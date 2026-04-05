@@ -2,41 +2,47 @@
 
 namespace App\Controller\auth\user;
 
-use App\Entity\users\user\User;
 use App\Repository\users\user\UserRepository;
+use App\Repository\users\client\ClientRepository;
+use App\Repository\users\freelancer\FreelancerRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/admin/users')]
 class AdminUserController extends AbstractController
 {
+    private function requireAdmin(Request $request): ?Response
+    {
+        if ($request->getSession()->get('user_role') !== 'ADMIN') {
+            return $this->redirectToRoute('user_login');
+        }
+        return null;
+    }
+
     // ── LIST ───────────────────────────────────────────────────────────
 
     #[Route('/', name: 'admin_user_index', methods: ['GET'])]
-    public function index(UserRepository $repo): Response
+    public function index(Request $request, UserRepository $repo): Response
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        if ($r = $this->requireAdmin($request)) return $r;
 
-        return $this->render('backOffice/user/index.html.twig', [
+        return $this->render('backOffice/user/list-users.html.twig', [
             'users' => $repo->findAllUsers(),
         ]);
     }
 
-    // ── ACTIVATE / DEACTIVATE ──────────────────────────────────────────
+    // ── TOGGLE ACTIVATE / DEACTIVATE ──────────────────────────────────
 
     #[Route('/{id}/toggle', name: 'admin_user_toggle', methods: ['POST'])]
-    public function toggle(int $id, UserRepository $repo, EntityManagerInterface $em): Response
+    public function toggle(int $id, Request $request, UserRepository $repo, EntityManagerInterface $em): Response
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        if ($r = $this->requireAdmin($request)) return $r;
 
         $user = $repo->find($id);
-        if (!$user) {
-            throw $this->createNotFoundException('User not found.');
-        }
+        if (!$user) throw $this->createNotFoundException('User not found.');
 
         $user->setActivated(!$user->isActivated());
         $em->flush();
@@ -50,20 +56,16 @@ class AdminUserController extends AbstractController
     // ── DELETE ─────────────────────────────────────────────────────────
 
     #[Route('/{id}/delete', name: 'admin_user_delete', methods: ['POST'])]
-    public function delete(int $id, UserRepository $repo, EntityManagerInterface $em, Request $request): Response
+    public function delete(int $id, Request $request, UserRepository $repo, EntityManagerInterface $em): Response
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        if ($r = $this->requireAdmin($request)) return $r;
 
         $user = $repo->find($id);
-        if (!$user) {
-            throw $this->createNotFoundException('User not found.');
-        }
+        if (!$user) throw $this->createNotFoundException('User not found.');
 
-        if ($this->isCsrfTokenValid('delete_user_' . $id, $request->request->get('_token'))) {
-            $em->remove($user);
-            $em->flush();
-            $this->addFlash('success', 'User deleted successfully.');
-        }
+        $em->remove($user);
+        $em->flush();
+        $this->addFlash('success', 'User deleted successfully.');
 
         return $this->redirectToRoute('admin_user_index');
     }
@@ -71,15 +73,20 @@ class AdminUserController extends AbstractController
     // ── VIEW DETAILS ───────────────────────────────────────────────────
 
     #[Route('/{id}', name: 'admin_user_show', methods: ['GET'])]
-    public function show(int $id, UserRepository $repo): Response
+    public function show(int $id, Request $request, UserRepository $repo, ClientRepository $clientRepo, FreelancerRepository $freelancerRepo): Response
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        if ($r = $this->requireAdmin($request)) return $r;
 
         $user = $repo->find($id);
-        if (!$user) {
-            throw $this->createNotFoundException('User not found.');
-        }
+        if (!$user) throw $this->createNotFoundException('User not found.');
 
-        return $this->render('backOffice/user/show.html.twig', ['user' => $user]);
+        $client     = $user->getRole() === 'CLIENT'     ? $clientRepo->findByUserId($id)     : null;
+        $freelancer = $user->getRole() === 'FREELANCER' ? $freelancerRepo->findByUserId($id) : null;
+
+        return $this->render('backOffice/user/show.html.twig', [
+            'user'       => $user,
+            'client'     => $client,
+            'freelancer' => $freelancer,
+        ]);
     }
 }

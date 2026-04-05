@@ -44,6 +44,7 @@ class RegistrationFormType extends AbstractType
                 'choices' => [
                     'Client'     => 'CLIENT',
                     'Freelancer' => 'FREELANCER',
+                    'Admin'      => 'ADMIN',
                 ],
                 'placeholder' => 'Select your role',
             ])
@@ -52,11 +53,7 @@ class RegistrationFormType extends AbstractType
                 'mapped'   => false,
                 'required' => false,
                 'constraints' => [
-                    new File([
-                        'maxSize'   => '2M',
-                        'mimeTypes' => ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-                        'mimeTypesMessage' => 'Please upload a valid image (JPG, PNG, GIF, WEBP).',
-                    ]),
+                    new File(['maxSize' => '2M']),
                 ],
             ]);
     }

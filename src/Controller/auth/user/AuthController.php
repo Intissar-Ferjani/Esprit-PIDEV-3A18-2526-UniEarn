@@ -2,6 +2,7 @@
 
 namespace App\Controller\auth\user;
 
+use App\Entity\users\admin\Admin;
 use App\Entity\users\user\User;
 use App\Form\users\user\RegistrationFormType;
 use App\Repository\users\user\UserRepository;
@@ -16,8 +17,6 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 #[Route('/user')]
 class AuthController extends AbstractController
 {
-    // ── SIGNUP (Step 1 — common for all roles) ─────────────────────────
-
     #[Route('/signup', name: 'user_signup', methods: ['GET', 'POST'])]
     public function signup(
         Request                $request,
@@ -31,32 +30,23 @@ class AuthController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
 
-            // Check duplicate email
             if ($userRepo->findByEmail($user->getEmail())) {
                 $this->addFlash('error', 'This email address is already registered.');
                 return $this->render('frontOffice/user/auth/signup.html.twig', ['form' => $form]);
             }
 
-            // Store plain password (no hashing for now)
-            $plainPassword = $form->get('plainPassword')->getData();
-            $user->setPassword($plainPassword);
+            $user->setPassword($form->get('plainPassword')->getData());
             $user->setEmail(strtolower(trim($user->getEmail())));
             $user->setActivated(true);
 
-            // Handle profile picture upload
             $pictureFile = $form->get('profilePictureFile')->getData();
             if ($pictureFile) {
-                $originalFilename = pathinfo($pictureFile->getClientOriginalName(), PATHINFO_FILENAME);
-                $safeFilename     = $slugger->slug($originalFilename);
-                $newFilename      = $safeFilename . '-' . uniqid() . '.' . $pictureFile->guessExtension();
-
+                $safeFilename = $slugger->slug(pathinfo($pictureFile->getClientOriginalName(), PATHINFO_FILENAME));
+                $newFilename  = $safeFilename . '-' . uniqid() . '.' . $pictureFile->guessExtension();
                 try {
-                    $pictureFile->move(
-                        $this->getParameter('profile_pictures_directory'),
-                        $newFilename
-                    );
+                    $pictureFile->move($this->getParameter('profile_pictures_directory'), $newFilename);
                     $user->setProfilePicturePath('uploads/profiles/' . $newFilename);
-                } catch (FileException $e) {
+                } catch (FileException) {
                     $this->addFlash('error', 'Could not upload profile picture.');
                 }
             }
@@ -64,26 +54,32 @@ class AuthController extends AbstractController
             $em->persist($user);
             $em->flush();
 
-            // Store user ID in session as "pending" — step 2 will finalize login
+            // ADMIN — one step only, create admin row + log in immediately
+            if ($user->getRole() === 'ADMIN') {
+                $admin = new Admin();
+                $admin->setUser($user);
+                $em->persist($admin);
+                $em->flush();
+
+                $request->getSession()->set('user_id',   $user->getIdUser());
+                $request->getSession()->set('user_name', $user->getName());
+                $request->getSession()->set('user_role', 'ADMIN');
+
+                $this->addFlash('success', 'Admin account created. Welcome!');
+                return $this->redirectToRoute('admin_dashboard');
+            }
+
+            // CLIENT / FREELANCER — go to step 2
             $request->getSession()->set('pending_user_id', $user->getIdUser());
 
-            // Redirect to the correct step 2 based on role
-            if ($user->getRole() === 'CLIENT') {
-                return $this->redirectToRoute('client_setup');
-            }
+            if ($user->getRole() === 'CLIENT')     return $this->redirectToRoute('client_setup');
+            if ($user->getRole() === 'FREELANCER') return $this->redirectToRoute('freelancer_setup');
 
-            if ($user->getRole() === 'FREELANCER') {
-                return $this->redirectToRoute('freelancer_setup');
-            }
-
-            // Fallback (should not happen for normal users)
             return $this->redirectToRoute('user_login');
         }
 
         return $this->render('frontOffice/user/auth/signup.html.twig', ['form' => $form]);
     }
-
-    // ── LOGIN ──────────────────────────────────────────────────────────
 
     #[Route('/login', name: 'user_login', methods: ['GET', 'POST'])]
     public function login(Request $request, UserRepository $userRepo): Response
@@ -91,49 +87,36 @@ class AuthController extends AbstractController
         if ($request->isMethod('POST')) {
             $email    = strtolower(trim($request->request->get('email')));
             $password = $request->request->get('password');
-
-            $user = $userRepo->findByEmail($email);
+            $user     = $userRepo->findByEmail($email);
 
             if (!$user) {
                 $this->addFlash('error', 'No account found with that email.');
                 return $this->render('frontOffice/user/auth/login.html.twig', ['last_email' => $email]);
             }
-
             if (!$user->isActivated()) {
-                $this->addFlash('error', 'Your account has been deactivated. Please contact support.');
+                $this->addFlash('error', 'Your account has been deactivated.');
                 return $this->render('frontOffice/user/auth/login.html.twig', ['last_email' => $email]);
             }
-
             if ($user->getPassword() !== $password) {
                 $this->addFlash('error', 'Incorrect password.');
                 return $this->render('frontOffice/user/auth/login.html.twig', ['last_email' => $email]);
             }
 
-            // Store user in session
-            $session = $request->getSession();
-            $session->set('user_id',   $user->getIdUser());
-            $session->set('user_name', $user->getName());
-            $session->set('user_role', $user->getRole());
+            $request->getSession()->set('user_id',   $user->getIdUser());
+            $request->getSession()->set('user_name', $user->getName());
+            $request->getSession()->set('user_role', $user->getRole());
 
             $this->addFlash('success', 'Welcome back, ' . $user->getName() . '!');
 
-            if ($user->getRole() === 'ADMIN') {
-                return $this->redirectToRoute('admin_user_index');
-            }
-            if ($user->getRole() === 'CLIENT') {
-                return $this->redirectToRoute('client_dashboard');
-            }
-            if ($user->getRole() === 'FREELANCER') {
-                return $this->redirectToRoute('freelancer_dashboard');
-            }
+            if ($user->getRole() === 'ADMIN')      return $this->redirectToRoute('admin_dashboard');
+            if ($user->getRole() === 'CLIENT')     return $this->redirectToRoute('client_dashboard');
+            if ($user->getRole() === 'FREELANCER') return $this->redirectToRoute('freelancer_dashboard');
 
             return $this->redirectToRoute('user_dashboard');
         }
 
         return $this->render('frontOffice/user/auth/login.html.twig', ['last_email' => '']);
     }
-
-    // ── LOGOUT ─────────────────────────────────────────────────────────
 
     #[Route('/logout', name: 'user_logout')]
     public function logout(Request $request): Response
@@ -142,22 +125,19 @@ class AuthController extends AbstractController
         return $this->redirectToRoute('user_login');
     }
 
-    // ── DASHBOARD ──────────────────────────────────────────────────────
-
     #[Route('/dashboard', name: 'user_dashboard')]
     public function dashboard(Request $request, UserRepository $userRepo): Response
     {
         $userId = $request->getSession()->get('user_id');
-
-        if (!$userId) {
-            return $this->redirectToRoute('user_login');
-        }
+        if (!$userId) return $this->redirectToRoute('user_login');
 
         $user = $userRepo->find($userId);
-        if (!$user) {
-            return $this->redirectToRoute('user_login');
-        }
+        if (!$user) return $this->redirectToRoute('user_login');
 
-        return $this->render('frontOffice/user/profile/dashboard.html.twig', ['user' => $user]);
+        if ($user->getRole() === 'ADMIN')      return $this->redirectToRoute('admin_dashboard');
+        if ($user->getRole() === 'CLIENT')     return $this->redirectToRoute('client_dashboard');
+        if ($user->getRole() === 'FREELANCER') return $this->redirectToRoute('freelancer_dashboard');
+
+        return $this->render('frontOffice/user/auth/dashboard.html.twig', ['user' => $user]);
     }
 }

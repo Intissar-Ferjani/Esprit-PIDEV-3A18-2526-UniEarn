@@ -1,0 +1,30 @@
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <img src="{{ asset('images/logoUniEarn.png') }}" alt="UniEarn" class="sidebar-logo-img">
+        <span class="sidebar-logo-text" style="color:#e53e3e;">Admin</span>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="{{ path('admin_dashboard') }}"
+           class="nav-item {{ active == 'dashboard' ? 'active' : '' }}">
+            🏠 <span>Dashboard</span>
+        </a>
+        <a href="{{ path('admin_manage_users') }}"
+           class="nav-item {{ active == 'users' ? 'active' : '' }}">
+            👥 <span>Manage Users</span>
+        </a>
+        <a href="#" class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
+            📝 <span>Manage Contracts</span>
+        </a>
+        <a href="#" class="nav-item {{ active == 'reports' ? 'active' : '' }}">
+            📊 <span>Reports</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+        <hr class="sidebar-divider">
+        <a href="{{ path('user_logout') }}" class="nav-item nav-logout">
+            🚪 <span>Logout</span>
+        </a>
+    </div>
+</aside>
