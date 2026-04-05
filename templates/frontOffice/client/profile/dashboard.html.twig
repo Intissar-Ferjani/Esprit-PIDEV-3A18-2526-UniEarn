@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniEarn – Client Dashboard</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+</head>
+<body class="dashboard-body">
+
+<div class="dashboard-layout">
+
+    {# ── Sidebar ── #}
+    {% include 'frontOffice/client/profile/_sidebar.html.twig' with {'active': 'dashboard'} %}
+
+    {# ── Main content ── #}
+    <div class="dashboard-main">
+
+        {# Top bar #}
+        <div class="top-bar">
+            <span class="top-bar-title">Dashboard</span>
+            <div class="top-bar-right">
+                <span class="top-bar-user">👤 {{ user.name }}</span>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+
+            {# Flash messages #}
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            {# ── Profile Header Card ── #}
+            <div class="profile-header-card">
+                <div class="profile-banner"></div>
+                <div class="profile-header-body">
+
+                    {# Avatar #}
+                    <div class="avatar-wrap">
+                        <form method="post" action="{{ path('client_change_photo') }}" enctype="multipart/form-data" id="photoForm">
+                            <label for="photoInput" class="avatar-label" title="Change photo">
+                                {% if user.profilePicturePath %}
+                                    <img src="{{ asset(user.profilePicturePath) }}" class="profile-avatar" alt="Avatar">
+                                {% else %}
+                                    <img src="{{ asset('images/default-avatar.jpg') }}" class="profile-avatar" alt="Avatar">
+                                {% endif %}
+                                <span class="avatar-camera">📷</span>
+                            </label>
+                            <input type="file" id="photoInput" name="profile_photo" accept="image/*"
+                                   style="display:none" onchange="document.getElementById('photoForm').submit()">
+                        </form>
+                    </div>
+
+                    {# Info #}
+                    <div class="profile-info">
+                        <h2 class="profile-name">{{ user.name }}</h2>
+                        <p class="profile-email">{{ user.email }}</p>
+                        <div class="profile-pills">
+                            <span class="pill pill-blue">🏢 {{ client.company ?: 'No Company' }}</span>
+                            <span class="pill pill-green">🏭 {{ client.industry ?: 'Not Specified' }}</span>
+                        </div>
+                    </div>
+
+                    {# Edit button #}
+                    <div class="profile-edit-btn-wrap">
+                        <a href="{{ path('client_profile_edit') }}" class="btn-edit">✏️ Edit Profile</a>
+                    </div>
+                </div>
+            </div>
+
+            {# ── Posted Projects ── #}
+            <div class="content-section" style="margin-top:24px;">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <span class="section-icon">📁</span>
+                        <h3 class="section-title">Posted Projects</h3>
+                    </div>
+                    <div class="section-filters">
+                        <input type="text" id="searchInput" placeholder="🔍 Search projects..."
+                               class="search-input" onkeyup="filterProjects()">
+                        <select id="statusFilter" class="filter-select" onchange="filterProjects()">
+                            <option value="">All Status</option>
+                            <option value="TODO">Active</option>
+                            <option value="DOING">In Progress</option>
+                            <option value="DONE">Completed</option>
+                        </select>
+                    </div>
+                </div>
+                <hr class="section-divider">
+
+                <div id="projectsContainer">
+                    {# Projects will be loaded here — placeholder for now #}
+                    <div class="empty-state">
+                        <span class="empty-icon">📋</span>
+                        <p class="empty-text">No projects posted yet</p>
+                        <p class="empty-subtext">Post your first project to get started!</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+function filterProjects() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const status = document.getElementById('statusFilter').value;
+    document.querySelectorAll('.project-card').forEach(card => {
+        const title = card.dataset.title?.toLowerCase() || '';
+        const cardStatus = card.dataset.status || '';
+        const matchSearch = title.includes(search);
+        const matchStatus = !status || cardStatus === status;
+        card.style.display = (matchSearch && matchStatus) ? '' : 'none';
+    });
+}
+</script>
+
+</body>
+</html>

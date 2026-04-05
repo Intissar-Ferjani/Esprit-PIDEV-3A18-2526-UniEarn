@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniEarn – {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    {% block stylesheets %}{% endblock %}
+</head>
+<body>
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="flash flash-{{ label }}">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    {% block body %}{% endblock %}
+
+    {% block javascripts %}{% endblock %}
+</body>
+</html>

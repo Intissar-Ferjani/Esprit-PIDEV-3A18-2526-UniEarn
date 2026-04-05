@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniEarn – Portfolio</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <style>
+        .progress-wrap { display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:20px; }
+        .step-box { display:flex; flex-direction:column; align-items:center; gap:5px; }
+        .step-circle { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; }
+        .step-completed { background:#20C997; color:white; }
+        .step-active    { background:#2563EB; color:white; }
+        .step-label { font-size:10px; }
+        .label-completed { color:#20C997; } .label-active { color:#2563EB; }
+        .step-line { font-size:14px; font-weight:700; color:#20C997; margin-bottom:18px; }
+
+        textarea.custom-field { height:auto; resize:vertical; }
+        .section-divider { border:none; border-top:1px solid #e2e8f0; margin:20px 0; }
+        .section-title { color:#1e293b; font-size:14px; font-weight:700; margin-bottom:12px; }
+
+        .btn-row { display:flex; gap:10px; margin-top:15px; }
+        .back-button { flex:1; height:40px; background:transparent; border:2px solid #2563EB; border-radius:8px; color:#2563EB; font-size:13px; font-weight:700; cursor:pointer; text-decoration:none; display:flex; align-items:center; justify-content:center; }
+        .skip-button { flex:1; height:40px; background:transparent; border:2px solid #cbd5e0; border-radius:8px; color:#718096; font-size:13px; font-weight:700; cursor:pointer; }
+        .complete-button { flex:1.5; height:40px; background:linear-gradient(to right,#2563EB,#20C997); border:none; border-radius:8px; color:white; font-size:13px; font-weight:700; cursor:pointer; }
+    </style>
+</head>
+<body>
+<div class="root">
+
+    <div class="left-panel">
+        <span class="brand-title">UniEarn</span>
+        <span class="brand-subtitle" style="margin-top:10px;">Almost done!</span>
+        <span class="brand-subtitle" style="font-size:14px;margin-top:5px;">Add your best work</span>
+    </div>
+
+    <div class="form-panel" style="overflow-y:auto; padding:30px 50px;">
+
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="flash flash-{{ label }}">{{ message }}</div>
+            {% endfor %}
+        {% endfor %}
+
+        {# Progress #}
+        <div class="progress-wrap">
+            <div class="step-box"><div class="step-circle step-completed">1</div><span class="step-label label-completed">Account</span></div>
+            <span class="step-line">━</span>
+            <div class="step-box"><div class="step-circle step-completed">2</div><span class="step-label label-completed">Profile</span></div>
+            <span class="step-line">━</span>
+            <div class="step-box"><div class="step-circle step-completed">3</div><span class="step-label label-completed">Verify</span></div>
+            <span class="step-line">━</span>
+            <div class="step-box"><div class="step-circle step-active">4</div><span class="step-label label-active">Portfolio</span></div>
+        </div>
+
+        <h1 class="form-title">Create Portfolio</h1>
+        <p class="form-subtitle" style="margin-bottom:20px;">Showcase your work <em>(Optional)</em></p>
+
+        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}, 'action': path('freelancer_portfolio')}) }}
+
+            {# Portfolio #}
+            <div class="field-wrap">
+                {{ form_label(form.portfolioTitle) }}
+                {{ form_widget(form.portfolioTitle, {'attr': {'class': 'custom-field'}}) }}
+                {{ form_errors(form.portfolioTitle) }}
+            </div>
+            <div class="field-wrap">
+                {{ form_label(form.portfolioDescription) }}
+                {{ form_widget(form.portfolioDescription, {'attr': {'class': 'custom-field', 'rows': 3}}) }}
+                {{ form_errors(form.portfolioDescription) }}
+            </div>
+
+            <hr class="section-divider">
+            <p class="section-title">Add a Project <span style="font-weight:400;color:#94a3b8;">(Optional)</span></p>
+
+            {# Portfolio Item #}
+            <div class="field-wrap">
+                {{ form_label(form.projectTitle) }}
+                {{ form_widget(form.projectTitle, {'attr': {'class': 'custom-field'}}) }}
+            </div>
+            <div class="field-wrap">
+                {{ form_label(form.projectDescription) }}
+                {{ form_widget(form.projectDescription, {'attr': {'class': 'custom-field', 'rows': 3}}) }}
+            </div>
+            <div class="field-wrap">
+                {{ form_label(form.technologies) }}
+                {{ form_widget(form.technologies, {'attr': {'class': 'custom-field'}}) }}
+                <p class="helper-text">Separate technologies with commas</p>
+            </div>
+            <div class="field-wrap">
+                {{ form_label(form.projectUrl) }}
+                {{ form_widget(form.projectUrl, {'attr': {'class': 'custom-field'}}) }}
+            </div>
+            <div class="field-wrap">
+                {{ form_label(form.githubUrl) }}
+                {{ form_widget(form.githubUrl, {'attr': {'class': 'custom-field'}}) }}
+            </div>
+
+            <div class="btn-row">
+                <a href="{{ path('freelancer_verify') }}" class="back-button">Back</a>
+                <button type="submit" class="complete-button">Complete ✓</button>
+            </div>
+
+        {{ form_end(form) }}
+
+        {# Skip button as separate form #}
+        <form method="post" action="{{ path('freelancer_portfolio_skip') }}" style="margin-top:10px;">
+            <button type="submit" class="skip-button" style="width:100%;">Skip — Add portfolio later</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

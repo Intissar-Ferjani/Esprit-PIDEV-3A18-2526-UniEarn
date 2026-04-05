@@ -1,0 +1,10 @@
+{% extends 'frontOffice/user/profile/base.html.twig' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block body %}
+<div style="padding: 2rem; font-family: 'Segoe UI', sans-serif;">
+    <h2>Welcome, {{ user.name }}!</h2>
+    <p>Role: <strong>{{ user.role }}</strong></p>
+    <a href="{{ path('user_logout') }}" class="login-link">Log Out</a>
+</div>
+{% endblock %}

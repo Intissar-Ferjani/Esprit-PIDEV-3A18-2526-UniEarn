@@ -1,0 +1,210 @@
+/* public/css/auth.css — translated from JavaFX auth.css */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #ffffff;
+}
+
+/* ── Layout ──────────────────────────────────────────────────── */
+.root {
+    display: flex;
+    min-height: 100vh;
+}
+
+.left-panel {
+    width: 300px;
+    min-height: 100vh;
+    background: #2563EB;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    flex-shrink: 0;
+}
+
+.brand-title {
+    color: white;
+    font-size: 48px;
+    font-weight: 700;
+    text-shadow: 0 2px 8px rgba(0,0,0,.2);
+    display: block;
+}
+
+.brand-subtitle {
+    color: rgba(255,255,255,.9);
+    font-size: 18px;
+    margin-top: 10px;
+    display: block;
+}
+
+.form-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 60px;
+    background: #ffffff;
+    overflow-y: auto;
+}
+
+/* ── Logo ─────────────────────────────────────────────────────── */
+.logo {
+    width: 60px;
+    height: 80px;
+    object-fit: contain;
+    margin-bottom: 10px;
+}
+
+/* ── Typography ───────────────────────────────────────────────── */
+.form-title {
+    color: #2d3748;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.form-subtitle {
+    color: #718096;
+    font-size: 13px;
+    margin-bottom: 20px;
+}
+
+.field-label, label {
+    display: block;
+    color: #4a5568;
+    font-weight: 600;
+    font-size: 12px;
+    margin-bottom: 6px;
+}
+
+/* ── Inputs ───────────────────────────────────────────────────── */
+.custom-field,
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    background: #f7fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #2d3748;
+    height: 45px;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+.custom-field:focus,
+input:focus {
+    outline: none;
+    border-color: #2563EB;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+
+/* ── Select / ComboBox ────────────────────────────────────────── */
+select, .custom-combo {
+    width: 100%;
+    background: #f7fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    height: 45px;
+    color: #2d3748;
+    cursor: pointer;
+}
+
+select:focus { outline: none; border-color: #2563EB; }
+
+/* ── Avatar ───────────────────────────────────────────────────── */
+.avatar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 18px;
+    gap: 8px;
+}
+
+.avatar-preview {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #e2e8f0;
+}
+
+/* ── Field wrapper ────────────────────────────────────────────── */
+.field-wrap {
+    width: 100%;
+    max-width: 370px;
+    margin-bottom: 14px;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────── */
+.signup-button {
+    width: 100%;
+    max-width: 370px;
+    height: 42px;
+    background: linear-gradient(to right, #2563EB 0%, #20C997 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(37,99,235,.3);
+    transition: background .2s, box-shadow .2s, transform .1s;
+    margin-bottom: 15px;
+}
+
+.signup-button:hover {
+    background: linear-gradient(to right, #1d4ed8 0%, #1ab386 100%);
+    box-shadow: 0 6px 18px rgba(37,99,235,.45);
+    transform: scaleY(1.02);
+}
+
+.signup-button:active {
+    background: linear-gradient(to right, #1e40af 0%, #169f7a 100%);
+}
+
+/* ── Links ────────────────────────────────────────────────────── */
+.login-label { color: #718096; font-size: 12px; margin-top: 10px; }
+
+.login-link {
+    color: #2563EB;
+    font-weight: 600;
+    font-size: 12px;
+    text-decoration: none;
+}
+.login-link:hover { color: #1d4ed8; text-decoration: underline; }
+
+/* ── Flash messages ───────────────────────────────────────────── */
+.flash {
+    width: 100%;
+    max-width: 370px;
+    padding: 10px 14px;
+    border-radius: 7px;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+.flash-success { background: #d1fae5; color: #065f46; }
+.flash-error   { background: #fee2e2; color: #991b1b; }
+
+/* ── Validation errors ────────────────────────────────────────── */
+.form-error, ul.errors, ul.errors li {
+    color: #e53e3e;
+    font-size: 12px;
+    list-style: none;
+    padding: 2px 0 0 4px;
+}
+
+/* ── File input ───────────────────────────────────────────────── */
+input[type="file"] {
+    font-size: 13px;
+    color: #64748b;
+    cursor: pointer;
+}

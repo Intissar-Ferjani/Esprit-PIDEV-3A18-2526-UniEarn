@@ -1,0 +1,47 @@
+{% extends 'frontOffice/user/profile/base.html.twig' %}
+{% block title %}Log In{% endblock %}
+
+{% block body %}
+<div class="root">
+
+    <div class="left-panel">
+        <span class="brand-title">UniEarn</span>
+        <span class="brand-subtitle">Welcome back!</span>
+    </div>
+
+    <div class="form-panel">
+        <img src="{{ asset('images/logoUniEarn.png') }}" alt="UniEarn Logo" class="logo">
+
+        <h1 class="form-title">Welcome Back</h1>
+        <p class="form-subtitle">Log in to your account</p>
+
+        <form method="post" action="{{ path('user_login') }}" novalidate style="width:100%;max-width:370px;">
+
+            <div class="field-wrap">
+                <label for="email" class="field-label">Email Address</label>
+                <input type="email" id="email" name="email"
+                       class="custom-field"
+                       value="{{ last_email }}"
+                       placeholder="Enter your email"
+                       required>
+            </div>
+
+            <div class="field-wrap">
+                <label for="password" class="field-label">Password</label>
+                <input type="password" id="password" name="password"
+                       class="custom-field"
+                       placeholder="Enter your password"
+                       required>
+            </div>
+
+            <button type="submit" class="signup-button">Log In</button>
+        </form>
+
+        <p class="login-label" style="margin-top:12px;">
+            Don't have an account?
+            <a href="{{ path('user_signup') }}" class="login-link">Sign Up</a>
+        </p>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'frontOffice/user/profile/base.html.twig' %}
+{% block title %}Create Account{% endblock %}
+
+{% block body %}
+<div class="root">
+
+    {# ── Left branding panel ── #}
+    <div class="left-panel">
+        <span class="brand-title">UniEarn</span>
+        <span class="brand-subtitle">Join our community today</span>
+    </div>
+
+    {# ── Right form panel ── #}
+    <div class="form-panel">
+        <img src="{{ asset('images/logoUniEarn.png') }}" alt="UniEarn Logo" class="logo">
+
+        <h1 class="form-title">Create Account</h1>
+        <p class="form-subtitle">Sign up to get started</p>
+
+        {{ form_start(form, {'attr': {'enctype': 'multipart/form-data', 'novalidate': 'novalidate'}}) }}
+
+        {# Profile picture #}
+        <div class="avatar-wrap">
+            <img id="avatarPreview"
+                 src="{{ asset('images/default-avatar.jpg') }}"
+                 alt="Profile photo" class="avatar-preview">
+            <div class="field-wrap">
+                {{ form_label(form.profilePictureFile) }}
+                {{ form_widget(form.profilePictureFile, {'attr': {'id': 'profilePictureFile', 'accept': 'image/*'}}) }}
+                {{ form_errors(form.profilePictureFile) }}
+            </div>
+        </div>
+
+        {# Name #}
+        <div class="field-wrap">
+            {{ form_label(form.name) }}
+            {{ form_widget(form.name, {'attr': {'class': 'custom-field'}}) }}
+            {{ form_errors(form.name) }}
+        </div>
+
+        {# Email #}
+        <div class="field-wrap">
+            {{ form_label(form.email) }}
+            {{ form_widget(form.email, {'attr': {'class': 'custom-field'}}) }}
+            {{ form_errors(form.email) }}
+        </div>
+
+        {# Password #}
+        <div class="field-wrap">
+            {{ form_label(form.plainPassword.first) }}
+            {{ form_widget(form.plainPassword.first, {'attr': {'class': 'custom-field'}}) }}
+            {{ form_errors(form.plainPassword.first) }}
+        </div>
+
+        {# Confirm password #}
+        <div class="field-wrap">
+            {{ form_label(form.plainPassword.second) }}
+            {{ form_widget(form.plainPassword.second, {'attr': {'class': 'custom-field'}}) }}
+            {{ form_errors(form.plainPassword.second) }}
+        </div>
+
+        {# Role #}
+        <div class="field-wrap">
+            {{ form_label(form.role) }}
+            {{ form_widget(form.role, {'attr': {'class': 'custom-combo'}}) }}
+            {{ form_errors(form.role) }}
+        </div>
+
+        <button type="submit" class="signup-button">Sign Up</button>
+
+        {{ form_end(form) }}
+
+        <p class="login-label">
+            Already have an account?
+            <a href="{{ path('user_login') }}" class="login-link">Log In</a>
+        </p>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    // Live avatar preview
+    document.getElementById('profilePictureFile').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                document.getElementById('avatarPreview').src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+{% endblock %}

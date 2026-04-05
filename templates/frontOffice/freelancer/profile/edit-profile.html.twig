@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn – Edit Profile</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    {% include 'frontOffice/freelancer/profile/_sidebar.html.twig' with {'active': 'dashboard'} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar"><span class="top-bar-title">Edit Profile</span></div>
+
+        <div class="dashboard-content">
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            <div class="edit-card">
+                <div class="edit-card-header">✏️ Edit Profile</div>
+
+                <form method="post" action="{{ path('freelancer_profile_edit') }}" class="edit-form" novalidate>
+
+                    <div class="edit-section-title">Professional Information</div>
+
+                    <div class="field-wrap">
+                        <label class="field-label">Full Name</label>
+                        <input type="text" name="name" class="custom-field" value="{{ user.name }}" required>
+                    </div>
+
+                    <div class="field-wrap">
+                        <label class="field-label">Email Address</label>
+                        <input type="email" name="email" class="custom-field" value="{{ user.email }}" required>
+                    </div>
+
+                    <div class="field-wrap">
+                        <label class="field-label">Hourly Rate (TND/hour)</label>
+                        <input type="number" name="price_per_hour" class="custom-field"
+                               value="{{ freelancer.pricePerHour }}" step="0.01" min="0">
+                    </div>
+
+                    <div class="field-wrap">
+                        <label class="field-label">Skills <span style="color:#94a3b8;font-weight:400;">(comma-separated)</span></label>
+                        <input type="text" name="skills" class="custom-field"
+                               value="{{ freelancer.skillsArray | join(', ') }}"
+                               placeholder="e.g. PHP, JavaScript, Python">
+                    </div>
+
+                    <div class="field-wrap">
+                        <label class="field-label">Professional Bio</label>
+                        <textarea name="bio" class="custom-field" rows="5"
+                                  placeholder="Tell clients about yourself...">{{ freelancer.bio }}</textarea>
+                    </div>
+
+                    <hr class="section-divider" style="margin:24px 0;">
+                    <div class="edit-section-title">🔒 Change Password</div>
+                    <p style="color:#94a3b8;font-size:12px;margin-bottom:16px;">Leave blank to keep your current password.</p>
+
+                    <div class="field-wrap">
+                        <label class="field-label">Current Password</label>
+                        <input type="password" name="current_password" class="custom-field" placeholder="Enter current password">
+                    </div>
+
+                    <div class="field-wrap">
+                        <label class="field-label">New Password</label>
+                        <input type="password" name="new_password" id="newPass" class="custom-field"
+                               placeholder="Min 8 characters" onkeyup="checkStrength(this.value)">
+                        <p id="strengthMsg" style="font-size:11px;margin-top:4px;"></p>
+                    </div>
+
+                    <div class="field-wrap">
+                        <label class="field-label">Confirm New Password</label>
+                        <input type="password" name="confirm_password" class="custom-field" placeholder="Repeat new password">
+                    </div>
+
+                    <div class="btn-row" style="margin-top:24px;">
+                        <a href="{{ path('freelancer_dashboard') }}" class="back-button"
+                           style="text-decoration:none;display:flex;align-items:center;justify-content:center;">Cancel</a>
+                        <button type="submit" class="signup-button" style="flex:1.5;">Save Changes</button>
+                    </div>
+                </form>
+
+                {# Danger Zone #}
+                <div class="danger-zone">
+                    <p class="danger-title">⚠ Danger Zone</p>
+                    <p class="danger-desc">Once you deactivate your account, there is no going back.</p>
+                    <button class="btn-deactivate" onclick="document.getElementById('deactivateModal').style.display='flex'">
+                        Deactivate Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Deactivate modal #}
+<div id="deactivateModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <h3 style="color:#c53030;margin-bottom:10px;">⚠ Deactivate Account</h3>
+        <p style="color:#4a5568;margin-bottom:16px;">Type <strong>DEACTIVATE</strong> to confirm.</p>
+        <form method="post" action="{{ path('freelancer_deactivate') }}">
+            <input type="text" name="confirm_text" class="custom-field" placeholder="Type DEACTIVATE" style="margin-bottom:14px;">
+            <div class="btn-row">
+                <button type="button" class="back-button"
+                        onclick="document.getElementById('deactivateModal').style.display='none'">Cancel</button>
+                <button type="submit" class="btn-deactivate" style="flex:1;">Confirm Deactivate</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function checkStrength(val) {
+    const el = document.getElementById('strengthMsg');
+    if (!val) { el.textContent = ''; return; }
+    let s = 0;
+    if (val.length >= 8) s++;
+    if (/[A-Z]/.test(val) && /[a-z]/.test(val)) s++;
+    if (/\d/.test(val)) s++;
+    if (/[^A-Za-z0-9]/.test(val)) s++;
+    if (s <= 1) { el.textContent = '⚠ Weak'; el.style.color = '#e53e3e'; }
+    else if (s <= 3) { el.textContent = '⚡ Medium'; el.style.color = '#d69e2e'; }
+    else { el.textContent = '✅ Strong'; el.style.color = '#38a169'; }
+}
+</script>
+</body>
+</html>

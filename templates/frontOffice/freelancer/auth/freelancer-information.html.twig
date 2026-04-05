@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniEarn – Freelancer Profile</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+</head>
+<body>
+<div class="root">
+
+    <div class="left-panel">
+        <span class="brand-title">UniEarn</span>
+        <span class="brand-subtitle" style="margin-top:10px;">Build your profile!</span>
+        <span class="brand-subtitle" style="font-size:14px;margin-top:5px;">Showcase your skills</span>
+    </div>
+
+    <div class="form-panel" style="overflow-y:auto; padding:30px 50px;">
+
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="flash flash-{{ label }}">{{ message }}</div>
+            {% endfor %}
+        {% endfor %}
+
+        <h1 class="form-title">Freelancer Profile</h1>
+
+        {{ form_start(form, {
+            'attr': {'enctype': 'multipart/form-data', 'novalidate': 'novalidate'},
+            'action': path('freelancer_setup')
+        }) }}
+
+        {# Hourly Rate #}
+        <div class="field-wrap">
+            <label>Hourly Rate (TND/hour)</label>
+            {{ form_widget(form.pricePerHour) }}
+            {{ form_errors(form.pricePerHour) }}
+        </div>
+
+        {# Skills #}
+        <div class="field-wrap">
+            <label>Skills</label>
+
+            <div id="skillTagsWrap"></div>
+
+            <input type="text" id="skillTypingInput"
+                   placeholder="Type skill and press Enter">
+
+            {# IMPORTANT: DO NOT override id #}
+            {{ form_widget(form.skillsInput, {
+                'attr': {'style': 'display:none'}
+            }) }}
+
+            {{ form_errors(form.skillsInput) }}
+        </div>
+
+        {# CV #}
+        <div class="field-wrap">
+            {{ form_label(form.cvFile) }}
+            {{ form_widget(form.cvFile) }}
+        </div>
+
+        {# Bio #}
+        <div class="field-wrap">
+            {{ form_label(form.bio) }}
+            {{ form_widget(form.bio) }}
+        </div>
+
+        {# Experience #}
+        <div class="field-wrap">
+            {{ form_label(form.experience) }}
+            {{ form_widget(form.experience) }}
+        </div>
+
+        <button type="submit">Next</button>
+
+        {{ form_end(form) }}
+
+    </div>
+</div>
+
+<script>
+const tags = [];
+const wrap = document.getElementById('skillTagsWrap');
+const typeInput = document.getElementById('skillTypingInput');
+
+// ✅ Correct ID from Symfony
+const hidden = document.getElementById('{{ form.skillsInput.vars.id }}');
+
+function renderTags() {
+    wrap.innerHTML = '';
+
+    tags.forEach((skill, i) => {
+        const tag = document.createElement('span');
+        tag.innerHTML = skill + ' ✕';
+        tag.style.marginRight = '5px';
+        tag.style.cursor = 'pointer';
+
+        tag.onclick = () => {
+            tags.splice(i, 1);
+            renderTags();
+        };
+
+        wrap.appendChild(tag);
+    });
+
+    // ✅ SAFE update
+    if (hidden) {
+        hidden.value = tags.join(',');
+    }
+}
+
+function addSkill(value) {
+    const skill = value.trim();
+
+    if (skill && !tags.includes(skill)) {
+        tags.push(skill);
+        renderTags();
+    }
+}
+
+typeInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        addSkill(typeInput.value);
+        typeInput.value = '';
+    }
+});
+
+typeInput.addEventListener('blur', () => {
+    if (typeInput.value.trim()) {
+        addSkill(typeInput.value);
+        typeInput.value = '';
+    }
+});
+</script>
+
+</body>
+</html>

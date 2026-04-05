@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn – My Portfolio</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <style>
+        .portfolio-item-card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,.05);
+            margin-bottom: 18px;
+        }
+        .item-accent { height: 4px; background: linear-gradient(to right, #1565c0, #42a5f5); }
+        .item-body { padding: 20px 24px; }
+        .item-header { display:flex; align-items:center; gap:14px; margin-bottom:12px; }
+        .item-icon { width:40px; height:40px; background:#e8f0fe; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+        .item-title { font-size:16px; font-weight:700; color:#1a202c; flex:1; }
+        .item-desc { color:#4a5568; font-size:13px; line-height:1.6; margin-bottom:12px; }
+        .tech-wrap { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+        .tech-badge { background:#e8f0fe; color:#1a73e8; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+        .item-links { display:flex; gap:10px; padding-top:12px; border-top:1px solid #f1f5f9; }
+        .link-chip { padding:5px 14px; border-radius:8px; font-size:12px; font-weight:600; text-decoration:none; display:flex; align-items:center; gap:5px; }
+        .link-chip-blue { background:#e8f0fe; color:#1a73e8; }
+        .link-chip-dark { background:#f0f0f0; color:#24292e; }
+        .item-actions { display:flex; gap:8px; }
+        .btn-icon-edit { background:#e8f0fe; border:none; border-radius:7px; padding:6px 12px; color:#1a73e8; cursor:pointer; font-size:12px; font-weight:600; }
+        .btn-icon-del  { background:#fff5f5; border:1.5px solid #fc8181; border-radius:7px; padding:6px 12px; color:#c53030; cursor:pointer; font-size:12px; font-weight:600; }
+
+        /* Portfolio info bar */
+        .portfolio-info-bar { background:white; border-radius:12px; padding:20px 28px; box-shadow:0 2px 6px rgba(0,0,0,.05); display:flex; align-items:center; gap:24px; margin-bottom:20px; }
+        .info-stat { display:flex; flex-direction:column; gap:3px; }
+        .info-stat-label { font-size:10px; font-weight:700; color:#718096; text-transform:uppercase; }
+        .info-stat-value { font-size:14px; font-weight:700; color:#1a202c; }
+        .info-divider { width:1px; height:40px; background:#e2e8f0; }
+        .info-actions { margin-left:auto; display:flex; gap:8px; }
+
+        /* Modal */
+        .form-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000; align-items:center; justify-content:center; }
+        .form-modal-box { background:white; border-radius:14px; width:520px; max-width:95vw; max-height:90vh; overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,.18); }
+        .form-modal-header { background:#2563EB; color:white; padding:18px 24px; font-size:17px; font-weight:700; border-radius:14px 14px 0 0; }
+        .form-modal-body { padding:24px; }
+    </style>
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    {% include 'frontOffice/freelancer/profile/_sidebar.html.twig' with {'active': 'portfolio'} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">My Portfolio</span>
+            <div class="top-bar-right">
+                <a href="{{ path('freelancer_dashboard') }}" style="color:#2563EB;text-decoration:none;font-size:13px;">← Back to Dashboard</a>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            {% if not portfolio %}
+                {# No portfolio yet #}
+                <div class="content-section" style="text-align:center;padding:60px 40px;">
+                    <div style="font-size:56px;margin-bottom:16px;">💼</div>
+                    <h2 style="font-size:22px;font-weight:700;color:#1e293b;margin-bottom:8px;">Build Your Portfolio</h2>
+                    <p style="color:#718096;font-size:14px;margin-bottom:24px;">Create a portfolio to showcase your work and attract more clients</p>
+                    <form method="post" action="{{ path('freelancer_portfolio_create') }}">
+                        <button type="submit" class="btn-edit" style="font-size:15px;padding:12px 28px;">+ Create Portfolio</button>
+                    </form>
+                </div>
+
+            {% else %}
+                {# Portfolio info bar #}
+                <div class="portfolio-info-bar">
+                    <div class="info-stat">
+                        <span class="info-stat-label">📁 Title</span>
+                        <span class="info-stat-value">{{ portfolio.title }}</span>
+                    </div>
+                    <div class="info-divider"></div>
+                    <div class="info-stat">
+                        <span class="info-stat-label">📅 Created</span>
+                        <span class="info-stat-value">{{ portfolio.createdAt | date('M d, Y') }}</span>
+                    </div>
+                    <div class="info-divider"></div>
+                    <div class="info-stat">
+                        <span class="info-stat-label">🗂 Projects</span>
+                        <span class="info-stat-value" style="color:#2563EB;font-size:18px;">{{ items | length }}</span>
+                    </div>
+                    <div class="info-actions">
+                        <button class="btn-icon-edit" onclick="openModal('editInfoModal')">✏️ Edit Info</button>
+                        <button class="btn-icon-del" onclick="openModal('deletePortfolioModal')">🗑 Delete</button>
+                    </div>
+                </div>
+
+                {# Add project button #}
+                <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+                    <button class="btn-edit" onclick="openModal('addItemModal')">+ Add Project</button>
+                </div>
+
+                {# Items #}
+                {% if items is empty %}
+                    <div class="empty-state">
+                        <span class="empty-icon">💼</span>
+                        <p class="empty-text">No portfolio items yet</p>
+                        <p class="empty-subtext">Add your first project to showcase your work</p>
+                    </div>
+                {% else %}
+                    {% for item in items %}
+                    <div class="portfolio-item-card">
+                        <div class="item-accent"></div>
+                        <div class="item-body">
+                            <div class="item-header">
+                                <div class="item-icon">💻</div>
+                                <span class="item-title">{{ item.title }}</span>
+                                <div class="item-actions">
+                                    <button class="btn-icon-edit"
+                                            onclick="openEditModal({{ item.idItem }}, '{{ item.title|e('js') }}', '{{ item.description|e('js') }}', '{{ item.technologiesArray|join(', ')|e('js') }}', '{{ item.projectUrl|e('js') }}', '{{ item.githubUrl|e('js') }}')">
+                                        ✏️ Edit
+                                    </button>
+                                    <form method="post" action="{{ path('freelancer_portfolio_item_delete', {id: item.idItem}) }}"
+                                          onsubmit="return confirm('Delete this project?')" style="display:inline;">
+                                        <button type="submit" class="btn-icon-del">🗑 Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <p class="item-desc">{{ item.description }}</p>
+
+                            {% if item.technologiesArray is not empty %}
+                            <div class="tech-wrap">
+                                {% for tech in item.technologiesArray %}
+                                    <span class="tech-badge">{{ tech }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            {% if item.projectUrl or item.githubUrl %}
+                            <div class="item-links">
+                                {% if item.projectUrl %}
+                                    <a href="{{ item.projectUrl }}" target="_blank" class="link-chip link-chip-blue">🔗 View Project</a>
+                                {% endif %}
+                                {% if item.githubUrl %}
+                                    <a href="{{ item.githubUrl }}" target="_blank" class="link-chip link-chip-dark">🐙 GitHub</a>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{# ── Add Item Modal ── #}
+<div id="addItemModal" class="form-modal">
+    <div class="form-modal-box">
+        <div class="form-modal-header">+ Add Project</div>
+        <div class="form-modal-body">
+            <form method="post" action="{{ path('freelancer_portfolio_item_add') }}">
+                <div class="field-wrap"><label class="field-label">Project Title *</label>
+                    <input type="text" name="title" class="custom-field" required placeholder="e.g. E-commerce Website"></div>
+                <div class="field-wrap"><label class="field-label">Description *</label>
+                    <textarea name="description" class="custom-field" rows="4" required placeholder="Describe your project..."></textarea></div>
+                <div class="field-wrap"><label class="field-label">Technologies</label>
+                    <input type="text" name="technologies" class="custom-field" placeholder="e.g. React, Node.js, MongoDB"></div>
+                <div class="field-wrap"><label class="field-label">Project URL</label>
+                    <input type="url" name="project_url" class="custom-field" placeholder="https://..."></div>
+                <div class="field-wrap"><label class="field-label">GitHub URL</label>
+                    <input type="url" name="github_url" class="custom-field" placeholder="https://github.com/..."></div>
+                <div class="btn-row">
+                    <button type="button" class="back-button" onclick="closeModal('addItemModal')">Cancel</button>
+                    <button type="submit" class="signup-button" style="flex:1.5;">Add Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# ── Edit Item Modal ── #}
+<div id="editItemModal" class="form-modal">
+    <div class="form-modal-box">
+        <div class="form-modal-header">✏️ Edit Project</div>
+        <div class="form-modal-body">
+            <form id="editItemForm" method="post" action="">
+                <div class="field-wrap"><label class="field-label">Project Title *</label>
+                    <input type="text" name="title" id="editTitle" class="custom-field" required></div>
+                <div class="field-wrap"><label class="field-label">Description *</label>
+                    <textarea name="description" id="editDesc" class="custom-field" rows="4" required></textarea></div>
+                <div class="field-wrap"><label class="field-label">Technologies</label>
+                    <input type="text" name="technologies" id="editTech" class="custom-field"></div>
+                <div class="field-wrap"><label class="field-label">Project URL</label>
+                    <input type="url" name="project_url" id="editProjectUrl" class="custom-field"></div>
+                <div class="field-wrap"><label class="field-label">GitHub URL</label>
+                    <input type="url" name="github_url" id="editGithubUrl" class="custom-field"></div>
+                <div class="btn-row">
+                    <button type="button" class="back-button" onclick="closeModal('editItemModal')">Cancel</button>
+                    <button type="submit" class="signup-button" style="flex:1.5;">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# ── Edit Portfolio Info Modal ── #}
+<div id="editInfoModal" class="form-modal">
+    <div class="form-modal-box">
+        <div class="form-modal-header">✏️ Edit Portfolio Info</div>
+        <div class="form-modal-body">
+            <form method="post" action="{{ path('freelancer_portfolio_edit_info') }}">
+                <div class="field-wrap"><label class="field-label">Portfolio Title *</label>
+                    <input type="text" name="title" class="custom-field" value="{{ portfolio.title ?? '' }}" required></div>
+                <div class="field-wrap"><label class="field-label">Description</label>
+                    <textarea name="description" class="custom-field" rows="3">{{ portfolio.description ?? '' }}</textarea></div>
+                <div class="btn-row">
+                    <button type="button" class="back-button" onclick="closeModal('editInfoModal')">Cancel</button>
+                    <button type="submit" class="signup-button" style="flex:1.5;">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# ── Delete Portfolio Modal ── #}
+<div id="deletePortfolioModal" class="form-modal">
+    <div class="form-modal-box">
+        <div class="form-modal-header" style="background:#c53030;">⚠️ Delete Portfolio</div>
+        <div class="form-modal-body">
+            <p style="color:#4a5568;margin-bottom:16px;">This will permanently delete your portfolio and ALL projects. Type <strong>DELETE</strong> to confirm.</p>
+            <form method="post" action="{{ path('freelancer_portfolio_delete') }}">
+                <input type="text" name="confirm_text" class="custom-field" placeholder="Type DELETE" style="margin-bottom:14px;">
+                <div class="btn-row">
+                    <button type="button" class="back-button" onclick="closeModal('deletePortfolioModal')">Cancel</button>
+                    <button type="submit" class="btn-deactivate" style="flex:1;">Confirm Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+function openEditModal(id, title, desc, tech, projectUrl, githubUrl) {
+    document.getElementById('editTitle').value      = title;
+    document.getElementById('editDesc').value       = desc;
+    document.getElementById('editTech').value       = tech;
+    document.getElementById('editProjectUrl').value = projectUrl;
+    document.getElementById('editGithubUrl').value  = githubUrl;
+    document.getElementById('editItemForm').action  = '/freelancer/portfolio/item/' + id + '/edit';
+    openModal('editItemModal');
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.form-modal').forEach(modal => {
+    modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+});
+</script>
+
+</body>
+</html>
