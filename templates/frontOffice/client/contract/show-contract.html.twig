@@ -9,7 +9,9 @@
 <body class="dashboard-body">
 <div class="dashboard-layout">
 
-    <div class="dashboard-main" style="margin:0 auto;max-width:750px;padding:32px;">
+    {% include 'frontOffice/client/profile/_sidebar.html.twig' with {'active': 'contracts'} %}
+
+    <div class="dashboard-main">
         <div class="top-bar">
             <span class="top-bar-title">📄 Contract Details</span>
             <div class="top-bar-right">
