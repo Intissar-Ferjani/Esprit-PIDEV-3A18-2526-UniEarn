@@ -16,12 +16,17 @@ class AdminUserController extends AbstractController
 {
     // ── LIST ───────────────────────────────────────────────────────────
 
-    #[Route('/', name: 'admin_user_index', methods: ['GET'])]
-    public function index(UserRepository $repo): Response
+    #[Route('/', name: 'admin_manage_users', methods: ['GET'])]
+    public function index(Request $request, UserRepository $repo): Response
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $userId   = $request->getSession()->get('user_id');
+        $userRole = $request->getSession()->get('user_role');
 
-        return $this->render('backOffice/user/index.html.twig', [
+        if (!$userId || $userRole !== 'ADMIN') {
+            return $this->redirectToRoute('user_login');
+        }
+
+        return $this->render('backOffice/user/list-users.html.twig', [
             'users' => $repo->findAllUsers(),
         ]);
     }
@@ -29,9 +34,14 @@ class AdminUserController extends AbstractController
     // ── ACTIVATE / DEACTIVATE ──────────────────────────────────────────
 
     #[Route('/{id}/toggle', name: 'admin_user_toggle', methods: ['POST'])]
-    public function toggle(int $id, UserRepository $repo, EntityManagerInterface $em): Response
+    public function toggle(int $id, Request $request, UserRepository $repo, EntityManagerInterface $em): Response
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $userId   = $request->getSession()->get('user_id');
+        $userRole = $request->getSession()->get('user_role');
+
+        if (!$userId || $userRole !== 'ADMIN') {
+            return $this->redirectToRoute('user_login');
+        }
 
         $user = $repo->find($id);
         if (!$user) {
@@ -44,7 +54,7 @@ class AdminUserController extends AbstractController
         $status = $user->isActivated() ? 'reactivated' : 'deactivated';
         $this->addFlash('success', "User {$user->getName()} has been {$status}.");
 
-        return $this->redirectToRoute('admin_user_index');
+        return $this->redirectToRoute('admin_manage_users');
     }
 
     // ── DELETE ─────────────────────────────────────────────────────────
@@ -52,7 +62,12 @@ class AdminUserController extends AbstractController
     #[Route('/{id}/delete', name: 'admin_user_delete', methods: ['POST'])]
     public function delete(int $id, UserRepository $repo, EntityManagerInterface $em, Request $request): Response
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $userId   = $request->getSession()->get('user_id');
+        $userRole = $request->getSession()->get('user_role');
+
+        if (!$userId || $userRole !== 'ADMIN') {
+            return $this->redirectToRoute('user_login');
+        }
 
         $user = $repo->find($id);
         if (!$user) {
@@ -65,15 +80,20 @@ class AdminUserController extends AbstractController
             $this->addFlash('success', 'User deleted successfully.');
         }
 
-        return $this->redirectToRoute('admin_user_index');
+        return $this->redirectToRoute('admin_manage_users');
     }
 
     // ── VIEW DETAILS ───────────────────────────────────────────────────
 
     #[Route('/{id}', name: 'admin_user_show', methods: ['GET'])]
-    public function show(int $id, UserRepository $repo): Response
+    public function show(int $id, Request $request, UserRepository $repo): Response
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $userId   = $request->getSession()->get('user_id');
+        $userRole = $request->getSession()->get('user_role');
+
+        if (!$userId || $userRole !== 'ADMIN') {
+            return $this->redirectToRoute('user_login');
+        }
 
         $user = $repo->find($id);
         if (!$user) {

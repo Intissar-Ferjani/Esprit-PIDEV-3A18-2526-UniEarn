@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn Admin – Forum Management</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    {% include 'backOffice/_sidebar.html.twig' with {'active': 'forum'} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">📝 Forum Management</span>
+            <div class="top-bar-right">
+                <a href="{{ path('admin_dashboard') }}" style="color:#2563EB;text-decoration:none;font-size:13px;">← Back to Dashboard</a>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            {# ── Search bar ── #}
+            <div style="background:white;padding:16px 24px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.1);display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <form method="get" action="{{ path('admin_forum_index') }}" style="display:flex;gap:10px;flex:1;max-width:500px;">
+                    <input type="text" name="q" value="{{ searchQuery | default('') }}" 
+                           placeholder="Search by title, content or author..." 
+                           style="flex:1;padding:10px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;transition:border-color .2s;">
+                    <button type="submit" class="btn-edit" style="background:#2563EB;">Search</button>
+                    {% if searchQuery %}
+                        <a href="{{ path('admin_forum_index') }}" class="btn-edit" style="background:#64748b;text-decoration:none;">Clear</a>
+                    {% endif %}
+                </form>
+                <div id="resultCount" style="font-size:13px;color:#64748b;font-weight:500;">
+                    {{ postsData | length }} post{{ postsData | length != 1 ? 's' : '' }} found
+                </div>
+            </div>
+
+            {# ── Table ── #}
+            <div class="content-section" style="padding:0;overflow:hidden;">
+                <table id="postsTable" style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">#</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Title</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Content</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Category</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Author</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Date</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in postsData %}
+                        <tr class="post-row"
+                            style="border-bottom:1px solid #e2e8f0;transition:background .15s;">
+                            <td style="padding:12px 16px;color:#64748b;font-size:13px;">{{ item.post.postId }}</td>
+                            <td style="padding:12px 16px;font-weight:600;color:#1e293b;font-size:14px;">{{ item.post.title }}</td>
+                            <td style="padding:12px 16px;color:#64748b;font-size:13px;" title="{{ item.post.content }}">
+                                {{ item.post.content | length > 50 ? item.post.content | slice(0, 50) ~ '...' : item.post.content }}
+                            </td>
+                            <td style="padding:12px 16px;">
+                                <span class="pill pill-blue" style="font-size:11px;">{{ item.post.category }}</span>
+                            </td>
+                            <td style="padding:12px 16px;color:#64748b;font-size:13px;">{{ item.authorName }}</td>
+                            <td style="padding:12px 16px;color:#64748b;font-size:13px;">{{ item.post.createdAt | date('Y-m-d H:i') }}</td>
+                            <td style="padding:12px 16px;">
+                                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                    <a href="{{ path('admin_forum_post_show', {id: item.post.postId}) }}"
+                                       class="btn-edit" style="padding:5px 12px;font-size:12px;background:#2563EB;">View</a>
+
+                                    <form method="post" action="{{ path('admin_forum_post_delete', {id: item.post.postId}) }}"
+                                          onsubmit="return confirm('Delete this post? This cannot be undone and will delete all related comments.')"
+                                          style="display:inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_post_' ~ item.post.postId) }}">
+                                        <button type="submit"
+                                                class="btn-edit"
+                                                style="padding:5px 12px;font-size:12px;background:#ef4444;">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;">
+                                No posts found in the forum.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+</div>
+</body>
+</html>
+</body>
+</html>

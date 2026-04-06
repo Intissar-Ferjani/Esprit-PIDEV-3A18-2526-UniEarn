@@ -118,7 +118,7 @@ class AuthController extends AbstractController
             $this->addFlash('success', 'Welcome back, ' . $user->getName() . '!');
 
             if ($user->getRole() === 'ADMIN') {
-                return $this->redirectToRoute('admin_user_index');
+                return $this->redirectToRoute('admin_manage_users');
             }
             if ($user->getRole() === 'CLIENT') {
                 return $this->redirectToRoute('client_dashboard');

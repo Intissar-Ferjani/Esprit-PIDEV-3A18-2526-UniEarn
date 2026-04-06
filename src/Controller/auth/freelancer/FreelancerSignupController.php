@@ -191,7 +191,7 @@ class FreelancerSignupController extends AbstractController
             $this->finalizeLogin($request, $user);
 
             $this->addFlash('success', 'Welcome to UniEarn, ' . $user->getName() . '! Your freelancer profile is ready.');
-            return $this->redirectToRoute('user_dashboard');
+            return $this->redirectToRoute('freelancer_dashboard');
         }
 
         return $this->render('frontOffice/freelancer/auth/portfolio-information.html.twig', ['form' => $form, 'user' => $user]);
@@ -210,7 +210,7 @@ class FreelancerSignupController extends AbstractController
         $this->finalizeLogin($request, $user);
 
         $this->addFlash('success', 'Welcome to UniEarn, ' . $user->getName() . '! You can add your portfolio later from your profile.');
-        return $this->redirectToRoute('user_dashboard');
+        return $this->redirectToRoute('freelancer_dashboard');
     }
 
     // ── Helper ─────────────────────────────────────────────────────────

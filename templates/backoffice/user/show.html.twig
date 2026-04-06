@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn Admin – User #{{ user.idUser }}</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    {% include 'backOffice/_sidebar.html.twig' with {'active': 'users'} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">👤 User Details</span>
+            <div class="top-bar-right">
+                <a href="{{ path('admin_manage_users') }}" style="color:#2563EB;text-decoration:none;font-size:13px;">← Back to Users</a>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+
+            <div class="profile-header-card" style="max-width:600px;">
+                <div class="profile-banner"></div>
+                <div class="profile-header-body" style="padding:0 28px 28px;">
+
+                    <div class="avatar-wrap">
+                        {% if user.profilePicturePath %}
+                            <img src="{{ asset(user.profilePicturePath) }}" class="profile-avatar" alt="Avatar">
+                        {% else %}
+                            <div style="width:100px;height:100px;border-radius:50%;background:#e8f0fe;border:4px solid white;display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 2px 8px rgba(0,0,0,.14);">
+                                {{ user.role == 'CLIENT' ? '👤' : '💼' }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="profile-info">
+                        <div class="profile-name">{{ user.name }}</div>
+                        <div class="profile-email">{{ user.email }}</div>
+                        <div class="profile-pills">
+                            {% if user.role == 'FREELANCER' %}
+                                <span class="pill pill-blue">💼 {{ user.role }}</span>
+                            {% elseif user.role == 'CLIENT' %}
+                                <span class="pill pill-green">👤 {{ user.role }}</span>
+                            {% else %}
+                                <span class="pill pill-purple">🛡️ {{ user.role }}</span>
+                            {% endif %}
+                            {% if user.isActivated %}
+                                <span class="pill pill-green">✅ Active</span>
+                            {% else %}
+                                <span style="background:#fee2e2;color:#991b1b;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;">🚫 Inactive</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Extra details for freelancer #}
+            {% if freelancer %}
+            <div class="content-section" style="max-width:600px;margin-top:20px;">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon-badge">💼</div>
+                        <span class="section-title">Freelancer Details</span>
+                    </div>
+                </div>
+                <hr class="section-divider">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                        <p class="field-label">Hourly Rate</p>
+                        <p style="font-weight:600;color:#1e293b;">{{ freelancer.pricePerHour }} TND/hr</p>
+                    </div>
+                    <div>
+                        <p class="field-label">Rating</p>
+                        <p style="font-weight:600;color:#1e293b;">⭐ {{ freelancer.rating | number_format(1) }}</p>
+                    </div>
+                    <div>
+                        <p class="field-label">Status</p>
+                        <p style="font-weight:600;color:#1e293b;">{{ freelancer.status | capitalize }}</p>
+                    </div>
+                    <div>
+                        <p class="field-label">Verification</p>
+                        <p style="font-weight:600;color:#1e293b;">{{ freelancer.verificationStatus | capitalize }}</p>
+                    </div>
+                </div>
+                {% if freelancer.skillsArray is not empty %}
+                <div style="margin-top:16px;">
+                    <p class="field-label">Skills</p>
+                    <div class="skills-flow" style="margin-top:6px;">
+                        {% for skill in freelancer.skillsArray %}
+                            <span class="tag">{{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {# Extra details for client #}
+            {% if client %}
+            <div class="content-section" style="max-width:600px;margin-top:20px;">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon-badge">👤</div>
+                        <span class="section-title">Client Details</span>
+                    </div>
+                </div>
+                <hr class="section-divider">
+                <div>
+                    <p class="field-label">Balance</p>
+                    <p style="font-weight:600;color:#1e293b;">{{ client.amount ?? '0.00' }} TND</p>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+</body>
+</html>
