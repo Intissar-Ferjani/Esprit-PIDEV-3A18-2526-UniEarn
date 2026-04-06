@@ -15,7 +15,7 @@
         <a href="#" class="nav-item {{ active == 'projects' ? 'active' : '' }}">
             📋 <span>My Projects</span>
         </a>
-        <a href="#" class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
+        <a href="{{ path('client_contract_index') }}" class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
             📄 <span>My Contracts</span>
         </a>
         <a href="#" class="nav-item {{ active == 'proposals' ? 'active' : '' }}">

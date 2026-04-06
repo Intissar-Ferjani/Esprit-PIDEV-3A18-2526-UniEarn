@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn Admin – Template Details</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    {% include 'backOffice/_sidebar.html.twig' with {'active': 'contracts'} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">📄 Template Details</span>
+            <div class="top-bar-right">
+                <a href="{{ path('admin_contract_template_index') }}" style="color:#2563EB;text-decoration:none;font-size:13px;">← Back to Templates</a>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            <div class="content-section" style="max-width:700px;">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <span class="section-icon">📄</span>
+                        <h3 class="section-title">{{ template.title }}</h3>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <a href="{{ path('admin_contract_template_edit', {id: template.idContractTemplate}) }}"
+                           class="btn-edit" style="padding:6px 16px;font-size:12px;background:#f59e0b;">Edit</a>
+                        <form method="post" action="{{ path('admin_contract_template_delete', {id: template.idContractTemplate}) }}"
+                              onsubmit="return confirm('Delete this template?')" style="display:inline;">
+                            <button type="submit" class="btn-edit" style="padding:6px 16px;font-size:12px;background:#ef4444;">Delete</button>
+                        </form>
+                    </div>
+                </div>
+                <hr class="section-divider">
+
+                <div style="display:flex;flex-direction:column;gap:16px;">
+                    <div>
+                        <span class="field-label">Type</span>
+                        <span style="background:#e8f0fe;color:#2563EB;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;">
+                            {{ template.contractType }}
+                        </span>
+                    </div>
+
+                    {% if template.description %}
+                    <div>
+                        <span class="field-label">Description</span>
+                        <p style="color:#374151;font-size:14px;margin:4px 0 0;">{{ template.description }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div>
+                        <span class="field-label">Content</span>
+                        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-top:4px;white-space:pre-wrap;font-size:13px;color:#374151;line-height:1.6;">{{ template.content }}</div>
+                    </div>
+
+                    <div style="display:flex;gap:24px;color:#64748b;font-size:12px;margin-top:8px;">
+                        <span>Created: {{ template.createdAt|date('M d, Y H:i') }}</span>
+                        <span>Updated: {{ template.updatedAt|date('M d, Y H:i') }}</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

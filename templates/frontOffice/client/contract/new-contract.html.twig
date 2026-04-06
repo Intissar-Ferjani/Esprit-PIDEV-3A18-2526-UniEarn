@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn – New Contract</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    <div class="dashboard-main" style="margin:0 auto;max-width:750px;padding:32px;">
+        <div class="top-bar">
+            <span class="top-bar-title">📝 Create Contract</span>
+            <div class="top-bar-right">
+                <a href="{{ path('client_contract_templates') }}" style="color:#2563EB;text-decoration:none;font-size:13px;">← Back to Templates</a>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            <div class="form-card">
+                <div class="form-card-header">
+                    <h2>📝 New Contract</h2>
+                    <p>Creating from template: {{ template.title }}</p>
+                </div>
+
+                <div class="form-card-body">
+                    {{ form_start(form, {'attr': {'class': 'contract-form', 'novalidate': 'novalidate'}}) }}
+
+                        <div class="form-group">
+                            <label><span class="field-icon">🏷️</span> Contract Title</label>
+                            {{ form_widget(form.title, {'attr': {'class': 'form-input', 'placeholder': 'e.g. Website Redesign Project'}}) }}
+                            {{ form_errors(form.title) }}
+                            <div class="form-hint">Between 3 and 255 characters</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label><span class="field-icon">👤</span> Freelancer</label>
+                            {{ form_widget(form.freelancer, {'attr': {'class': 'form-input'}}) }}
+                            {{ form_errors(form.freelancer) }}
+                            <div class="form-hint">Select the freelancer you want to work with</div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label><span class="field-icon">📅</span> Start Date</label>
+                                {{ form_widget(form.startDate, {'attr': {'class': 'form-input'}}) }}
+                                {{ form_errors(form.startDate) }}
+                            </div>
+                            <div class="form-group">
+                                <label><span class="field-icon">🏁</span> End Date</label>
+                                {{ form_widget(form.endDate, {'attr': {'class': 'form-input'}}) }}
+                                {{ form_errors(form.endDate) }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label><span class="field-icon">💰</span> Amount (USD)</label>
+                            {{ form_widget(form.amount, {'attr': {'class': 'form-input', 'placeholder': '0.00'}}) }}
+                            {{ form_errors(form.amount) }}
+                            <div class="form-hint">Must be a positive value</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label><span class="field-icon">📄</span> Contract Content</label>
+                            {{ form_widget(form.content, {'attr': {'class': 'form-input', 'placeholder': 'Contract details, clauses and terms...', 'rows': 10}}) }}
+                            {{ form_errors(form.content) }}
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn-submit">✅ Create Contract</button>
+                            <a href="{{ path('client_contract_templates') }}" class="btn-cancel">Cancel</a>
+                        </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

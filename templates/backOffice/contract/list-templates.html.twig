@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn Admin – Contract Templates</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    {% include 'backOffice/_sidebar.html.twig' with {'active': 'contracts'} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">📝 Contract Templates</span>
+            <div class="top-bar-right">
+                <a href="{{ path('admin_dashboard') }}" style="color:#2563EB;text-decoration:none;font-size:13px;">← Back to Dashboard</a>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            {# ── Action Bar ── #}
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <span style="color:#64748b;font-size:14px;">{{ templates|length }} template{{ templates|length != 1 ? 's' : '' }}</span>
+                <a href="{{ path('admin_contract_template_new') }}" class="btn-edit" style="padding:8px 20px;font-size:13px;">
+                    ➕ New Template
+                </a>
+            </div>
+
+            {# ── Table ── #}
+            <div class="content-section" style="padding:0;overflow:hidden;">
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">#</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Title</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Type</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Created</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for tpl in templates %}
+                        <tr style="border-bottom:1px solid #e2e8f0;transition:background .15s;"
+                            onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background=''">
+                            <td style="padding:12px 16px;color:#64748b;font-size:13px;">{{ tpl.idContractTemplate }}</td>
+                            <td style="padding:12px 16px;font-weight:600;color:#1e293b;font-size:14px;">{{ tpl.title }}</td>
+                            <td style="padding:12px 16px;">
+                                <span style="background:#e8f0fe;color:#2563EB;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;">
+                                    {{ tpl.contractType }}
+                                </span>
+                            </td>
+                            <td style="padding:12px 16px;color:#64748b;font-size:13px;">{{ tpl.createdAt|date('M d, Y') }}</td>
+                            <td style="padding:12px 16px;">
+                                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                    <a href="{{ path('admin_contract_template_show', {id: tpl.idContractTemplate}) }}"
+                                       class="btn-edit" style="padding:5px 12px;font-size:12px;">View</a>
+                                    <a href="{{ path('admin_contract_template_edit', {id: tpl.idContractTemplate}) }}"
+                                       class="btn-edit" style="padding:5px 12px;font-size:12px;background:#f59e0b;">Edit</a>
+                                    <form method="post" action="{{ path('admin_contract_template_delete', {id: tpl.idContractTemplate}) }}"
+                                          onsubmit="return confirm('Delete this template? This cannot be undone.')"
+                                          style="display:inline;">
+                                        <button type="submit" class="btn-edit"
+                                                style="padding:5px 12px;font-size:12px;background:#ef4444;">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" style="text-align:center;padding:40px;color:#94a3b8;">
+                                No templates found. Create your first one!
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

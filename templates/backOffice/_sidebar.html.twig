@@ -13,8 +13,11 @@
            class="nav-item {{ active == 'users' ? 'active' : '' }}">
             👥 <span>Manage Users</span>
         </a>
-        <a href="#" class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
-            📝 <span>Manage Contracts</span>
+        <a href="{{ path('admin_contract_template_index') }}" class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
+            📝 <span>Contract Templates</span>
+        </a>
+        <a href="{{ path('admin_contract_index') }}" class="nav-item {{ active == 'all-contracts' ? 'active' : '' }}">
+            📋 <span>All Contracts</span>
         </a>
         <a href="#" class="nav-item {{ active == 'reports' ? 'active' : '' }}">
             📊 <span>Reports</span>

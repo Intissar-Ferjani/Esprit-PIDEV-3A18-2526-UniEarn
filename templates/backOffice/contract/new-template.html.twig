@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn Admin – New Contract Template</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    {% include 'backOffice/_sidebar.html.twig' with {'active': 'contracts'} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">➕ New Contract Template</span>
+            <div class="top-bar-right">
+                <a href="{{ path('admin_contract_template_index') }}" style="color:#2563EB;text-decoration:none;font-size:13px;">← Back to Templates</a>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            <div class="form-card">
+                <div class="form-card-header">
+                    <h2>📝 Create Template</h2>
+                    <p>Fill in the details below to create a new contract template</p>
+                </div>
+
+                <div class="form-card-body">
+                    {{ form_start(form, {'attr': {'class': 'contract-form', 'novalidate': 'novalidate'}}) }}
+
+                        <div class="form-group">
+                            <label><span class="field-icon">🏷️</span> Template Title</label>
+                            {{ form_widget(form.title, {'attr': {'class': 'form-input', 'placeholder': 'e.g. Freelance Web Development Agreement'}}) }}
+                            {{ form_errors(form.title) }}
+                            <div class="form-hint">Between 3 and 255 characters</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label><span class="field-icon">📁</span> Contract Type</label>
+                            {{ form_widget(form.contractType, {'attr': {'class': 'form-input'}}) }}
+                            {{ form_errors(form.contractType) }}
+                        </div>
+
+                        <div class="form-group">
+                            <label><span class="field-icon">📋</span> Description</label>
+                            {{ form_widget(form.description, {'attr': {'class': 'form-input', 'placeholder': 'Brief description of when to use this template...', 'rows': 3}}) }}
+                            {{ form_errors(form.description) }}
+                            <div class="form-hint">Optional — max 1000 characters</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label><span class="field-icon">📄</span> Contract Content</label>
+                            {{ form_widget(form.content, {'attr': {'class': 'form-input', 'placeholder': 'Write the contract clauses, terms and conditions here...', 'rows': 10}}) }}
+                            {{ form_errors(form.content) }}
+                            <div class="form-hint">Minimum 10 characters — this will be the default content for contracts using this template</div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn-submit">✅ Create Template</button>
+                            <a href="{{ path('admin_contract_template_index') }}" class="btn-cancel">Cancel</a>
+                        </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>
