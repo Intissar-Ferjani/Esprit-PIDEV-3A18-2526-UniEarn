@@ -22,6 +22,12 @@
            class="nav-item {{ active == 'portfolio' ? 'active' : '' }}">
             💼 <span>Portfolio</span>
         </a>
+        <a href="{{ path('app_application_index') }}" class="nav-item {{ active == 'applications' ? 'active' : '' }}">
+            📝 <span>My Applications</span>
+        </a>
+        <a href="{{ path('app_evaluation_index') }}" class="nav-item {{ active == 'evaluations' ? 'active' : '' }}">
+            ⭐ <span>Evaluations</span>
+        </a>
         <a href="#" class="nav-item {{ active == 'messages' ? 'active' : '' }}">
             💬 <span>Messages</span>
         </a>

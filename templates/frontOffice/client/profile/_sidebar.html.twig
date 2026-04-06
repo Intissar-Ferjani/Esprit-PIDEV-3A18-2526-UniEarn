@@ -12,14 +12,11 @@
         <a href="#" class="nav-item {{ active == 'freelancers' ? 'active' : '' }}">
             👥 <span>Browse Freelancers</span>
         </a>
-        <a href="#" class="nav-item {{ active == 'projects' ? 'active' : '' }}">
-            📋 <span>My Projects</span>
+        <a href="{{ path('app_application_index') }}" class="nav-item {{ active == 'applications' ? 'active' : '' }}">
+            📋 <span>Manage Applications</span>
         </a>
-        <a href="#" class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
-            📄 <span>My Contracts</span>
-        </a>
-        <a href="#" class="nav-item {{ active == 'proposals' ? 'active' : '' }}">
-            ⭐ <span>Reviews & Proposals</span>
+        <a href="{{ path('app_evaluation_index') }}" class="nav-item {{ active == 'evaluations' ? 'active' : '' }}">
+            ⭐ <span>Evaluations</span>
         </a>
         <a href="#" class="nav-item {{ active == 'messages' ? 'active' : '' }}">
             💬 <span>Messages</span>

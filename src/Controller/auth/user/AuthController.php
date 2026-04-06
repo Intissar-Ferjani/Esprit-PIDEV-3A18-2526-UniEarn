@@ -97,7 +97,22 @@ class AuthController extends AbstractController
                 $this->addFlash('error', 'Your account has been deactivated.');
                 return $this->render('frontOffice/user/auth/login.html.twig', ['last_email' => $email]);
             }
-            if ($user->getPassword() !== $password) {
+            $dbPassword = $user->getPassword();
+            $isMatch = false;
+
+            // 1. Try hashed comparison (supporting $2a$ or $2y$ prefixes)
+            if (str_starts_with($dbPassword, '$2')) {
+                if (password_verify($password, $dbPassword)) {
+                    $isMatch = true;
+                }
+            } 
+            
+            // 2. Fallback to plain text comparison (for legacy users)
+            if (!$isMatch && $dbPassword === $password) {
+                $isMatch = true;
+            }
+
+            if (!$isMatch) {
                 $this->addFlash('error', 'Incorrect password.');
                 return $this->render('frontOffice/user/auth/login.html.twig', ['last_email' => $email]);
             }

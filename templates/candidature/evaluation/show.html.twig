@@ -1,0 +1,141 @@
+{% extends 'candidature/layout.html.twig' %}
+
+{% block title %}Evaluation Details{% endblock %}
+{% block page_title %}Evaluation Details{% endblock %}
+
+{% block content %}
+<style>
+    .premium-eval-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        padding: 40px;
+        margin: 20px auto;
+        max-width: 800px;
+        position: relative;
+        overflow: hidden;
+    }
+    .premium-eval-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 6px;
+        background: linear-gradient(90deg, #f59e0b, #fbbf24, #f59e0b);
+    }
+    .eval-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .star-display {
+        font-size: 40px;
+        letter-spacing: 5px;
+        background: -webkit-linear-gradient(45deg, #fbbf24, #f59e0b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: inline-block;
+        margin-bottom: 10px;
+        text-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+    }
+    .eval-meta {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 30px;
+    }
+    .eval-meta span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: #f8fafc;
+        padding: 6px 12px;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+    }
+    .comment-bubble {
+        background: #f1f5f9;
+        border-radius: 16px;
+        padding: 30px;
+        font-size: 16px;
+        line-height: 1.8;
+        color: #334155;
+        position: relative;
+        margin-bottom: 40px;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .comment-bubble::before {
+        content: '"';
+        position: absolute;
+        top: 10px; left: 15px;
+        font-size: 60px;
+        color: #cbd5e1;
+        font-family: Georgia, serif;
+        opacity: 0.5;
+        line-height: 1;
+    }
+    .btn-premium {
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+        color: white;
+    }
+    .btn-premium:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        color: white;
+    }
+    .btn-back { background: #64748b; }
+    .btn-edit { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .btn-delete { background: linear-gradient(135deg, #ef4444, #dc2626); }
+</style>
+
+<div class="content-section">
+    <div class="premium-eval-card">
+        
+        <div class="eval-header">
+            <h3 style="color: #1e293b; font-size: 24px; font-weight: 800; margin-bottom: 15px;">Evaluation</h3>
+            <div class="star-display">
+                {% for i in 1..5 %}
+                    {% if i <= evaluation.rating %}★{% else %}☆{% endif %}
+                {% endfor %}
+            </div>
+            <div style="font-size: 18px; font-weight: 700; color: #475569;">{{ evaluation.rating }} out of 5</div>
+        </div>
+
+        <div class="eval-meta">
+            {% if evaluation.projectId %}
+                <span title="Project ID">📁 Project #{{ evaluation.projectId }}</span>
+            {% endif %}
+            <span title="Date Submitted">📅 {{ evaluation.createdAt|date('M d, Y') }}</span>
+        </div>
+
+        <div class="comment-bubble">
+            <div style="position: relative; z-index: 1;">
+                {{ evaluation.comment|nl2br }}
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 15px; justify-content: center; border-top: 1px solid #f1f5f9; padding-top: 25px;">
+            <a href="{{ path('app_evaluation_index') }}" class="btn-premium btn-back">
+                ⬅ Back to Reviews
+            </a>
+            
+            {% if user is defined and user is not null and evaluation.evaluator and evaluation.evaluator.idUser == user.idUser %}
+                <a href="{{ path('app_evaluation_edit', {'id': evaluation.id}) }}" class="btn-premium btn-edit">
+                    ✍ Edit Review
+                </a>
+            {% endif %}
+        </div>
+        
+    </div>
+</div>
+{% endblock %}
