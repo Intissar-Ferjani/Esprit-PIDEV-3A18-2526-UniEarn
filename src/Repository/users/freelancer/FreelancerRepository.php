@@ -25,6 +25,7 @@ class FreelancerRepository extends ServiceEntityRepository
             ->join('f.user', 'u')
             ->where('u.idUser = :id')
             ->setParameter('id', $userId)
+            ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
     }
@@ -34,7 +35,8 @@ class FreelancerRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('f')
             ->join('f.user', 'u')
             ->addSelect('u')
-            ->orderBy('f.idFreelancer', 'DESC')
+            ->where('u.activated = true')
+            ->orderBy('f.rating', 'DESC')
             ->getQuery()
             ->getResult();
     }

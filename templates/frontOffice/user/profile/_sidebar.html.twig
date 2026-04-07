@@ -1,0 +1,125 @@
+{# templates/_sidebar.html.twig — works for all roles #}
+{% set role = app.session.get('user_role') %}
+
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <img src="{{ asset('images/logoUniEarn.png') }}" alt="UniEarn" class="sidebar-logo-img">
+        <span class="sidebar-logo-text" style="{{ role == 'ADMIN' ? 'color:#e53e3e;' : '' }}">
+            {{ role == 'ADMIN' ? 'Admin' : 'UniEarn' }}
+        </span>
+    </div>
+
+    <nav class="sidebar-nav">
+
+        {# ── Dashboard (all roles) ── #}
+        {% if role == 'ADMIN' %}
+            <a href="{{ path('admin_dashboard') }}"
+               class="nav-item {{ active == 'dashboard' ? 'active' : '' }}">
+                🏠 <span>Dashboard</span>
+            </a>
+        {% elseif role == 'CLIENT' %}
+            <a href="{{ path('client_dashboard') }}"
+               class="nav-item {{ active == 'dashboard' ? 'active' : '' }}">
+                🏠 <span>Dashboard</span>
+            </a>
+        {% elseif role == 'FREELANCER' %}
+            <a href="{{ path('freelancer_dashboard') }}"
+               class="nav-item {{ active == 'dashboard' ? 'active' : '' }}">
+                🏠 <span>Dashboard</span>
+            </a>
+        {% endif %}
+
+        {# ── ADMIN tabs ── #}
+        {% if role == 'ADMIN' %}
+            <a href="{{ path('admin_manage_users') }}"
+               class="nav-item {{ active == 'users' ? 'active' : '' }}">
+                👥 <span>Manage Users</span>
+            </a>
+            <a href="{{ path('admin_forum_index') }}"
+               class="nav-item {{ active == 'forum' ? 'active' : '' }}">
+                📝 <span>Forum Management</span>
+            </a>
+            <a href="{{ path('admin_contract_template_index') }}"
+               class="nav-item {{ active == 'contract_templates' ? 'active' : '' }}">
+                📝 <span>Contract Templates</span>
+            </a>
+            <a href="{{ path('admin_contract_index') }}"
+               class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
+                📋 <span>All Contracts</span>
+            </a>
+            <a href="#" class="nav-item {{ active == 'reports' ? 'active' : '' }}">
+                📊 <span>Reports</span>
+            </a>
+        {% endif %}
+
+        {# ── CLIENT tabs ── #}
+        {% if role == 'CLIENT' %}
+            <a href="{{ path('client_browse_freelancers') }}"
+               class="nav-item {{ active == 'freelancers' ? 'active' : '' }}">
+                👥 <span>Browse Freelancers</span>
+            </a>
+            <a href="{{ path('app_application_index') }}"
+               class="nav-item {{ active == 'applications' ? 'active' : '' }}">
+                📋 <span>Manage Applications</span>
+            </a>
+            <a href="{{ path('app_evaluation_index') }}"
+               class="nav-item {{ active == 'evaluations' ? 'active' : '' }}">
+                ⭐ <span>Evaluations</span>
+            </a>
+            <a href="{{ path('client_contract_index') }}"
+               class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
+                📄 <span>My Contracts</span>
+            </a>
+            <a href="#" class="nav-item {{ active == 'messages' ? 'active' : '' }}">
+                💬 <span>Messages</span>
+            </a>
+            <a href="#" class="nav-item {{ active == 'payments' ? 'active' : '' }}">
+                💳 <span>Payments</span>
+            </a>
+        {% endif %}
+
+        {# ── FREELANCER tabs ── #}
+        {% if role == 'FREELANCER' %}
+            <a href="#" class="nav-item {{ active == 'projects' ? 'active' : '' }}">
+                📋 <span>Available Projects</span>
+            </a>
+            <a href="{{ path('app_application_index') }}"
+               class="nav-item {{ active == 'applications' ? 'active' : '' }}">
+                📋 <span>My Applications</span>
+            </a>
+            <a href="{{ path('freelancer_contract_index') }}"
+               class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
+                📄 <span>My Contracts</span>
+            </a>
+            <a href="{{ path('app_evaluation_index') }}"
+               class="nav-item {{ active == 'evaluations' ? 'active' : '' }}">
+                ⭐ <span>Evaluations</span>
+            </a>
+            <a href="#" class="nav-item {{ active == 'tasks' ? 'active' : '' }}">
+                📝 <span>Task Board</span>
+            </a>
+            <a href="{{ path('freelancer_portfolio_page') }}"
+               class="nav-item {{ active == 'portfolio' ? 'active' : '' }}">
+                💼 <span>Portfolio</span>
+            </a>
+            <a href="{{ path('freelancer_forum') }}"
+               class="nav-item {{ active == 'forum' ? 'active' : '' }}">
+                💬 <span>Community Forum</span>
+            </a>
+            <a href="#" class="nav-item {{ active == 'messages' ? 'active' : '' }}">
+                💬 <span>Messages</span>
+            </a>
+            <a href="#" class="nav-item {{ active == 'payments' ? 'active' : '' }}">
+                💳 <span>Payments</span>
+            </a>
+        {% endif %}
+
+    </nav>
+
+    <div class="sidebar-bottom">
+        <hr class="sidebar-divider">
+        <a href="{{ path('user_logout') }}" class="nav-item nav-logout">
+            🚪 <span>Logout</span>
+        </a>
+    </div>
+</aside>

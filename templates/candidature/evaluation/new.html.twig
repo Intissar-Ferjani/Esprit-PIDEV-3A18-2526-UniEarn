@@ -1,0 +1,108 @@
+{% extends 'candidature/layout.html.twig' %}
+
+{% block title %}New Evaluation{% endblock %}
+{% block page_title %}New Evaluation{% endblock %}
+
+{% block content %}
+<style>
+    .premium-eval-container {
+        max-width: 600px; 
+        margin: 40px auto; 
+        background: #ffffff; 
+        padding: 40px; 
+        border-radius: 20px; 
+        box-shadow: 0 20px 40px rgba(245, 158, 11, 0.08);
+        position: relative;
+    }
+    .premium-eval-container::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 6px;
+        background: linear-gradient(90deg, #f59e0b, #fbbf24, #fcd34d);
+        border-radius: 20px 20px 0 0;
+    }
+    .form-input {
+        width: 100%; 
+        padding: 14px 16px; 
+        border: 2px solid #e2e8f0; 
+        border-radius: 10px; 
+        box-sizing: border-box;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        background: #f8fafc;
+        color: #1e293b;
+    }
+    .form-input:focus {
+        border-color: #f59e0b;
+        background: #ffffff;
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+    }
+    .form-label {
+        display: block; 
+        font-weight: 700; 
+        color: #334155; 
+        margin-bottom: 8px;
+        font-size: 14px;
+        letter-spacing: 0.5px;
+    }
+    .submit-btn-premium {
+        width: 100%; 
+        padding: 16px; 
+        font-size: 16px; 
+        font-weight: 700; 
+        border-radius: 12px; 
+        border: none; 
+        cursor: pointer; 
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+    }
+    .submit-btn-premium:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+    }
+</style>
+
+<div class="premium-eval-container">
+    <div style="text-align: center; margin-bottom: 35px;">
+        <span style="font-size: 40px; display: block; margin-bottom: 15px;">⭐</span>
+        <h3 style="margin: 0; font-size: 28px; font-weight: 800; color: #0f172a;">Submit Evaluation</h3>
+        <p style="margin: 8px 0 0; color: #64748b; font-size: 15px;">Leave a rating and comment about your experience.</p>
+    </div>
+
+    {{ form_start(form, {'attr': {'class': 'form'}}) }}
+        
+        {# Render hidden fields automatically #}
+        <div style="display: none;">
+            {{ form_widget(form.evaluatedId) }}
+            {{ form_widget(form.projectId) }}
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <label class="form-label">Rating</label>
+            {{ form_widget(form.rating, {'attr': {'class': 'form-input'}}) }}
+            <div style="color: #ef4444; font-size: 12px; margin-top: 6px; font-weight: 500;">{{ form_errors(form.rating) }}</div>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+            <label class="form-label">Your Comment</label>
+            {{ form_widget(form.comment, {'attr': {'class': 'form-input', 'rows': '5', 'placeholder': 'Share details about the collaboration...'}}) }}
+            <div style="color: #ef4444; font-size: 12px; margin-top: 6px; font-weight: 500;">{{ form_errors(form.comment) }}</div>
+        </div>
+
+        <button class="submit-btn-premium">
+            Submit Evaluation
+        </button>
+    {{ form_end(form) }}
+
+    <div style="margin-top: 30px; text-align: center;">
+        <a href="{{ path('app_application_index') }}" style="color: #64748b; font-size: 14px; text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+            ← Cancel and Return
+        </a>
+    </div>
+</div>
+
+
+{% endblock %}

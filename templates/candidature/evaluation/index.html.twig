@@ -1,0 +1,205 @@
+{% extends 'candidature/layout.html.twig' %}
+
+{% block title %}Evaluations{% endblock %}
+{% block page_title %}Evaluations{% endblock %}
+
+{% block content %}
+
+{# ─── Flash messages ────────────────────────────────────────────────── #}
+{% for label, messages in app.flashes %}
+    {% for msg in messages %}
+        <div style="padding:12px 18px; border-radius:8px; margin-bottom:14px; font-size:13px;
+                    background:{{ label == 'success' ? '#dcfce7' : '#fee2e2' }};
+                    color:{{ label == 'success' ? '#166534' : '#991b1b' }};">
+            {{ msg }}
+        </div>
+    {% endfor %}
+{% endfor %}
+
+{# ─── Header ─────────────────────────────────────────────────────────── #}
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+    <div>
+        <h2 style="margin:0; font-size:22px; font-weight:700; color:#1e293b;">⭐ Evaluations</h2>
+        <p style="margin:4px 0 0; color:#64748b; font-size:13px;">Manage the evaluations you've given and received.</p>
+    </div>
+</div>
+
+{# ─── Tab Bar ─────────────────────────────────────────────────────────── #}
+<div style="display:flex; gap:0; border-bottom:2px solid #e2e8f0; margin-bottom:0;">
+    <button id="tab-given" onclick="switchTab('given')"
+            style="padding:12px 24px; font-size:14px; font-weight:600; border:none; background:none;
+                   cursor:pointer; border-bottom:3px solid #4f46e5; color:#4f46e5; margin-bottom:-2px;">
+        📤 Given
+        <span style="background:#ede9fe; color:#6d28d9; padding:2px 8px; border-radius:12px; font-size:11px; margin-left:6px;">
+            {{ evaluationsGiven|length }}
+        </span>
+    </button>
+    <button id="tab-received" onclick="switchTab('received')"
+            style="padding:12px 24px; font-size:14px; font-weight:600; border:none; background:none;
+                   cursor:pointer; border-bottom:3px solid transparent; color:#64748b; margin-bottom:-2px;">
+        📥 Received
+        <span style="background:#dcfce7; color:#166534; padding:2px 8px; border-radius:12px; font-size:11px; margin-left:6px;">
+            {{ evaluationsReceived|length }}
+        </span>
+    </button>
+</div>
+
+{# ══════════════════════════════════════════
+   PANEL: Evaluations Given
+══════════════════════════════════════════ #}
+<div id="panel-given" class="content-section" style="border-top:none; border-radius:0 0 10px 10px;">
+
+    {% if evaluationsGiven is empty %}
+        <div class="empty-state">
+            <span class="empty-icon">✍</span>
+            <p class="empty-text">No evaluations given yet</p>
+            <p class="empty-subtext">Rate a freelancer or client after completing a project.</p>
+        </div>
+    {% else %}
+        <div style="overflow-y:auto; max-height:480px;">
+            <table class="table" style="width:100%; border-collapse:separate; border-spacing:0 8px;">
+                <thead style="position:sticky; top:0; background:#f8fafc; z-index:1;">
+                    <tr style="color:#718096; font-size:12px; text-transform:uppercase; letter-spacing:0.05em;">
+                        <th style="padding:10px 14px;">To</th>
+                        <th style="padding:10px 14px;">Rating</th>
+                        <th style="padding:10px 14px;">Project</th>
+                        <th style="padding:10px 14px;">Date</th>
+                        <th style="padding:10px 14px; text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for eval in evaluationsGiven %}
+                    <tr style="background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                        <td style="padding:12px 14px; font-weight:600; color:#1e293b;">
+                            {{ eval.evaluated.name ?? ('User #' ~ eval.evaluated.idUser) }}
+                        </td>
+                        <td style="padding:12px 14px;">
+                            <span style="color:#f59e0b; font-size:15px; letter-spacing:1px;">{% for i in 1..eval.rating %}★{% endfor %}{% for i in eval.rating..4 %}☆{% endfor %}</span>
+                            <span style="color:#94a3b8; font-size:11px;">({{ eval.rating }}/5)</span>
+                        </td>
+                        <td style="padding:12px 14px; color:#64748b; font-size:13px;">
+                            {{ eval.projectId ? '📁 #' ~ eval.projectId : '—' }}
+                        </td>
+                        <td style="padding:12px 14px; color:#94a3b8; font-size:13px;">
+                            {{ eval.createdAt|date('d M Y') }}
+                        </td>
+                        <td style="padding:12px 14px; text-align:right;">
+                            <div style="display:flex; justify-content:flex-end; gap:6px;">
+                                <a href="{{ path('app_evaluation_show', {'id': eval.id}) }}"
+                                   style="font-size:12px; font-weight:600; text-decoration:none; padding:4px 10px; border-radius:6px; background:#f1f5f9; color:#475569; transition:all 0.2s;"
+                                   onmouseover="this.style.background='#e2e8f0'; this.style.color='#1e293b'"
+                                   onmouseout="this.style.background='#f1f5f9'; this.style.color='#475569'">View</a>
+                                {% if user is not null and eval.evaluator and eval.evaluator.idUser == user.idUser %}
+                                    <form method="post" action="{{ path('app_evaluation_delete', {'id': eval.id}) }}"
+                                          style="display:inline;"
+                                          onsubmit="return confirm('Delete this evaluation permanently?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ eval.id) }}">
+                                        <button style="background:#f8fafc; border:none; color:#94a3b8; cursor:pointer;
+                                                       font-weight:600; font-size:12px; padding:4px 10px; border-radius:6px; transition:all 0.2s;"
+                                                onmouseover="this.style.background='#e2e8f0'; this.style.color='#64748b'"
+                                                onmouseout="this.style.background='#f8fafc'; this.style.color='#94a3b8'">🗑</button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+
+{# ══════════════════════════════════════════
+   PANEL: Evaluations Received
+══════════════════════════════════════════ #}
+<div id="panel-received" class="content-section" style="display:none; border-top:none; border-radius:0 0 10px 10px;">
+
+    {% if evaluationsReceived is empty %}
+        <div class="empty-state">
+            <span class="empty-icon">📭</span>
+            <p class="empty-text">No evaluations received yet</p>
+            <p class="empty-subtext">Complete projects to start receiving feedback.</p>
+        </div>
+    {% else %}
+        {# ── Mini stats bar ─────────────────────────────────────────── #}
+        {% set totalRating = 0 %}
+        {% for eval in evaluationsReceived %}{% set totalRating = totalRating + eval.rating %}{% endfor %}
+        {% set avgRating = evaluationsReceived|length > 0 ? (totalRating / evaluationsReceived|length)|round(1) : 0 %}
+
+        <div style="display:flex; gap:12px; margin-bottom:16px;">
+            <div style="background:#fef9c3; border-radius:10px; padding:10px 18px; display:flex; align-items:center; gap:10px;">
+                <span style="font-size:18px;">⭐</span>
+                <div>
+                    <div style="font-size:17px; font-weight:700; color:#b45309;">{{ avgRating }}</div>
+                    <div style="font-size:11px; color:#92400e;">Avg / 5</div>
+                </div>
+            </div>
+            <div style="background:#ede9fe; border-radius:10px; padding:10px 18px; display:flex; align-items:center; gap:10px;">
+                <span style="font-size:18px;">📝</span>
+                <div>
+                    <div style="font-size:17px; font-weight:700; color:#4f46e5;">{{ evaluationsReceived|length }}</div>
+                    <div style="font-size:11px; color:#6d28d9;">Total</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="overflow-y:auto; max-height:420px;">
+            <table class="table" style="width:100%; border-collapse:separate; border-spacing:0 8px;">
+                <thead style="position:sticky; top:0; background:#f8fafc; z-index:1;">
+                    <tr style="color:#718096; font-size:12px; text-transform:uppercase; letter-spacing:0.05em;">
+                        <th style="padding:10px 14px;">From</th>
+                        <th style="padding:10px 14px;">Rating</th>
+                        <th style="padding:10px 14px;">Project</th>
+                        <th style="padding:10px 14px;">Comment</th>
+                        <th style="padding:10px 14px;">Date</th>
+                        <th style="padding:10px 14px; text-align:right;">Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for eval in evaluationsReceived %}
+                    <tr style="background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                        <td style="padding:12px 14px; font-weight:600; color:#1e293b;">
+                            {{ eval.evaluator.name ?? ('User #' ~ eval.evaluator.idUser) }}
+                        </td>
+                        <td style="padding:12px 14px;">
+                            <span style="color:#f59e0b; font-size:15px; letter-spacing:1px;">{% for i in 1..eval.rating %}★{% endfor %}{% for i in eval.rating..4 %}☆{% endfor %}</span>
+                            <span style="color:#94a3b8; font-size:11px;">({{ eval.rating }}/5)</span>
+                        </td>
+                        <td style="padding:12px 14px; color:#64748b; font-size:13px;">
+                            {{ eval.projectId ? '📁 #' ~ eval.projectId : '—' }}
+                        </td>
+                        <td style="padding:12px 14px; color:#475569; font-size:13px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                            {{ eval.comment|length > 55 ? eval.comment|slice(0, 55) ~ '…' : eval.comment }}
+                        </td>
+                        <td style="padding:12px 14px; color:#94a3b8; font-size:13px;">
+                            {{ eval.createdAt|date('d M Y') }}
+                        </td>
+                        <td style="padding:12px 14px; text-align:right;">
+                            <a href="{{ path('app_evaluation_show', {'id': eval.id}) }}"
+                               style="font-size:12px; font-weight:600; text-decoration:none; padding:4px 12px; border-radius:6px; background:#f1f5f9; color:#475569; transition:all 0.2s; display:inline-block;"
+                               onmouseover="this.style.background='#e2e8f0'; this.style.color='#1e293b'"
+                               onmouseout="this.style.background='#f1f5f9'; this.style.color='#475569'">View</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+
+{# ─── Tab switching script ─────────────────────────────────────────── #}
+<script>
+function switchTab(tab) {
+    const panels = ['given', 'received'];
+    panels.forEach(function(p) {
+        document.getElementById('panel-' + p).style.display = (p === tab) ? 'block' : 'none';
+        var btn = document.getElementById('tab-' + p);
+        btn.style.borderBottomColor  = (p === tab) ? '#4f46e5' : 'transparent';
+        btn.style.color              = (p === tab) ? '#4f46e5'  : '#64748b';
+    });
+}
+</script>
+
+{% endblock %}

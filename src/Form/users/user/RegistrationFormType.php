@@ -15,6 +15,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\File;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\Regex;
+use App\Form\Type\RoleCardType;
+
 
 class RegistrationFormType extends AbstractType
 {
@@ -30,23 +33,41 @@ class RegistrationFormType extends AbstractType
                 'attr'  => ['placeholder' => 'Enter your email'],
             ])
             ->add('plainPassword', RepeatedType::class, [
-                'type'            => PasswordType::class,
-                'mapped'          => false,
-                'first_options'   => ['label' => 'Password',         'attr' => ['placeholder' => 'Create a password']],
-                'second_options'  => ['label' => 'Confirm Password', 'attr' => ['placeholder' => 'Re-enter your password']],
-                'constraints'     => [
+                'type'           => PasswordType::class,
+                'mapped'         => false,
+                'first_options'  => [
+                    'label' => 'Password',
+                    'attr'  => ['placeholder' => 'Min 8 characters'],
+                ],
+                'second_options' => [
+                    'label' => 'Confirm Password',
+                    'attr'  => ['placeholder' => 'Re-enter your password'],
+                ],
+                'invalid_message' => 'Passwords do not match.',
+                'constraints' => [
                     new NotBlank(['message' => 'Please enter a password.']),
-                    new Length(['min' => 6, 'minMessage' => 'Password must be at least {{ limit }} characters.']),
+                    new Length([
+                        'min'        => 8,
+                        'minMessage' => 'Password must be at least 8 characters.',
+                        'max'        => 255,
+                    ]),
+                    new Regex([
+                        'pattern' => '/[A-Z]/',
+                        'message' => 'Password must contain at least one uppercase letter.',
+                    ]),
+                    new Regex([
+                        'pattern' => '/[0-9]/',
+                        'message' => 'Password must contain at least one number.',
+                    ]),
                 ],
             ])
-            ->add('role', ChoiceType::class, [
-                'label'   => 'I am a',
+            ->add('role', RoleCardType::class, [
+                'label'   => 'I want to',
                 'choices' => [
                     'Client'     => 'CLIENT',
                     'Freelancer' => 'FREELANCER',
                     'Admin'      => 'ADMIN',
                 ],
-                'placeholder' => 'Select your role',
             ])
             ->add('profilePictureFile', FileType::class, [
                 'label'    => 'Profile Photo',

@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Form\candidature;
+
+use App\Entity\candidature\Application;
+use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Form\Extension\Core\Type\MoneyType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+
+class ApplicationType extends AbstractType
+{
+    public function buildForm(FormBuilderInterface $builder, array $options): void
+    {
+        $builder
+            ->add('projectId', IntegerType::class, [
+                'label' => 'Project ID',
+                // Project would normally be an EntityType, but we use an Integer for now
+            ])
+            ->add('coverLetter', TextareaType::class, [
+                'label' => 'Cover Letter',
+                'attr' => ['rows' => 6, 'placeholder' => 'Write a cover letter of at least 20 characters...']
+            ])
+            ->add('proposedBudget', MoneyType::class, [
+                'label' => 'Proposed Budget',
+                'currency' => 'TND', // Assuming Tunisian Dinar or similar based on origin
+            ])
+            ->add('estimatedDuration', IntegerType::class, [
+                'label' => 'Estimated Duration (in days)',
+            ])
+        ;
+    }
+
+    public function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setDefaults([
+            'data_class' => Application::class,
+        ]);
+    }
+}
