@@ -1,0 +1,350 @@
+{# templates/frontOffice/freelancer/Tasks/task.html.twig #}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniEarn – Mes Tâches</title>
+    <!-- Use existing dashboard CSS -->
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <style>
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .dashboard-content-custom {
+            padding: 20px 30px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            height: calc(100vh - 70px); /* Adjust based on top-bar height */
+        }
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .header-title {
+            font-size: 26px;
+            font-weight: bold;
+            color: #14171a;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        .control-input {
+            background-color: white;
+            border: 1px solid #e1e8ed;
+            color: #14171a;
+            border-radius: 6px;
+            padding: 8px 15px;
+            font-size: 13px;
+        }
+        .control-input:focus {
+            outline: none;
+            border-color: #1976d2;
+        }
+        .btn-toggle {
+            background-color: white;
+            color: #14171a;
+            border: 1px solid #e1e8ed;
+            border-radius: 6px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .btn-toggle:hover {
+            background-color: #f8f9fa;
+        }
+        .btn-primary {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 15px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-primary:hover {
+            background-color: #27ae60;
+        }
+        .btn-info {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 15px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-info:hover {
+            background-color: #2980b9;
+        }
+        .btn-secondary-action {
+            background-color: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 15px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-secondary-action:hover {
+            background-color: #7f8c8d;
+        }
+        .btn-action-delete {
+            background-color: #ef4444;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .btn-action-delete:hover {
+            background-color: #dc2626;
+        }
+        .board-container {
+            display: flex;
+            gap: 25px;
+            padding: 10px;
+            overflow-x: auto;
+            flex-grow: 1;
+            align-items: flex-start;
+        }
+        .board-column {
+            background-color: #e2e4e6;
+            border-radius: 8px;
+            width: 300px;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            max-height: 100%;
+        }
+        .column-header {
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 15px;
+            color: #172b4d;
+        }
+        .column-content {
+            padding: 0 10px 10px 10px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .task-card {
+            background-color: white;
+            border-radius: 6px;
+            padding: 12px;
+            box-shadow: 0 1px 2px rgba(9, 30, 66, 0.25);
+            cursor: pointer;
+        }
+        .task-card:hover {
+            background-color: #f4f5f7;
+        }
+        .task-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #172b4d;
+            margin-bottom: 8px;
+        }
+        .task-tags {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 8px;
+        }
+        .tag {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: white;
+        }
+        .tag-urgent { background-color: #eb5a46; }
+        .tag-normal { background-color: #61bd4f; }
+        
+        .task-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #5e6c84;
+        }
+        .spacer {
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body class="dashboard-body">
+
+<div class="dashboard-layout">
+
+    {# Sidebar - Assuming a generic inclusion to keep it DRY like the rest of the project, 
+       otherwise mimicking the exact structure #}
+    {% set sidebar = sidebarInclude ?? 'frontOffice/user/profile/_sidebar.html.twig' %}
+    {% set active  = 'tasks' %}
+    {% include sidebar with {'active': active} %}
+
+    <div class="dashboard-main">
+        {# Top Bar #}
+        <div class="top-bar" style="padding: 0 30px; height: 70px;">
+            <a href="{{ path('freelancer_dashboard') }}" class="btn-secondary" style="padding: 6px 12px; font-size: 13px; text-decoration: none; color: #1e293b; background-color: #e2e8f0; border-radius: 6px;">← Retour</a>
+            <div class="spacer"></div>
+            <img src="{{ asset('images/UniEarn_full_logo.png') }}" alt="UniEarn Logo" style="height: 55px; width: auto; object-fit: contain;">
+        </div>
+
+        <div class="dashboard-content-custom">
+
+            <!-- Dashboard Header -->
+            <div class="header-controls">
+                <h1 class="header-title">☑ Task Board</h1>
+                
+                <div class="spacer"></div>
+                
+                <!-- Toggle Switch -->
+                <button id="viewToggle" class="btn-toggle">View: By Status</button>
+                
+                <!-- Search Field -->
+                <form method="get" action="{{ path('freelancer_task_index') }}" style="margin: 0;">
+                    <input type="text" name="search" id="searchField" class="control-input" placeholder="🔍 Rechercher une tâche..." style="width: 250px;" value="{{ app.request.query.get('search') }}">
+                </form>
+
+                <!-- Project Selector -->
+                <select id="projectSelector" class="control-input" style="width: 200px;">
+                    <option value="">Sélectionner un projet</option>
+                    {% for project in form_projects|default([]) %}
+                        <option value="{{ project.idProject }}">{{ project.title }}</option>
+                    {% endfor %}
+                </select>
+
+                <!-- AI Suggestions Button -->
+                <button class="btn-info" onclick="handleAISuggestions()">✨ AI Suggestions</button>
+
+                <!-- Export PDF Button -->
+                <a href="{{ path('freelancer_task_export_pdf') }}" class="btn-secondary-action">📄 Export PDF</a>
+
+                <!-- New Task Button -->
+                <a href="{{ path('freelancer_task_new') }}" class="btn-primary">➕ New Task</a>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #2c3e50; margin: 15px 0 20px 0;">
+
+            {% if form is defined %}
+                <div class="form-section" style="background:#fff; border-radius:8px; padding:15px; margin-bottom:20px;">
+                    {{ form_start(form) }}
+                    <div class="form-row" style="display:flex; gap:12px; margin-bottom:10px;">
+                        <div class="form-group" style="flex:1;">{{ form_row(form.title) }}</div>
+                        <div class="form-group" style="flex:1;">{{ form_row(form.project) }}</div>
+                    </div>
+                    <div class="form-row" style="display:flex; gap:12px; margin-bottom:10px;">
+                        <div class="form-group" style="flex:1;">{{ form_row(form.deadline) }}</div>
+                        <div class="form-group" style="flex:1;">{{ form_row(form.taskStatus) }}</div>
+                        <div class="form-group" style="flex:1;">{{ form_row(form.priority) }}</div>
+                    </div>
+                    <div class="form-row" style="display:flex; gap:12px; margin-bottom:10px;">
+                        <div class="form-group" style="flex:1;">{{ form_row(form.role) }}</div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="width:100%;">{{ form_row(form.description) }}</div>
+                    </div>
+                    <button type="submit" class="btn-primary">{{ is_edit|default(false) ? 'Update Task' : 'Create Task' }}</button>
+                    {{ form_end(form) }}
+                </div>
+            {% endif %}
+
+            <!-- Board Container -->
+            <div class="board-container" id="boardContainer">
+                
+                {# This section would normally be dynamically populated iterating through column statuses #}
+                {% set statuses = [
+                    {'value': 'TODO', 'label': 'To Do'},
+                    {'value': 'InProgress', 'label': 'In Progress'},
+                    {'value': 'Done', 'label': 'Done'}
+                ] %}
+                
+                {% for status in statuses %}
+                    <div class="board-column">
+                        <div class="column-header">{{ status.label }}</div>
+                        <div class="column-content">
+                            {% for task in tasks ?? [] %}
+                                {% if task.taskStatus and task.taskStatus.value == status.value %}
+                                <div class="task-card" onclick="window.location.href='{{ path('freelancer_task_edit', {'id': task.idTask}) }}'">
+                                    <div class="task-tags">
+                                        {# Mock tags depending on priorities/categories #}
+                                        <span class="tag {{ task.priority == 'High' ? 'tag-urgent' : 'tag-normal' }}">{{ task.priority|default('Medium') }}</span>
+                                    </div>
+                                    <div class="task-title">{{ task.title }}</div>
+                                    <div class="task-footer">
+                                        <span>📅 {{ task.deadline ? task.deadline|date('d/m/Y') : 'N/A' }}</span>
+                                        <form method="post" action="{{ path('freelancer_task_delete', {'id': task.idTask}) }}" onsubmit="return confirm('Delete this task?');" style="display:inline-block; margin:0;">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ task.idTask) }}">
+                                            <button type="submit" class="btn-action-delete">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% else %}
+                                {# Empty state for visual when there's no dynamic data initialized #}
+                                {% if loop.parent.loop.first and loop.first %}
+                                    <p style="color: #5e6c84; font-size: 13px; text-align: center; padding: 20px 0; margin:0;">
+                                        Aucune tâche pour le moment.
+                                    </p>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    function handleAISuggestions() {
+        // Logique pour les suggestions IA
+        alert("Suggestions IA en cours de génération...");
+    }
+
+    document.getElementById('viewToggle').addEventListener('click', function() {
+        // Toggle view logic
+        if (this.innerText === "View: By Status") {
+            this.innerText = "View: By Project";
+        } else {
+            this.innerText = "View: By Status";
+        }
+    });
+
+    document.getElementById('projectSelector').addEventListener('change', function() {
+        // Project filter logic
+        const projectId = this.value;
+        const currentUrl = new URL(window.location.href);
+        if (projectId) {
+            currentUrl.searchParams.set('project', projectId);
+        } else {
+            currentUrl.searchParams.delete('project');
+        }
+        window.location.href = currentUrl.toString();
+    });
+</script>
+
+</body>
+</html>

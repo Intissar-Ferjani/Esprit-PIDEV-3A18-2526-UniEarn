@@ -35,6 +35,10 @@
                class="nav-item {{ active == 'users' ? 'active' : '' }}">
                 👥 <span>Manage Users</span>
             </a>
+            <a href="{{ path('admin_manage_projects') }}"
+               class="nav-item {{ active == 'projects_admin' ? 'active' : '' }}">
+                📁 <span>Manage Projects</span>
+            </a>
             <a href="{{ path('admin_forum_index') }}"
                class="nav-item {{ active == 'forum' ? 'active' : '' }}">
                 📝 <span>Forum Management</span>
@@ -54,6 +58,10 @@
 
         {# ── CLIENT tabs ── #}
         {% if role == 'CLIENT' %}
+            <a href="{{ path('client_project_index') }}"
+               class="nav-item {{ active == 'projects' ? 'active' : '' }}">
+                📁 <span>MyProjects</span>
+            </a>
             <a href="{{ path('client_browse_freelancers') }}"
                class="nav-item {{ active == 'freelancers' ? 'active' : '' }}">
                 👥 <span>Browse Freelancers</span>
@@ -80,7 +88,7 @@
 
         {# ── FREELANCER tabs ── #}
         {% if role == 'FREELANCER' %}
-            <a href="#" class="nav-item {{ active == 'projects' ? 'active' : '' }}">
+            <a href="{{ path('freelancer_available_projects') }}" class="nav-item {{ active == 'projects' ? 'active' : '' }}">
                 📋 <span>Available Projects</span>
             </a>
             <a href="{{ path('app_application_index') }}"
@@ -95,7 +103,7 @@
                class="nav-item {{ active == 'evaluations' ? 'active' : '' }}">
                 ⭐ <span>Evaluations</span>
             </a>
-            <a href="#" class="nav-item {{ active == 'tasks' ? 'active' : '' }}">
+            <a href="{{ path('freelancer_task_index') }}" class="nav-item {{ active == 'tasks' ? 'active' : '' }}">
                 📝 <span>Task Board</span>
             </a>
             <a href="{{ path('freelancer_portfolio_page') }}"

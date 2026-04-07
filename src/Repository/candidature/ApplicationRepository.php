@@ -3,6 +3,7 @@
 namespace App\Repository\candidature;
 
 use App\Entity\candidature\Application;
+use App\Enum\ApplicationStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\DBAL\Connection;
@@ -124,5 +125,37 @@ class ApplicationRepository extends ServiceEntityRepository
             // project table may not exist in this DB — return empty map
             return [];
         }
+    }
+
+    /**
+     * @return int[]
+     */
+    public function findAcceptedProjectIdsForFreelancer(int $freelancerId): array
+    {
+        $rows = $this->createQueryBuilder('a')
+            ->select('DISTINCT a.projectId')
+            ->andWhere('IDENTITY(a.freelancer) = :freelancerId')
+            ->andWhere('a.status = :status')
+            ->setParameter('freelancerId', $freelancerId)
+            ->setParameter('status', ApplicationStatus::ACCEPTED)
+            ->getQuery()
+            ->getScalarResult();
+
+        return array_map(static fn (array $row): int => (int) $row['projectId'], $rows);
+    }
+
+    /**
+     * @return int[]
+     */
+    public function findAppliedProjectIdsForFreelancer(int $freelancerId): array
+    {
+        $rows = $this->createQueryBuilder('a')
+            ->select('DISTINCT a.projectId')
+            ->andWhere('IDENTITY(a.freelancer) = :freelancerId')
+            ->setParameter('freelancerId', $freelancerId)
+            ->getQuery()
+            ->getScalarResult();
+
+        return array_map(static fn (array $row): int => (int) $row['projectId'], $rows);
     }
 }
