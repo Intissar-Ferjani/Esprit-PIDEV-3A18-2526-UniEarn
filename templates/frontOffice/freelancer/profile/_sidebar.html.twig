@@ -12,7 +12,7 @@
         <a href="#" class="nav-item {{ active == 'projects' ? 'active' : '' }}">
             📋 <span>Available Projects</span>
         </a>
-        <a href="#" class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
+        <a href="{{ path('freelancer_contract_index') }}" class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
             📄 <span>My Contracts</span>
         </a>
         <a href="#" class="nav-item {{ active == 'tasks' ? 'active' : '' }}">
@@ -27,6 +27,7 @@
         </a>
         <a href="{{ path('app_evaluation_index') }}" class="nav-item {{ active == 'evaluations' ? 'active' : '' }}">
             ⭐ <span>Evaluations</span>
+        </a>
         <a href="{{ path('freelancer_forum') }}"
            class="nav-item {{ active == 'forum' ? 'active' : '' }}">
             💬 <span>Community Forum</span>

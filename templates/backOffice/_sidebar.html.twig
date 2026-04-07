@@ -13,12 +13,20 @@
            class="nav-item {{ active == 'users' ? 'active' : '' }}">
             👥 <span>Manage Users</span>
         </a>
+<<<<<<< HEAD:templates/backoffice/_sidebar.html.twig
         <a href="{{ path('admin_forum_index') }}"
            class="nav-item {{ active == 'forum' ? 'active' : '' }}">
             📝 <span>Forum Management</span>
         </a>
         <a href="#" class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
             📝 <span>Manage Contracts</span>
+=======
+        <a href="{{ path('admin_contract_template_index') }}" class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
+            📝 <span>Contract Templates</span>
+        </a>
+        <a href="{{ path('admin_contract_index') }}" class="nav-item {{ active == 'all-contracts' ? 'active' : '' }}">
+            📋 <span>All Contracts</span>
+>>>>>>> 8ae0f908205a8c7b70c11959fc7b3bb95bcc0332:templates/backOffice/_sidebar.html.twig
         </a>
         <a href="#" class="nav-item {{ active == 'reports' ? 'active' : '' }}">
             📊 <span>Reports</span>
