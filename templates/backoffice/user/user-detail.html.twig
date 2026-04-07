@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn – User Detail</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <style>
+        .detail-card { background:white; border-radius:12px; max-width:680px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+        .detail-header { padding:24px 28px; color:white; }
+        .detail-header.role-client     { background:#3498db; }
+        .detail-header.role-freelancer { background:#9b59b6; }
+        .detail-header.role-admin      { background:#e74c3c; }
+        .detail-body { padding:28px; }
+        .info-row { display:flex; gap:12px; padding:10px 0; border-bottom:1px solid #f1f5f9; }
+        .info-row:last-child { border-bottom:none; }
+        .info-label { font-weight:700; color:#2c3e50; min-width:140px; font-size:13px; }
+        .info-value { color:#34495e; font-size:13px; }
+        .section-sep { margin:20px 0 14px; font-size:15px; font-weight:700; color:#1e293b; }
+    </style>
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    {% include 'backOffice/_sidebar.html.twig' with {'active': 'users'} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">User Detail</span>
+            <div class="top-bar-right">
+                <a href="{{ path('admin_manage_users') }}" style="color:#2563EB;text-decoration:none;font-size:13px;">← Back to Users</a>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+
+            <div class="detail-card">
+                <div class="detail-header role-{{ user.role|lower }}">
+                    <h2 style="font-size:22px;font-weight:700;margin-bottom:4px;">{{ user.name }}</h2>
+                    <p style="opacity:.85;font-size:14px;">{{ user.email }}</p>
+                </div>
+
+                <div class="detail-body">
+                    <div class="info-row"><span class="info-label">User ID</span><span class="info-value">{{ user.idUser }}</span></div>
+                    <div class="info-row"><span class="info-label">Role</span><span class="info-value">{{ user.role }}</span></div>
+                    <div class="info-row">
+                        <span class="info-label">Status</span>
+                        <span class="info-value">{{ user.isActivated ? '✅ Active' : '🚫 Deactivated' }}</span>
+                    </div>
+
+                    {% if client %}
+                        <p class="section-sep">🏢 Client Information</p>
+                        <div class="info-row"><span class="info-label">Company</span><span class="info-value">{{ client.company ?: 'N/A' }}</span></div>
+                        <div class="info-row"><span class="info-label">Industry</span><span class="info-value">{{ client.industry ?: 'N/A' }}</span></div>
+                        <div class="info-row"><span class="info-label">Budget</span><span class="info-value">{{ client.amount }} TND</span></div>
+                        <div class="info-row"><span class="info-label">Rating</span><span class="info-value">{{ client.rating }}</span></div>
+                    {% endif %}
+
+                    {% if freelancer %}
+                        <p class="section-sep">💼 Freelancer Information</p>
+                        <div class="info-row"><span class="info-label">Price/Hour</span><span class="info-value">{{ freelancer.pricePerHour }} TND</span></div>
+                        <div class="info-row"><span class="info-label">Total Earned</span><span class="info-value">{{ freelancer.amount }} TND</span></div>
+                        <div class="info-row"><span class="info-label">Rating</span><span class="info-value">{{ freelancer.rating }}</span></div>
+                        <div class="info-row"><span class="info-label">Verification</span><span class="info-value">{{ freelancer.verificationStatus }}</span></div>
+                        <div class="info-row">
+                            <span class="info-label">Skills</span>
+                            <span class="info-value">
+                                {% for skill in freelancer.skillsArray %}
+                                    <span style="background:#e8f0fe;color:#1a73e8;padding:2px 8px;border-radius:20px;font-size:11px;margin-right:4px;">{{ skill }}</span>
+                                {% endfor %}
+                            </span>
+                        </div>
+                        <div class="info-row"><span class="info-label">Bio</span><span class="info-value">{{ freelancer.bio }}</span></div>
+                    {% endif %}
+
+                    <div style="display:flex;gap:10px;margin-top:20px;">
+                        <form method="post" action="{{ path('admin_toggle_user', {id: user.idUser}) }}">
+                            <button type="submit" class="btn-edit" style="background:{{ user.isActivated ? '#e74c3c' : '#27ae60' }};">
+                                {{ user.isActivated ? '🚫 Deactivate' : '✅ Activate' }}
+                            </button>
+                        </form>
+                        <form method="post" action="{{ path('admin_delete_user', {id: user.idUser}) }}"
+                              onsubmit="return confirm('Delete this user permanently?')">
+                            <button type="submit" class="btn-deactivate">🗑 Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

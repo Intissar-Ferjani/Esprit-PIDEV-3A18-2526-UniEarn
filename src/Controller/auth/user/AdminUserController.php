@@ -25,9 +25,9 @@ class AdminUserController extends AbstractController
     // ── LIST ───────────────────────────────────────────────────────────
 
     #[Route('/', name: 'admin_user_index', methods: ['GET'])]
-    public function index(Request $request, UserRepository $repo): Response
+    public function index(UserRepository $repo): Response
     {
-        if ($r = $this->requireAdmin($request)) return $r;
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
         return $this->render('backOffice/user/list-users.html.twig', [
             'users' => $repo->findAllUsers(),
@@ -39,7 +39,7 @@ class AdminUserController extends AbstractController
     #[Route('/{id}/toggle', name: 'admin_user_toggle', methods: ['POST'])]
     public function toggle(int $id, Request $request, UserRepository $repo, EntityManagerInterface $em): Response
     {
-        if ($r = $this->requireAdmin($request)) return $r;
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
         $user = $repo->find($id);
         if (!$user) throw $this->createNotFoundException('User not found.');
@@ -50,7 +50,7 @@ class AdminUserController extends AbstractController
         $status = $user->isActivated() ? 'reactivated' : 'deactivated';
         $this->addFlash('success', "User {$user->getName()} has been {$status}.");
 
-        return $this->redirectToRoute('admin_user_index');
+        return $this->redirectToRoute('admin_manage_users');
     }
 
     // ── DELETE ─────────────────────────────────────────────────────────
@@ -58,7 +58,7 @@ class AdminUserController extends AbstractController
     #[Route('/{id}/delete', name: 'admin_user_delete', methods: ['POST'])]
     public function delete(int $id, Request $request, UserRepository $repo, EntityManagerInterface $em): Response
     {
-        if ($r = $this->requireAdmin($request)) return $r;
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
         $user = $repo->find($id);
         if (!$user) throw $this->createNotFoundException('User not found.');
@@ -67,15 +67,15 @@ class AdminUserController extends AbstractController
         $em->flush();
         $this->addFlash('success', 'User deleted successfully.');
 
-        return $this->redirectToRoute('admin_user_index');
+        return $this->redirectToRoute('admin_manage_users');
     }
 
     // ── VIEW DETAILS ───────────────────────────────────────────────────
 
     #[Route('/{id}', name: 'admin_user_show', methods: ['GET'])]
-    public function show(int $id, Request $request, UserRepository $repo, ClientRepository $clientRepo, FreelancerRepository $freelancerRepo): Response
+    public function show(int $id, UserRepository $repo): Response
     {
-        if ($r = $this->requireAdmin($request)) return $r;
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
         $user = $repo->find($id);
         if (!$user) throw $this->createNotFoundException('User not found.');
