@@ -35,8 +35,17 @@
                class="nav-item {{ active == 'users' ? 'active' : '' }}">
                 👥 <span>Manage Users</span>
             </a>
-            <a href="#" class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
-                📝 <span>Manage Contracts</span>
+            <a href="{{ path('admin_forum_index') }}"
+               class="nav-item {{ active == 'forum' ? 'active' : '' }}">
+                📝 <span>Forum Management</span>
+            </a>
+            <a href="{{ path('admin_contract_template_index') }}"
+               class="nav-item {{ active == 'contract_templates' ? 'active' : '' }}">
+                📝 <span>Contract Templates</span>
+            </a>
+            <a href="{{ path('admin_contract_index') }}"
+               class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
+                📋 <span>All Contracts</span>
             </a>
             <a href="#" class="nav-item {{ active == 'reports' ? 'active' : '' }}">
                 📊 <span>Reports</span>
@@ -49,14 +58,17 @@
                class="nav-item {{ active == 'freelancers' ? 'active' : '' }}">
                 👥 <span>Browse Freelancers</span>
             </a>
-            <a href="#" class="nav-item {{ active == 'projects' ? 'active' : '' }}">
-                📋 <span>My Projects</span>
+            <a href="{{ path('app_application_index') }}"
+               class="nav-item {{ active == 'applications' ? 'active' : '' }}">
+                📋 <span>Manage Applications</span>
             </a>
-            <a href="#" class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
+            <a href="{{ path('app_evaluation_index') }}"
+               class="nav-item {{ active == 'evaluations' ? 'active' : '' }}">
+                ⭐ <span>Evaluations</span>
+            </a>
+            <a href="{{ path('client_contract_index') }}"
+               class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
                 📄 <span>My Contracts</span>
-            </a>
-            <a href="#" class="nav-item {{ active == 'proposals' ? 'active' : '' }}">
-                ⭐ <span>Reviews & Proposals</span>
             </a>
             <a href="#" class="nav-item {{ active == 'messages' ? 'active' : '' }}">
                 💬 <span>Messages</span>
@@ -71,8 +83,17 @@
             <a href="#" class="nav-item {{ active == 'projects' ? 'active' : '' }}">
                 📋 <span>Available Projects</span>
             </a>
-            <a href="#" class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
+            <a href="{{ path('app_application_index') }}"
+               class="nav-item {{ active == 'applications' ? 'active' : '' }}">
+                📋 <span>My Applications</span>
+            </a>
+            <a href="{{ path('freelancer_contract_index') }}"
+               class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
                 📄 <span>My Contracts</span>
+            </a>
+            <a href="{{ path('app_evaluation_index') }}"
+               class="nav-item {{ active == 'evaluations' ? 'active' : '' }}">
+                ⭐ <span>Evaluations</span>
             </a>
             <a href="#" class="nav-item {{ active == 'tasks' ? 'active' : '' }}">
                 📝 <span>Task Board</span>
@@ -80,6 +101,10 @@
             <a href="{{ path('freelancer_portfolio_page') }}"
                class="nav-item {{ active == 'portfolio' ? 'active' : '' }}">
                 💼 <span>Portfolio</span>
+            </a>
+            <a href="{{ path('freelancer_forum') }}"
+               class="nav-item {{ active == 'forum' ? 'active' : '' }}">
+                💬 <span>Community Forum</span>
             </a>
             <a href="#" class="nav-item {{ active == 'messages' ? 'active' : '' }}">
                 💬 <span>Messages</span>

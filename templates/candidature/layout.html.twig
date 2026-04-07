@@ -13,16 +13,16 @@
 <div class="dashboard-layout">
     {# ── Sidebar ── #}
     {% if freelancer is defined and freelancer is not null %}
-        {% include 'frontOffice/freelancer/profile/_sidebar.html.twig' with {'active': active|default('dashboard')} %}
+        {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': active|default('dashboard')} %}
     {% elseif client is defined and client is not null %}
-        {% include 'frontOffice/client/profile/_sidebar.html.twig' with {'active': active|default('dashboard')} %}
+        {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': active|default('dashboard')} %}
     {% else %}
         {# Fallback for Admin or others if they access these routes #}
         {% if user is defined and user is not null %}
             {% if 'FREELANCER' in user.role %}
-                {% include 'frontOffice/freelancer/profile/_sidebar.html.twig' with {'active': active|default('dashboard')} %}
+                {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': active|default('dashboard')} %}
             {% elseif 'CLIENT' in user.role %}
-                {% include 'frontOffice/client/profile/_sidebar.html.twig' with {'active': active|default('dashboard')} %}
+                {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': active|default('dashboard')} %}
             {% endif %}
         {% endif %}
     {% endif %}
