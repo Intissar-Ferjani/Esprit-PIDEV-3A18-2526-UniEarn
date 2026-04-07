@@ -11,6 +11,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use App\Repository\users\freelancer\FreelancerRepository;
+use App\Repository\users\freelancer\PortfolioRepository;
+use App\Repository\users\freelancer\PortfolioItemRepository;
+use App\Form\users\client\ClientEditFormType;
 
 #[Route('/client')]
 class ClientProfileController extends AbstractController
@@ -29,6 +33,7 @@ class ClientProfileController extends AbstractController
         return $this->render('frontOffice/client/profile/dashboard.html.twig', [
             'client' => $client,
             'user'   => $client->getUser(),
+            'viewerRole' => 'CLIENT',
         ]);
     }
 
@@ -49,29 +54,31 @@ class ClientProfileController extends AbstractController
 
         $user = $client->getUser();
 
-        if ($request->isMethod('POST')) {
-            $name     = trim($request->request->get('name', ''));
-            $email    = strtolower(trim($request->request->get('email', '')));
-            $company  = trim($request->request->get('company', ''));
-            $industry = trim($request->request->get('industry', ''));
+        $form = $this->createForm(ClientEditFormType::class, $client);
+        $form->get('name')->setData($user->getName());
+        $form->get('email')->setData($user->getEmail());
 
-            // Validate
-            if (!$name || !$email) {
-                $this->addFlash('error', 'Name and email are required.');
-                return $this->redirectToRoute('client_profile_edit');
-            }
+        $form->handleRequest($request);
 
-            // Check email uniqueness (excluding current user)
+        if ($form->isSubmitted() && $form->isValid()) {
+            $name  = $form->get('name')->getData();
+            $email = strtolower(trim($form->get('email')->getData()));
+
+            // Email uniqueness check
             $existing = $userRepo->findByEmail($email);
-            if ($existing && $existing->getIdUser() !== $user->getIdUser()) {
+            if ($existing && (int)$existing->getIdUser() !== (int)$user->getIdUser()) {
                 $this->addFlash('error', 'This email is already used by another account.');
-                return $this->redirectToRoute('client_profile_edit');
+                return $this->render('frontOffice/client/profile/edit-profile.html.twig', [
+                    'form'   => $form->createView(),
+                    'client' => $client,
+                    'user'   => $user,
+                ]);
             }
 
             // Password change
-            $currentPassword = $request->request->get('current_password', '');
-            $newPassword     = $request->request->get('new_password', '');
-            $confirmPassword = $request->request->get('confirm_password', '');
+            $currentPassword = $form->get('currentPassword')->getData();
+            $newPassword     = $form->get('newPassword')->getData();
+            $confirmPassword = $form->get('confirmPassword')->getData();
 
             if ($newPassword !== '') {
                 $dbPassword = $user->getPassword();
@@ -85,27 +92,26 @@ class ClientProfileController extends AbstractController
 
                 if (!$isCurrentMatch) {
                     $this->addFlash('error', 'Current password is incorrect.');
-                    return $this->redirectToRoute('client_profile_edit');
-                }
-                if (strlen($newPassword) < 8) {
-                    $this->addFlash('error', 'New password must be at least 8 characters.');
-                    return $this->redirectToRoute('client_profile_edit');
+                    return $this->render('frontOffice/client/profile/edit-profile.html.twig', [
+                        'form'   => $form->createView(),
+                        'client' => $client,
+                        'user'   => $user,
+                    ]);
                 }
                 if ($newPassword !== $confirmPassword) {
                     $this->addFlash('error', 'New passwords do not match.');
-                    return $this->redirectToRoute('client_profile_edit');
+                    return $this->render('frontOffice/client/profile/edit-profile.html.twig', [
+                        'form'   => $form->createView(),
+                        'client' => $client,
+                        'user'   => $user,
+                    ]);
                 }
                 $user->setPassword($newPassword);
             }
 
             $user->setName($name);
             $user->setEmail($email);
-            $client->setCompany($company);
-            $client->setIndustry($industry);
-
             $em->flush();
-
-            // Update session name
             $request->getSession()->set('user_name', $name);
 
             $this->addFlash('success', 'Profile updated successfully!');
@@ -113,6 +119,7 @@ class ClientProfileController extends AbstractController
         }
 
         return $this->render('frontOffice/client/profile/edit-profile.html.twig', [
+            'form'   => $form->createView(),
             'client' => $client,
             'user'   => $user,
         ]);
@@ -178,5 +185,40 @@ class ClientProfileController extends AbstractController
         $request->getSession()->invalidate();
         $this->addFlash('success', 'Your account has been deactivated.');
         return $this->redirectToRoute('user_login');
+    }
+
+
+    #[Route('/freelancers/{id}', name: 'client_view_freelancer', methods: ['GET'])]
+    public function viewFreelancers(
+        int                     $id,
+        Request                 $request,
+        FreelancerRepository    $freelancerRepo,
+        PortfolioRepository     $portfolioRepo,
+        PortfolioItemRepository $itemRepo,
+        ClientRepository        $clientRepo
+    ): Response {
+        $userId = $request->getSession()->get('user_id');
+        if (!$userId) return $this->redirectToRoute('user_login');
+ 
+        $client     = $clientRepo->findByUserId($userId);
+        $freelancer = $freelancerRepo->find($id);
+ 
+        if (!$freelancer) throw $this->createNotFoundException('Freelancer not found.');
+ 
+        $portfolio = $portfolioRepo->findByFreelancerId($freelancer->getIdFreelancer());
+        $items     = $portfolio ? $itemRepo->findByPortfolioId($portfolio->getIdPortfolio()) : [];
+ 
+        // Reuse the same freelancer dashboard template, but pass viewerRole = 'CLIENT'
+        // so the template hides edit/photo controls
+        return $this->render('frontOffice/freelancer/profile/dashboard.html.twig', [
+            'freelancer'  => $freelancer,
+            'user'        => $freelancer->getUser(),
+            'viewerRole'  => 'CLIENT',
+            'backUrl'     => $this->generateUrl('client_browse_freelancers'),
+            'portfolio'   => $portfolio,
+            'items'       => $items,
+            'sidebarInclude' => 'frontOffice/user/profile/_sidebar.html.twig',
+            'sidebarActive'  => 'freelancers',
+        ]);
     }
 }

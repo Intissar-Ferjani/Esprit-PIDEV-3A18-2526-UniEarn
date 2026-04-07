@@ -17,18 +17,42 @@ class Client
     private ?int $idClient = null;
 
     #[ORM\Column(name: 'amount', type: 'float')]
+    #[Assert\PositiveOrZero(message: 'Budget cannot be negative.')]
+    #[Assert\LessThanOrEqual(value: 999999, message: 'Budget cannot exceed 999,999 TND.')]
     private float $amount = 0.0;
 
     #[ORM\Column(name: 'rating', type: 'float')]
     private float $rating = 0.0;
 
-    #[ORM\Column(name: 'company', type: 'string', length: 255)]
+    #[ORM\Column(name: 'company', type: 'string', length: 255, unique: true)]
     #[Assert\NotBlank(message: 'Company name is required.')]
-    #[Assert\Length(min: 2, max: 100, minMessage: 'Company name must be at least 2 characters.')]
+    #[Assert\Length(
+        min: 2, max: 100,
+        minMessage: 'Company name must be at least 2 characters.',
+        maxMessage: 'Company name cannot exceed 100 characters.'
+    )]
     private ?string $company = null;
 
-    #[ORM\Column(name: 'industry', type: 'string', length: 255)]
-    #[Assert\NotBlank(message: 'Please select an industry.')]
+    #[Assert\Choice(
+    choices: [
+        'Technology & IT',
+        'Marketing & Advertising',
+        'Design & Creative',
+        'Writing & Content',
+        'Business & Consulting',
+        'Education & Training',
+        'Healthcare',
+        'Finance & Accounting',
+        'Legal Services',
+        'Real Estate',
+        'E-commerce & Retail',
+        'Manufacturing',
+        'Hospitality & Tourism',
+        'Construction',
+        'Other',
+    ],
+    message: 'Please select a valid industry.'
+    )]
     private ?string $industry = null;
 
     // ── Relationship to User (mirrors Java's Client extends User + userID FK) ──

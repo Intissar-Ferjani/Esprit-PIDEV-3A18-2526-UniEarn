@@ -41,45 +41,33 @@ class FreelancerSignupController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
 
-            // Skills — from comma-separated hidden input
-            $skillsRaw = $form->get('skillsInput')->getData();
-            $skills    = array_values(array_filter(array_map('trim', explode(',', $skillsRaw ?? ''))));
-
-            if (empty($skills)) {
-                $this->addFlash('error', 'Please add at least one skill.');
-                return $this->render('frontOffice/freelancer/auth/freelancer-information.html.twig', ['form' => $form, 'user' => $user]);
-            }
-            $freelancer->setSkillsArray($skills);
-
-            // CV upload
             $cvFile = $form->get('cvFile')->getData();
+
             if ($cvFile) {
-                $newFilename = uniqid() . '_' . $slugger->slug(pathinfo($cvFile->getClientOriginalName(), PATHINFO_FILENAME)) . '.pdf';
+                $newFilename = uniqid().'.'.$cvFile->guessExtension();
+
                 try {
-                    $cvFile->move($this->getParameter('cv_directory'), $newFilename);
-                    $freelancer->setCvPath('uploads/cv/' . $newFilename);
-                } catch (FileException) {
-                    $this->addFlash('error', 'Could not upload CV.');
-                    return $this->render('frontOffice/freelancer/auth/freelancer-information.html.twig', ['form' => $form, 'user' => $user]);
+                    $cvFile->move(
+                        $this->getParameter('cv_directory'),
+                        $newFilename
+                    );
+                } catch (FileException $e) {
+                    $this->addFlash('error', 'File upload failed.');
                 }
+
+                $freelancer->setCvPath($newFilename);
             }
 
-            $freelancer->setUser($user);
-            $freelancer->setAmount(0.0);
-            $freelancer->setRating(0.0);
-            $freelancer->setVerificationStatus('unverified');
-            $freelancer->setStatus('available');
-            $freelancer->setIdTask(null);
+            $freelancer->setUser($user); 
 
             $em->persist($freelancer);
             $em->flush();
 
-            // Store freelancer ID in session for next steps
+            // store freelancer id for next step
             $request->getSession()->set('pending_freelancer_id', $freelancer->getIdFreelancer());
 
             return $this->redirectToRoute('freelancer_verify');
         }
-
         return $this->render('frontOffice/freelancer/auth/freelancer-information.html.twig', ['form' => $form, 'user' => $user]);
     }
 

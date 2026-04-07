@@ -18,7 +18,8 @@ class Freelancer
 
     #[ORM\Column(name: 'pricePerHour', type: 'float')]
     #[Assert\NotBlank(message: 'Hourly rate is required.')]
-    #[Assert\Positive(message: 'Rate must be greater than 0.')]
+    #[Assert\Positive(message: 'Hourly rate must be greater than 0.')]
+    #[Assert\LessThanOrEqual(value: 9999, message: 'Hourly rate cannot exceed 9999 TND.')]
     private float $pricePerHour = 0.0;
 
     #[ORM\Column(name: 'amount', type: 'float')]
@@ -29,6 +30,7 @@ class Freelancer
 
     // Stored as comma-separated string in DB e.g. "PHP,Java,Python"
     #[ORM\Column(name: 'skills', type: 'string', length: 255)]
+    #[Assert\NotBlank(message: 'Please add at least one skill.')]
     private string $skills = '';
 
     #[ORM\Column(name: 'verificationStatus', type: 'string', length: 20)]
@@ -39,9 +41,10 @@ class Freelancer
 
     #[ORM\Column(name: 'bio', type: 'string', length: 500)]
     #[Assert\NotBlank(message: 'Please write a brief bio.')]
-    #[Assert\Length(min: 10, max: 500,
+    #[Assert\Length(
+        min: 10, max: 500,
         minMessage: 'Bio must be at least 10 characters.',
-        maxMessage: 'Bio must not exceed 500 characters.'
+        maxMessage: 'Bio cannot exceed 500 characters.'
     )]
     private string $bio = '';
 

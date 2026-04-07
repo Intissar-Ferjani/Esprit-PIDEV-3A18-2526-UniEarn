@@ -4,6 +4,7 @@ namespace App\Entity\users\freelancer;
 
 use App\Repository\users\freelancer\PortfolioItemRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: PortfolioItemRepository::class)]
 #[ORM\Table(name: 'portfolioitem')]
@@ -15,9 +16,21 @@ class PortfolioItem
     private ?int $idItem = null;
 
     #[ORM\Column(name: 'title', type: 'string', length: 255, nullable: true)]
+    #[Assert\NotBlank(message: 'Project title is required.')]
+    #[Assert\Length(
+        min: 3, max: 255,
+        minMessage: 'Title must be at least 3 characters.',
+        maxMessage: 'Title cannot exceed 255 characters.'
+    )]
     private ?string $title = null;
 
     #[ORM\Column(name: 'description', type: 'string', length: 500, nullable: true)]
+    #[Assert\NotBlank(message: 'Project description is required.')]
+    #[Assert\Length(
+        min: 10, max: 500,
+        minMessage: 'Description must be at least 10 characters.',
+        maxMessage: 'Description cannot exceed 500 characters.'
+    )]
     private ?string $description = null;
 
     // Stored as JSON string in DB: ["PHP","React"]
@@ -28,9 +41,15 @@ class PortfolioItem
     private ?string $imageUrl = null;
 
     #[ORM\Column(name: 'projectUrl', type: 'string', length: 255, nullable: true)]
+    #[Assert\Url(message: 'Project URL must be a valid URL.')]
     private ?string $projectUrl = null;
 
     #[ORM\Column(name: 'githubUrl', type: 'string', length: 255, nullable: true)]
+    #[Assert\Url(message: 'GitHub URL must be a valid URL.')]
+    #[Assert\Regex(
+        pattern: '/^https:\/\/(www\.)?github\.com\/.+/',
+        message: 'GitHub URL must be a valid github.com URL.'
+    )]
     private ?string $githubUrl = null;
 
     #[ORM\Column(name: 'created_At', type: 'datetime')]

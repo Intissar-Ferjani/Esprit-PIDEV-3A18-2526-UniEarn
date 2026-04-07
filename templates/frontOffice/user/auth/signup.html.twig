@@ -1,92 +1,205 @@
-{% extends 'frontOffice/user/profile/base.html.twig' %}
-{% block title %}Create Account{% endblock %}
+{% extends 'base.html.twig' %}
+{% block title %}Create Account – UniEarn{% endblock %}
+
+{% block stylesheets %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ asset('css/signup.css') }}">
+{% endblock %}
 
 {% block body %}
-<div class="root">
+<div class="auth-layout">
 
     {# ── Left branding panel ── #}
-    <div class="left-panel">
-        <span class="brand-title">UniEarn</span>
-        <span class="brand-subtitle">Join our community today</span>
-    </div>
+    <div class="auth-left">
+        <div class="brand">
+            <img src="{{ asset('images/logoUniEarn.png') }}" alt="UniEarn" class="brand-logo">
+            <span class="brand-name">UniEarn</span>
+        </div>
 
-    {# ── Right form panel ── #}
-    <div class="form-panel">
-        <img src="{{ asset('images/logoUniEarn.png') }}" alt="UniEarn Logo" class="logo">
-
-        <h1 class="form-title">Create Account</h1>
-        <p class="form-subtitle">Sign up to get started</p>
-
-        {{ form_start(form, {'attr': {'enctype': 'multipart/form-data', 'novalidate': 'novalidate'}}) }}
-
-        {# Profile picture #}
-        <div class="avatar-wrap">
-            <img id="avatarPreview"
-                 src="{{ asset('images/default-avatar.jpg') }}"
-                 alt="Profile photo" class="avatar-preview">
-            <div class="field-wrap">
-                {{ form_label(form.profilePictureFile) }}
-                {{ form_widget(form.profilePictureFile, {'attr': {'id': 'profilePictureFile', 'accept': 'image/*'}}) }}
-                {{ form_errors(form.profilePictureFile) }}
+        <div class="auth-left-body">
+            <h2>Start earning with your skills today</h2>
+            <p>Join thousands of students who freelance, grow, and get paid on UniEarn.</p>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <div class="feature-dot">🎓</div>
+                    <span>Built exclusively for university students</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-dot">💼</div>
+                    <span>Post projects or offer your services</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-dot">🔒</div>
+                    <span>Verified profiles and secure payments</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-dot">⭐</div>
+                    <span>Build your reputation while you study</span>
+                </div>
             </div>
         </div>
 
-        {# Name #}
-        <div class="field-wrap">
-            {{ form_label(form.name) }}
-            {{ form_widget(form.name, {'attr': {'class': 'custom-field'}}) }}
-            {{ form_errors(form.name) }}
-        </div>
-
-        {# Email #}
-        <div class="field-wrap">
-            {{ form_label(form.email) }}
-            {{ form_widget(form.email, {'attr': {'class': 'custom-field'}}) }}
-            {{ form_errors(form.email) }}
-        </div>
-
-        {# Password #}
-        <div class="field-wrap">
-            {{ form_label(form.plainPassword.first) }}
-            {{ form_widget(form.plainPassword.first, {'attr': {'class': 'custom-field'}}) }}
-            {{ form_errors(form.plainPassword.first) }}
-        </div>
-
-        {# Confirm password #}
-        <div class="field-wrap">
-            {{ form_label(form.plainPassword.second) }}
-            {{ form_widget(form.plainPassword.second, {'attr': {'class': 'custom-field'}}) }}
-            {{ form_errors(form.plainPassword.second) }}
-        </div>
-
-        {# Role #}
-        <div class="field-wrap">
-            {{ form_label(form.role) }}
-            {{ form_widget(form.role, {'attr': {'class': 'custom-combo'}}) }}
-            {{ form_errors(form.role) }}
-        </div>
-
-        <button type="submit" class="signup-button">Sign Up</button>
-
-        {{ form_end(form) }}
-
-        <p class="login-label">
-            Already have an account?
-            <a href="{{ path('user_login') }}" class="login-link">Log In</a>
-        </p>
+        <div class="auth-left-footer">© 2025 UniEarn. All rights reserved.</div>
     </div>
 
+    {# ── Right form panel ── #}
+    <div class="auth-right">
+        <div class="auth-card">
+
+            <div class="auth-card-header">
+                <h1>Create your account</h1>
+                <p>Fill in the details below to get started</p>
+            </div>
+
+            {# Flash messages #}
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash-wrap">
+                        <div class="flash flash-{{ label }}">
+                            {{ label == 'error' ? '✕' : '✓' }} {{ message }}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+
+            {{ form_start(form, {
+                'attr': {
+                    'enctype': 'multipart/form-data',
+                    'novalidate': 'novalidate',
+                    'id': 'signupForm'
+                }
+            }) }}
+
+            {# ── Avatar upload ── #}
+            <div class="avatar-upload-area">
+                <div class="avatar-preview-wrap">
+                    <img id="avatarPreview"
+                         src="{{ asset('images/default-avatar.jpg') }}"
+                         alt="Profile photo"
+                         class="avatar-preview">
+                </div>
+                <div class="avatar-upload-info">
+                    <h4>Profile Photo</h4>
+                    <p>JPG or PNG, max 2MB. Optional but recommended.</p>
+                    <label for="registration_form_profilePictureFile" class="avatar-file-btn">
+                        📷 Choose Photo
+                    </label>
+                    {{ form_widget(form.profilePictureFile, {
+                        'attr': {
+                            'class': 'avatar-file-input',
+                            'accept': 'image/*'
+                        }
+                    }) }}
+                </div>
+            </div>
+            <div class="field-errors">{{ form_errors(form.profilePictureFile) }}</div>
+
+            {# ── Name & Email ── #}
+            <div class="form-row">
+                <div class="field">
+                    {{ form_label(form.name) }}
+                    {{ form_widget(form.name, {
+                        'attr': {
+                            'class': 'field-input' ~ (form.name.vars.errors|length > 0 ? ' has-error' : ''),
+                            'placeholder': 'Your full name'
+                        }
+                    }) }}
+                    <div class="field-errors">{{ form_errors(form.name) }}</div>
+                </div>
+
+                <div class="field">
+                    {{ form_label(form.email) }}
+                    {{ form_widget(form.email, {
+                        'attr': {
+                            'class': 'field-input' ~ (form.email.vars.errors|length > 0 ? ' has-error' : ''),
+                            'placeholder': 'you@email.com'
+                        }
+                    }) }}
+                    <div class="field-errors">{{ form_errors(form.email) }}</div>
+                </div>
+            </div>
+
+            {# ── Password ── #}
+            <div class="form-divider">Security</div>
+
+            <div class="form-row">
+                <div class="field">
+                    {{ form_label(form.plainPassword.first) }}
+                    {{ form_widget(form.plainPassword.first, {
+                        'attr': {
+                            'class': 'field-input' ~ (form.plainPassword.first.vars.errors|length > 0 ? ' has-error' : ''),
+                            'placeholder': 'Min 8 characters',
+                            'id': 'passwordField'
+                        }
+                    }) }}
+                    <div class="field-errors">{{ form_errors(form.plainPassword.first) }}</div>
+                </div>
+
+                <div class="field">
+                    {{ form_label(form.plainPassword.second) }}
+                    {{ form_widget(form.plainPassword.second, {
+                        'attr': {
+                            'class': 'field-input' ~ (form.plainPassword.second.vars.errors|length > 0 ? ' has-error' : ''),
+                            'placeholder': 'Re-enter password'
+                        }
+                    }) }}
+                    <div class="field-errors">{{ form_errors(form.plainPassword.second) }}</div>
+                </div>
+            </div>
+
+            {# ── Role ── #}
+            <div class="form-divider">I want to</div>
+
+            <div class="field">
+                <div class="role-cards">
+                    {% for child in form.role %}
+                        <div>
+                            {{ form_widget(child, {'attr': {'class': 'role-card-input'}}) }}
+                            <label for="{{ child.vars.id }}" class="role-card-label">
+                                <span class="role-card-icon">
+                                    {% if child.vars.value == 'CLIENT' %}🏢
+                                    {% elseif child.vars.value == 'FREELANCER' %}💼
+                                    {% elseif child.vars.value == 'ADMIN' %}🛡️
+                                    {% endif %}
+                                </span>
+                                <span class="role-card-name">{{ child.vars.label }}</span>
+                                <span class="role-card-desc">
+                                    {% if child.vars.value == 'CLIENT' %}Post projects & hire talent
+                                    {% elseif child.vars.value == 'FREELANCER' %}Offer skills & earn money
+                                    {% elseif child.vars.value == 'ADMIN' %}Manage the platform
+                                    {% endif %}
+                                </span>
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="field-errors">{{ form_errors(form.role) }}</div>
+            </div>
+
+            <button type="submit" class="btn-submit">Create Account<span style="margin-left: 5px;"> →</span></button>
+
+            {{ form_end(form) }}
+
+            <p class="login-prompt">
+                Already have an account?
+                <a href="{{ path('user_login') }}">Sign in</a>
+            </p>
+
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block javascripts %}
 <script>
-    // Live avatar preview
-    document.getElementById('profilePictureFile').addEventListener('change', function (e) {
+document.querySelector('input[name="registration_form[profilePictureFile]"]')
+    ?.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onload = (evt) => {
+            reader.onload = evt => {
                 document.getElementById('avatarPreview').src = evt.target.result;
             };
             reader.readAsDataURL(file);

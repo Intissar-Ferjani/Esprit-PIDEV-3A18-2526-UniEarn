@@ -48,7 +48,7 @@
 <body class="dashboard-body">
 <div class="dashboard-layout">
 
-    {% include 'frontOffice/freelancer/profile/_sidebar.html.twig' with {'active': 'portfolio'} %}
+    {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': 'portfolio'} %}
 
     <div class="dashboard-main">
         <div class="top-bar">
@@ -166,22 +166,37 @@
     <div class="form-modal-box">
         <div class="form-modal-header">+ Add Project</div>
         <div class="form-modal-body">
-            <form method="post" action="{{ path('freelancer_portfolio_item_add') }}">
-                <div class="field-wrap"><label class="field-label">Project Title *</label>
-                    <input type="text" name="title" class="custom-field" required placeholder="e.g. E-commerce Website"></div>
-                <div class="field-wrap"><label class="field-label">Description *</label>
-                    <textarea name="description" class="custom-field" rows="4" required placeholder="Describe your project..."></textarea></div>
-                <div class="field-wrap"><label class="field-label">Technologies</label>
-                    <input type="text" name="technologies" class="custom-field" placeholder="e.g. React, Node.js, MongoDB"></div>
-                <div class="field-wrap"><label class="field-label">Project URL</label>
-                    <input type="url" name="project_url" class="custom-field" placeholder="https://..."></div>
-                <div class="field-wrap"><label class="field-label">GitHub URL</label>
-                    <input type="url" name="github_url" class="custom-field" placeholder="https://github.com/..."></div>
+            {{ form_start(addForm, {'action': path('freelancer_portfolio_item_add')}) }}
+                <div class="field-wrap">
+                    <label class="field-label">Project Title *</label>
+                    {{ form_widget(addForm.title) }}
+                    <div style="color:#e53e3e;font-size:12px;margin-top:4px;">{{ form_errors(addForm.title) }}</div>
+                </div>
+                <div class="field-wrap">
+                    <label class="field-label">Description *</label>
+                    {{ form_widget(addForm.description) }}
+                    <div style="color:#e53e3e;font-size:12px;margin-top:4px;">{{ form_errors(addForm.description) }}</div>
+                </div>
+                <div class="field-wrap">
+                    <label class="field-label">Technologies</label>
+                    {{ form_widget(addForm.technologiesInput) }}
+                    <div style="color:#e53e3e;font-size:12px;margin-top:4px;">{{ form_errors(addForm.technologiesInput) }}</div>
+                </div>
+                <div class="field-wrap">
+                    <label class="field-label">Project URL</label>
+                    {{ form_widget(addForm.projectUrl) }}
+                    <div style="color:#e53e3e;font-size:12px;margin-top:4px;">{{ form_errors(addForm.projectUrl) }}</div>
+                </div>
+                <div class="field-wrap">
+                    <label class="field-label">GitHub URL</label>
+                    {{ form_widget(addForm.githubUrl) }}
+                    <div style="color:#e53e3e;font-size:12px;margin-top:4px;">{{ form_errors(addForm.githubUrl) }}</div>
+                </div>
                 <div class="btn-row">
                     <button type="button" class="back-button" onclick="closeModal('addItemModal')">Cancel</button>
                     <button type="submit" class="signup-button" style="flex:1.5;">Add Project</button>
                 </div>
-            </form>
+            {{ form_end(addForm) }}
         </div>
     </div>
 </div>
@@ -191,22 +206,37 @@
     <div class="form-modal-box">
         <div class="form-modal-header">✏️ Edit Project</div>
         <div class="form-modal-body">
-            <form id="editItemForm" method="post" action="">
-                <div class="field-wrap"><label class="field-label">Project Title *</label>
-                    <input type="text" name="title" id="editTitle" class="custom-field" required></div>
-                <div class="field-wrap"><label class="field-label">Description *</label>
-                    <textarea name="description" id="editDesc" class="custom-field" rows="4" required></textarea></div>
-                <div class="field-wrap"><label class="field-label">Technologies</label>
-                    <input type="text" name="technologies" id="editTech" class="custom-field"></div>
-                <div class="field-wrap"><label class="field-label">Project URL</label>
-                    <input type="url" name="project_url" id="editProjectUrl" class="custom-field"></div>
-                <div class="field-wrap"><label class="field-label">GitHub URL</label>
-                    <input type="url" name="github_url" id="editGithubUrl" class="custom-field"></div>
+            {{ form_start(editForm, {'attr': {'id': 'editItemForm'}}) }}
+                <div class="field-wrap">
+                    <label class="field-label">Project Title *</label>
+                    {{ form_widget(editForm.title, {'id': 'editTitle'}) }}
+                    <div style="color:#e53e3e;font-size:12px;margin-top:4px;">{{ form_errors(editForm.title) }}</div>
+                </div>
+                <div class="field-wrap">
+                    <label class="field-label">Description *</label>
+                    {{ form_widget(editForm.description, {'id': 'editDesc'}) }}
+                    <div style="color:#e53e3e;font-size:12px;margin-top:4px;">{{ form_errors(editForm.description) }}</div>
+                </div>
+                <div class="field-wrap">
+                    <label class="field-label">Technologies</label>
+                    {{ form_widget(editForm.technologiesInput, {'id': 'editTech'}) }}
+                    <div style="color:#e53e3e;font-size:12px;margin-top:4px;">{{ form_errors(editForm.technologiesInput) }}</div>
+                </div>
+                <div class="field-wrap">
+                    <label class="field-label">Project URL</label>
+                    {{ form_widget(editForm.projectUrl, {'id': 'editProjectUrl'}) }}
+                    <div style="color:#e53e3e;font-size:12px;margin-top:4px;">{{ form_errors(editForm.projectUrl) }}</div>
+                </div>
+                <div class="field-wrap">
+                    <label class="field-label">GitHub URL</label>
+                    {{ form_widget(editForm.githubUrl, {'id': 'editGithubUrl'}) }}
+                    <div style="color:#e53e3e;font-size:12px;margin-top:4px;">{{ form_errors(editForm.githubUrl) }}</div>
+                </div>
                 <div class="btn-row">
                     <button type="button" class="back-button" onclick="closeModal('editItemModal')">Cancel</button>
                     <button type="submit" class="signup-button" style="flex:1.5;">Save Changes</button>
                 </div>
-            </form>
+            {{ form_end(editForm) }}
         </div>
     </div>
 </div>
@@ -265,6 +295,14 @@ function openEditModal(id, title, desc, tech, projectUrl, githubUrl) {
 document.querySelectorAll('.form-modal').forEach(modal => {
     modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
 });
+
+{% if openAddModal ?? false %}
+    openModal('addItemModal');
+{% endif %}
+{% if openEditModal ?? false %}
+    document.getElementById('editItemForm').action = '/freelancer/portfolio/item/' + {{ openEditModal }} + '/edit';
+    openModal('editItemModal');
+{% endif %}
 </script>
 
 </body>

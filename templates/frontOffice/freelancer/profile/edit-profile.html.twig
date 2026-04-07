@@ -9,90 +9,130 @@
 <body class="dashboard-body">
 <div class="dashboard-layout">
 
-    {% include 'frontOffice/freelancer/profile/_sidebar.html.twig' with {'active': 'dashboard'} %}
+    {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': 'dashboard'} %}
 
     <div class="dashboard-main">
-        <div class="top-bar"><span class="top-bar-title">Edit Profile</span></div>
+        <div class="top-bar">
+            <span class="top-bar-title">Edit Profile</span>
+        </div>
 
-        <div class="dashboard-content">
+        <div class="dashboard-content" style="display: flex; flex-direction: column; align-items: center; padding: 40px 20px;">
 
             {% for label, messages in app.flashes %}
                 {% for message in messages %}
-                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                    <div class="flash flash-{{ label }}" style="width: 100%; max-width: 600px; margin-bottom: 20px; box-sizing: border-box;">{{ message }}</div>
                 {% endfor %}
             {% endfor %}
 
-            <div class="edit-card">
-                <div class="edit-card-header">✏️ Edit Profile</div>
+            <div class="edit-card" style="width: 100%; max-width: 600px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); padding: 20px;">
+                <div class="edit-card-header" style="padding: 20px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border-radius: 8px 8px 0 0; margin: -20px -20px 0 -20px;">
+                </div>
 
-                <form method="post" action="{{ path('freelancer_profile_edit') }}" class="edit-form" novalidate>
+                {{ form_start(form, {'attr': {'class': 'edit-form', 'novalidate': 'novalidate'}, 'action': path('freelancer_profile_edit')}) }}
 
-                    <div class="edit-section-title">Professional Information</div>
+                    <div class="edit-section-title" style="font-size: 14px; font-weight: 600; color: #1e293b; margin-top: 28px; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px;">Professional Information</div>
 
-                    <div class="field-wrap">
-                        <label class="field-label">Full Name</label>
-                        <input type="text" name="name" class="custom-field" value="{{ user.name }}" required>
+                    <div class="field-wrap" style="margin-bottom: 16px;">
+                        {{ form_label(form.name, null, {'label_attr': {'class': 'field-label', 'style': 'display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 8px;'}}) }}
+                        {{ form_widget(form.name, {'attr': {'class': 'custom-field', 'style': 'width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; transition: all 0.2s; box-sizing: border-box;'}}) }}
+                        {{ form_errors(form.name) }}
                     </div>
 
-                    <div class="field-wrap">
-                        <label class="field-label">Email Address</label>
-                        <input type="email" name="email" class="custom-field" value="{{ user.email }}" required>
+                    <div class="field-wrap" style="margin-bottom: 16px;">
+                        {{ form_label(form.email, null, {'label_attr': {'class': 'field-label', 'style': 'display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 8px;'}}) }}
+                        {{ form_widget(form.email, {'attr': {'class': 'custom-field', 'style': 'width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; transition: all 0.2s; box-sizing: border-box;'}}) }}
+                        {{ form_errors(form.email) }}
                     </div>
 
-                    <div class="field-wrap">
-                        <label class="field-label">Hourly Rate (TND/hour)</label>
-                        <input type="number" name="price_per_hour" class="custom-field"
-                               value="{{ freelancer.pricePerHour }}" step="0.01" min="0">
+                    <div class="field-wrap" style="margin-bottom: 16px;">
+                        {{ form_label(form.pricePerHour, null, {'label_attr': {'class': 'field-label', 'style': 'display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 8px;'}}) }}
+                        {{ form_widget(form.pricePerHour, {'attr': {'class': 'custom-field', 'style': 'width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; transition: all 0.2s; box-sizing: border-box;'}}) }}
+                        {{ form_errors(form.pricePerHour) }}
                     </div>
 
-                    <div class="field-wrap">
-                        <label class="field-label">Skills <span style="color:#94a3b8;font-weight:400;">(comma-separated)</span></label>
-                        <input type="text" name="skills" class="custom-field"
-                               value="{{ freelancer.skillsArray | join(', ') }}"
-                               placeholder="e.g. PHP, JavaScript, Python">
+                    <div class="field-wrap" style="margin-bottom: 16px;">
+                        {{ form_label(form.skillsInput, null, {'label_attr': {'class': 'field-label', 'style': 'display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 8px;'}}) }}
+                        <span style="color: #64748b; font-size: 12px; font-weight: 400; display: block; margin-bottom: 4px;">(comma-separated)</span>
+                        {{ form_widget(form.skillsInput, {'attr': {'class': 'custom-field', 'placeholder': 'e.g. PHP, JavaScript, Python', 'style': 'width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; transition: all 0.2s; box-sizing: border-box;'}}) }}
+                        {{ form_errors(form.skillsInput) }}
                     </div>
 
-                    <div class="field-wrap">
-                        <label class="field-label">Professional Bio</label>
-                        <textarea name="bio" class="custom-field" rows="5"
-                                  placeholder="Tell clients about yourself...">{{ freelancer.bio }}</textarea>
+                    <div class="field-wrap" style="margin-bottom: 8px;">
+                        {{ form_label(form.bio, null, {'label_attr': {'class': 'field-label', 'style': 'display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 8px;'}}) }}
+                        {{ form_widget(form.bio, {'attr': {'class': 'custom-field', 'rows': 5, 'style': 'width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; transition: all 0.2s; box-sizing: border-box;'}}) }}
+                        {{ form_errors(form.bio) }}
                     </div>
 
-                    <hr class="section-divider" style="margin:24px 0;">
-                    <div class="edit-section-title">🔒 Change Password</div>
-                    <p style="color:#94a3b8;font-size:12px;margin-bottom:16px;">Leave blank to keep your current password.</p>
+                    <div style="border-top: 2px solid #e2e8f0; margin: 28px 0; padding-top: 28px;"></div>
+                    
+                    <div class="edit-section-title" style="font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">🔒 Change Password</div>
+                    <p style="color: #64748b; font-size: 13px; margin-bottom: 20px; line-height: 1.5;">
+                        Leave blank to keep your current password.
+                    </p>
 
-                    <div class="field-wrap">
-                        <label class="field-label">Current Password</label>
-                        <input type="password" name="current_password" class="custom-field" placeholder="Enter current password">
+                    <div class="field-wrap" style="margin-bottom: 16px;">
+                        {{ form_label(form.currentPassword, null, {'label_attr': {'class': 'field-label', 'style': 'display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 8px;'}}) }}
+                        {{ form_widget(form.currentPassword, {'attr': {'class': 'custom-field', 'style': 'width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; transition: all 0.2s; box-sizing: border-box;'}}) }}
+                        {{ form_errors(form.currentPassword) }}
                     </div>
 
-                    <div class="field-wrap">
-                        <label class="field-label">New Password</label>
-                        <input type="password" name="new_password" id="newPass" class="custom-field"
-                               placeholder="Min 8 characters" onkeyup="checkStrength(this.value)">
-                        <p id="strengthMsg" style="font-size:11px;margin-top:4px;"></p>
+                    <div class="field-wrap" style="margin-bottom: 16px;">
+                        {{ form_label(form.newPassword, null, {'label_attr': {'class': 'field-label', 'style': 'display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 8px;'}}) }}
+                        {{ form_widget(form.newPassword, {'attr': {
+                            'class': 'custom-field',
+                            'id': 'newPass',
+                            'style': 'width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; transition: all 0.2s; box-sizing: border-box;',
+                            'onkeyup': 'checkStrength(this.value)'
+                        }}) }}
+                        <p id="strengthMsg" style="font-size: 12px; margin-top: 6px; color: #64748b;"></p>
+                        {{ form_errors(form.newPassword) }}
                     </div>
 
-                    <div class="field-wrap">
-                        <label class="field-label">Confirm New Password</label>
-                        <input type="password" name="confirm_password" class="custom-field" placeholder="Repeat new password">
+                    <div class="field-wrap" style="margin-bottom: 16px;">
+                        {{ form_label(form.confirmPassword, null, {'label_attr': {'class': 'field-label', 'style': 'display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 8px;'}}) }}
+                        {{ form_widget(form.confirmPassword, {'attr': {'class': 'custom-field', 'style': 'width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; transition: all 0.2s; box-sizing: border-box;'}}) }}
+                        {{ form_errors(form.confirmPassword) }}
                     </div>
 
-                    <div class="btn-row" style="margin-top:24px;">
+                    <div class="btn-row" style="display: flex; gap: 12px; margin-top: 28px;">
                         <a href="{{ path('freelancer_dashboard') }}" class="back-button"
-                           style="text-decoration:none;display:flex;align-items:center;justify-content:center;">Cancel</a>
-                        <button type="submit" class="signup-button" style="flex:1.5;">Save Changes</button>
+                           style="flex: 1; text-decoration: none; display: flex; align-items: center; justify-content: center; padding: 12px 20px; border: 1.5px solid #cbd5e1; border-radius: 6px; color: #2563eb; font-weight: 600; font-size: 14px; transition: all 0.2s; cursor: pointer;">
+                            Cancel
+                        </a>
+                        <button type="submit" class="signup-button" style="flex: 1.2; padding: 12px 20px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);">Save Changes</button>
                     </div>
-                </form>
 
-                {# Danger Zone #}
-                <div class="danger-zone">
-                    <p class="danger-title">⚠ Danger Zone</p>
-                    <p class="danger-desc">Once you deactivate your account, there is no going back.</p>
-                    <button class="btn-deactivate" onclick="document.getElementById('deactivateModal').style.display='flex'">
+                {{ form_end(form) }}
+
+                {# Danger Zone — no JavaScript #}
+                <div class="danger-zone" style="border: 1.5px solid #fee2e2; background: #fef2f2; border-radius: 8px; padding: 20px; margin-top: 28px;">
+                    <p class="danger-title" style="color: #dc2626; font-weight: 700; font-size: 14px; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 0.5px;">⚠ Danger Zone</p>
+                    <p class="danger-desc" style="color: #7f1d1d; font-size: 13px; margin: 0 0 16px 0; line-height: 1.5;">Once you deactivate your account, there is no going back.</p>
+
+                    {# CSS toggle — hidden checkbox trick #}
+                    <input type="checkbox" id="deactivateToggle" style="display:none;">
+
+                    <label for="deactivateToggle" class="btn-deactivate" style="cursor: pointer; display: inline-block; padding: 10px 16px; background: #dc2626; color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; transition: all 0.2s;">
                         Deactivate Account
-                    </button>
+                    </label>
+
+                    <div class="deactivate-confirm-box">
+                        <h3 style="color: #dc2626; margin-bottom: 12px; font-weight: 700; font-size: 14px;">⚠ Confirm Deactivation</h3>
+                        <p style="color: #64748b; margin-bottom: 16px; font-size: 13px; line-height: 1.6;">
+                            Are you absolutely sure? Type <strong>DEACTIVATE</strong> to confirm.
+                        </p>
+                        <form method="post" action="{{ path('freelancer_deactivate') }}">
+                            <input type="text" name="confirm_text" class="custom-field"
+                                placeholder="Type DEACTIVATE" style="width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; margin-bottom: 16px; box-sizing: border-box;">
+                            <div class="btn-row" style="display: flex; gap: 12px;">
+                                <label for="deactivateToggle" class="back-button"
+                                    style="flex: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 10px 16px; border: 1.5px solid #cbd5e1; border-radius: 6px; background: white; color: #2563eb; font-weight: 600; font-size: 13px; transition: all 0.2s;">
+                                    Cancel
+                                </label>
+                                <button type="submit" class="btn-deactivate" style="flex: 1; padding: 10px 16px; background: #dc2626; color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s;">Confirm Deactivate</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -100,34 +140,24 @@
 </div>
 
 {# Deactivate modal #}
-<div id="deactivateModal" class="modal-overlay" style="display:none;">
-    <div class="modal-box">
-        <h3 style="color:#c53030;margin-bottom:10px;">⚠ Deactivate Account</h3>
-        <p style="color:#4a5568;margin-bottom:16px;">Type <strong>DEACTIVATE</strong> to confirm.</p>
+<div id="deactivateModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); flex-direction: column; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="modal-box" style="background: white; border-radius: 8px; padding: 28px; max-width: 400px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);">
+        <h3 style="color: #dc2626; margin-bottom: 12px; font-weight: 700; font-size: 16px;">⚠ Deactivate Account</h3>
+        <p style="color: #64748b; margin-bottom: 20px; font-size: 13px; line-height: 1.6;">Type <strong>DEACTIVATE</strong> to confirm.</p>
         <form method="post" action="{{ path('freelancer_deactivate') }}">
-            <input type="text" name="confirm_text" class="custom-field" placeholder="Type DEACTIVATE" style="margin-bottom:14px;">
-            <div class="btn-row">
+            <input type="text" name="confirm_text" class="custom-field"
+                   placeholder="Type DEACTIVATE" style="width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; margin-bottom: 20px; box-sizing: border-box;">
+            <div class="btn-row" style="display: flex; gap: 12px;">
                 <button type="button" class="back-button"
-                        onclick="document.getElementById('deactivateModal').style.display='none'">Cancel</button>
-                <button type="submit" class="btn-deactivate" style="flex:1;">Confirm Deactivate</button>
+                        onclick="document.getElementById('deactivateModal').style.display='none'"
+                        style="flex: 1; padding: 10px 16px; border: 1.5px solid #cbd5e1; border-radius: 6px; background: white; color: #2563eb; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s;">
+                    Cancel
+                </button>
+                <button type="submit" class="btn-deactivate" style="flex: 1; padding: 10px 16px; background: #dc2626; color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s;">Confirm Deactivate</button>
             </div>
         </form>
     </div>
 </div>
 
-<script>
-function checkStrength(val) {
-    const el = document.getElementById('strengthMsg');
-    if (!val) { el.textContent = ''; return; }
-    let s = 0;
-    if (val.length >= 8) s++;
-    if (/[A-Z]/.test(val) && /[a-z]/.test(val)) s++;
-    if (/\d/.test(val)) s++;
-    if (/[^A-Za-z0-9]/.test(val)) s++;
-    if (s <= 1) { el.textContent = '⚠ Weak'; el.style.color = '#e53e3e'; }
-    else if (s <= 3) { el.textContent = '⚡ Medium'; el.style.color = '#d69e2e'; }
-    else { el.textContent = '✅ Strong'; el.style.color = '#38a169'; }
-}
-</script>
 </body>
 </html>

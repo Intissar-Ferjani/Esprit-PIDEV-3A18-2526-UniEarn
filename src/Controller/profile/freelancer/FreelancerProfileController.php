@@ -15,6 +15,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use App\Form\users\freelancer\FreelancerEditFormType;
+use App\Form\users\freelancer\PortfolioItemFormType;
+
 
 #[Route('/freelancer')]
 class FreelancerProfileController extends AbstractController
@@ -22,17 +25,30 @@ class FreelancerProfileController extends AbstractController
     // ── DASHBOARD ──────────────────────────────────────────────────────
 
     #[Route('/dashboard', name: 'freelancer_dashboard', methods: ['GET'])]
-    public function dashboard(Request $request, FreelancerRepository $repo): Response
-    {
+    public function dashboard(
+        Request                 $request,
+        FreelancerRepository    $repo,
+        PortfolioRepository     $portfolioRepo,
+        PortfolioItemRepository $itemRepo
+    ): Response {
         $userId = $request->getSession()->get('user_id');
         if (!$userId) return $this->redirectToRoute('user_login');
 
         $freelancer = $repo->findByUserId($userId);
         if (!$freelancer) return $this->redirectToRoute('user_login');
 
+        $portfolio = $portfolioRepo->findByFreelancerId($freelancer->getIdFreelancer());
+        $items     = $portfolio ? $itemRepo->findByPortfolioId($portfolio->getIdPortfolio()) : [];
+
         return $this->render('frontOffice/freelancer/profile/dashboard.html.twig', [
-            'freelancer' => $freelancer,
-            'user'       => $freelancer->getUser(),
+            'freelancer'     => $freelancer,
+            'user'           => $freelancer->getUser(),
+            'viewerRole'     => 'FREELANCER',
+            'backUrl'        => null,
+            'portfolio'      => $portfolio,
+            'items'          => $items,
+            'sidebarInclude' => 'frontOffice/user/profile/_sidebar.html.twig',
+            'sidebarActive'  => 'dashboard',
         ]);
     }
 
@@ -53,29 +69,35 @@ class FreelancerProfileController extends AbstractController
 
         $user = $freelancer->getUser();
 
-        if ($request->isMethod('POST')) {
-            $name         = trim($request->request->get('name', ''));
-            $email        = strtolower(trim($request->request->get('email', '')));
-            $pricePerHour = (float) $request->request->get('price_per_hour', 0);
-            $skillsRaw    = trim($request->request->get('skills', ''));
-            $bio          = trim($request->request->get('bio', ''));
+        // Pre-populate unmapped fields
+        $form = $this->createForm(FreelancerEditFormType::class, $freelancer, [
+            'data' => $freelancer,
+        ]);
+        $form->get('name')->setData($user->getName());
+        $form->get('email')->setData($user->getEmail());
+        $form->get('skillsInput')->setData($freelancer->getSkills());
 
-            if (!$name || !$email) {
-                $this->addFlash('error', 'Name and email are required.');
-                return $this->redirectToRoute('freelancer_profile_edit');
-            }
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $name  = $form->get('name')->getData();
+            $email = strtolower(trim($form->get('email')->getData()));
 
             // Email uniqueness check
             $existing = $userRepo->findByEmail($email);
-            if ($existing && $existing->getIdUser() !== $user->getIdUser()) {
+            if ($existing && (int)$existing->getIdUser() !== (int)$user->getIdUser()) {
                 $this->addFlash('error', 'This email is already used by another account.');
-                return $this->redirectToRoute('freelancer_profile_edit');
+                return $this->render('frontOffice/freelancer/profile/edit-profile.html.twig', [
+                    'form'       => $form->createView(),
+                    'freelancer' => $freelancer,
+                    'user'       => $user,
+                ]);
             }
 
             // Password change
-            $currentPassword = $request->request->get('current_password', '');
-            $newPassword     = $request->request->get('new_password', '');
-            $confirmPassword = $request->request->get('confirm_password', '');
+            $currentPassword = $form->get('currentPassword')->getData();
+            $newPassword     = $form->get('newPassword')->getData();
+            $confirmPassword = $form->get('confirmPassword')->getData();
 
             if ($newPassword !== '') {
                 $dbPassword = $user->getPassword();
@@ -89,26 +111,30 @@ class FreelancerProfileController extends AbstractController
 
                 if (!$isCurrentMatch) {
                     $this->addFlash('error', 'Current password is incorrect.');
-                    return $this->redirectToRoute('freelancer_profile_edit');
-                }
-                if (strlen($newPassword) < 8) {
-                    $this->addFlash('error', 'New password must be at least 8 characters.');
-                    return $this->redirectToRoute('freelancer_profile_edit');
+                    return $this->render('frontOffice/freelancer/profile/edit-profile.html.twig', [
+                        'form'       => $form->createView(),
+                        'freelancer' => $freelancer,
+                        'user'       => $user,
+                    ]);
                 }
                 if ($newPassword !== $confirmPassword) {
                     $this->addFlash('error', 'New passwords do not match.');
-                    return $this->redirectToRoute('freelancer_profile_edit');
+                    return $this->render('frontOffice/freelancer/profile/edit-profile.html.twig', [
+                        'form'       => $form->createView(),
+                        'freelancer' => $freelancer,
+                        'user'       => $user,
+                    ]);
                 }
                 $user->setPassword($newPassword);
             }
 
+            // Apply user fields
             $user->setName($name);
             $user->setEmail($email);
-            $freelancer->setPricePerHour($pricePerHour);
-            $freelancer->setBio($bio);
 
-            // Skills
-            $skills = array_values(array_filter(array_map('trim', explode(',', $skillsRaw))));
+            // Apply skills from unmapped field
+            $skillsRaw = $form->get('skillsInput')->getData();
+            $skills    = array_values(array_filter(array_map('trim', explode(',', $skillsRaw))));
             $freelancer->setSkillsArray($skills);
 
             $em->flush();
@@ -119,11 +145,11 @@ class FreelancerProfileController extends AbstractController
         }
 
         return $this->render('frontOffice/freelancer/profile/edit-profile.html.twig', [
+            'form'       => $form->createView(),
             'freelancer' => $freelancer,
             'user'       => $user,
         ]);
     }
-
     // ── CHANGE PHOTO ───────────────────────────────────────────────────
 
     #[Route('/profile/photo', name: 'freelancer_change_photo', methods: ['POST'])]
@@ -200,11 +226,16 @@ class FreelancerProfileController extends AbstractController
         $portfolio = $portfolioRepo->findByFreelancerId($freelancer->getIdFreelancer());
         $items     = $portfolio ? $itemRepo->findByPortfolioId($portfolio->getIdPortfolio()) : [];
 
+        $addForm = $this->createForm(PortfolioItemFormType::class);
+        $editForm = $this->container->get('form.factory')->createNamed('edit_item', PortfolioItemFormType::class);
+
         return $this->render('frontOffice/freelancer/profile/portfolio-page.html.twig', [
             'freelancer' => $freelancer,
             'user'       => $freelancer->getUser(),
             'portfolio'  => $portfolio,
             'items'      => $items,
+            'addForm'    => $addForm->createView(),
+            'editForm'   => $editForm->createView(),
         ]);
     }
 
@@ -257,28 +288,31 @@ class FreelancerProfileController extends AbstractController
             return $this->redirectToRoute('freelancer_portfolio_page');
         }
 
-        $title = trim($request->request->get('title', ''));
-        $desc  = trim($request->request->get('description', ''));
+        $item = new PortfolioItem();
+        $form = $this->createForm(PortfolioItemFormType::class, $item);
+        $form->handleRequest($request);
 
-        if (!$title || !$desc) {
-            $this->addFlash('error', 'Title and description are required.');
+        if ($form->isSubmitted() && $form->isValid()) {
+            $item->setTechnologiesFromString($form->get('technologiesInput')->getData());
+            $item->setImageUrl('[]');
+            $item->setPortfolio($portfolio);
+            $em->persist($item);
+            $em->flush();
+            $this->addFlash('success', 'Project added to portfolio!');
             return $this->redirectToRoute('freelancer_portfolio_page');
         }
 
-        $item = new PortfolioItem();
-        $item->setTitle($title);
-        $item->setDescription($desc);
-        $item->setTechnologiesFromString($request->request->get('technologies', ''));
-        $item->setProjectUrl($request->request->get('project_url') ?: null);
-        $item->setGithubUrl($request->request->get('github_url') ?: null);
-        $item->setImageUrl('[]');
-        $item->setPortfolio($portfolio);
-
-        $em->persist($item);
-        $em->flush();
-
-        $this->addFlash('success', 'Project added to portfolio!');
-        return $this->redirectToRoute('freelancer_portfolio_page');
+        // Validation failed
+        $editForm = $this->container->get('form.factory')->createNamed('edit_item', PortfolioItemFormType::class);
+        return $this->render('frontOffice/freelancer/profile/portfolio-page.html.twig', [
+            'freelancer'   => $freelancer,
+            'user'         => $freelancer->getUser(),
+            'portfolio'    => $portfolio,
+            'items'        => $portfolio ? $em->getRepository(PortfolioItem::class)->findByPortfolioId($portfolio->getIdPortfolio()) : [],
+            'addForm'      => $form->createView(),
+            'editForm'     => $editForm->createView(),
+            'openAddModal' => true,
+        ]);
     }
 
     // ── EDIT PORTFOLIO ITEM ────────────────────────────────────────────
@@ -288,20 +322,38 @@ class FreelancerProfileController extends AbstractController
         int                     $id,
         Request                 $request,
         PortfolioItemRepository $itemRepo,
+        FreelancerRepository    $repo,
+        PortfolioRepository     $portfolioRepo,
         EntityManagerInterface  $em
     ): Response {
         $item = $itemRepo->find($id);
         if (!$item) throw $this->createNotFoundException('Item not found.');
 
-        $item->setTitle(trim($request->request->get('title', '')));
-        $item->setDescription(trim($request->request->get('description', '')));
-        $item->setTechnologiesFromString($request->request->get('technologies', ''));
-        $item->setProjectUrl($request->request->get('project_url') ?: null);
-        $item->setGithubUrl($request->request->get('github_url') ?: null);
-        $em->flush();
+        $form = $this->container->get('form.factory')->createNamed('edit_item', PortfolioItemFormType::class, $item);
+        $form->handleRequest($request);
 
-        $this->addFlash('success', 'Project updated!');
-        return $this->redirectToRoute('freelancer_portfolio_page');
+        if ($form->isSubmitted() && $form->isValid()) {
+            $item->setTechnologiesFromString($form->get('technologiesInput')->getData());
+            $em->flush();
+            $this->addFlash('success', 'Project updated!');
+            return $this->redirectToRoute('freelancer_portfolio_page');
+        }
+
+        // Validation failed
+        $userId = $request->getSession()->get('user_id');
+        $freelancer = $repo->findByUserId($userId);
+        $portfolio  = $portfolioRepo->findByFreelancerId($freelancer->getIdFreelancer());
+        
+        $addForm = $this->createForm(PortfolioItemFormType::class);
+        return $this->render('frontOffice/freelancer/profile/portfolio-page.html.twig', [
+            'freelancer'    => $freelancer,
+            'user'          => $freelancer->getUser(),
+            'portfolio'     => $portfolio,
+            'items'         => $portfolio ? $itemRepo->findByPortfolioId($portfolio->getIdPortfolio()) : [],
+            'addForm'       => $addForm->createView(),
+            'editForm'      => $form->createView(),
+            'openEditModal' => $id,
+        ]);
     }
 
     // ── DELETE PORTFOLIO ITEM ──────────────────────────────────────────

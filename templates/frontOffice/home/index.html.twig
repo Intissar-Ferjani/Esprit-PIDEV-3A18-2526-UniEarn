@@ -1,0 +1,189 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}UniEarn — Freelancing Étudiant{% endblock %}
+
+{% block stylesheets %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ asset('css/home.css') }}">
+{% endblock %}
+
+{% block body %}
+
+{# ── Navbar ── #}
+<nav class="uniearn-nav">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-between">
+
+            <a href="{{ path('home') }}" class="nav-logo d-flex align-items-center gap-2">
+                <img src="{{ asset('images/logoUniEarn.png') }}" alt="UniEarn" height="36">
+                UniEarn
+            </a>
+
+            <div class="d-none d-md-flex align-items-center gap-4">
+                <a href="#features" class="nav-link-custom">Fonctionnalités</a>
+                <a href="#how" class="nav-link-custom">Comment ça marche</a>
+                <a href="#" class="nav-link-custom">À propos</a>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ path('user_login') }}" class="btn-login d-none d-sm-inline-block">Connexion</a>
+                <a href="{{ path('user_signup') }}" class="btn-signup-nav">S'inscrire</a>
+            </div>
+
+        </div>
+    </div>
+</nav>
+
+{# ── Hero ── #}
+<section class="hero text-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="hero-badge">✦ Plateforme #1 pour étudiants freelances</div>
+                <h1 class="hero-title">
+                    Travaillez en freelance<br>
+                    <span>pendant vos études</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Trouvez des missions adaptées à votre emploi du temps étudiant.
+                    Paiements sécurisés, clients vérifiés, et support dédié.
+                </p>
+                <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap">
+                    <a href="{{ path('user_signup') }}" class="btn-cta-primary">
+                        Commencer gratuitement
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </a>
+                    <a href="#features" class="btn-cta-secondary">Voir les missions</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ── Stats Bar ── #}
+<section class="stats-bar">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-center gap-0">
+
+            <div class="text-center px-4 px-md-5">
+                <div class="stat-num stat-num-dark">5 000+</div>
+                <div class="stat-label">Étudiants actifs</div>
+            </div>
+
+            <div class="stat-divider d-none d-sm-block"></div>
+
+            <div class="text-center px-4 px-md-5">
+                <div class="stat-num stat-num-green">98%</div>
+                <div class="stat-label">Paiements réussis</div>
+            </div>
+
+            <div class="stat-divider d-none d-sm-block"></div>
+
+            <div class="text-center px-4 px-md-5">
+                <div class="stat-num stat-num-blue">150+</div>
+                <div class="stat-label">Campus partenaires</div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{# ── Features ── #}
+<section class="features" id="features">
+    <div class="container">
+        <div class="text-center mb-5">
+            <div class="section-label">Pourquoi UniEarn</div>
+            <h2 class="section-title">Tout ce qu'il vous faut pour réussir</h2>
+            <p class="section-subtitle mt-2">Conçu spécialement pour les étudiants freelances</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon feature-icon-blue">🛡️</div>
+                    <div class="feature-title">Paiements sécurisés</div>
+                    <p class="feature-desc">Votre argent est protégé jusqu'à la livraison du travail. Zéro risque d'impayé.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card featured">
+                    <div class="feature-icon feature-icon-white">⏰</div>
+                    <div class="feature-title">Flexible &amp; Adapté</div>
+                    <p class="feature-desc">Choisissez des missions compatibles avec votre emploi du temps universitaire.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon feature-icon-green">✅</div>
+                    <div class="feature-title">Clients vérifiés</div>
+                    <p class="feature-desc">Tous nos clients passent par une vérification stricte. Travaillez en toute confiance.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ── How it works ── #}
+<section class="steps" id="how">
+    <div class="container">
+        <div class="text-center mb-5">
+            <div class="section-label">Simple &amp; Rapide</div>
+            <h2 class="section-title">Comment ça marche ?</h2>
+        </div>
+
+        <div class="d-flex align-items-start justify-content-center flex-wrap flex-md-nowrap">
+
+            <div class="text-center" style="min-width:160px;">
+                <div class="step-circle">1</div>
+                <div class="step-title">Créez votre profil</div>
+                <p class="step-desc">Ajoutez vos compétences et votre carte étudiante pour être vérifié.</p>
+            </div>
+
+            <div class="step-connector d-none d-md-block"></div>
+
+            <div class="text-center" style="min-width:160px;">
+                <div class="step-circle">2</div>
+                <div class="step-title">Trouvez des missions</div>
+                <p class="step-desc">Parcourez les projets adaptés à vos compétences et disponibilités.</p>
+            </div>
+
+            <div class="step-connector d-none d-md-block"></div>
+
+            <div class="text-center" style="min-width:160px;">
+                <div class="step-circle">3</div>
+                <div class="step-title">Livrez &amp; Soyez payé</div>
+                <p class="step-desc">Terminez le projet et recevez votre paiement de manière sécurisée.</p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{# ── CTA Banner ── #}
+<section class="cta-banner text-center">
+    <div class="container">
+        <h2 class="cta-banner-title mb-3">Prêt à commencer ?</h2>
+        <p class="cta-banner-sub mb-4">
+            Rejoignez 5 000+ étudiants qui gagnent de l'expérience et de l'argent sur UniEarn.
+        </p>
+        <a href="{{ path('user_signup') }}" class="btn-banner">Créer mon compte gratuitement</a>
+    </div>
+</section>
+
+{# ── Footer ── #}
+<footer class="uniearn-footer">
+    <div class="container">
+        <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3">
+            <p class="footer-text">© 2026 UniEarn — Plateforme de freelancing étudiant</p>
+            <div class="d-flex gap-4">
+                <a href="#" class="footer-link">Confidentialité</a>
+                <a href="#" class="footer-link">CGU</a>
+                <a href="#" class="footer-link">Contact</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+{% endblock %}

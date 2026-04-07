@@ -1,9 +1,12 @@
+{# templates/frontOffice/client/dashboard.html.twig
+   viewerRole = 'CLIENT' (own dashboard) | 'ADMIN' (admin viewing this profile)
+#}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UniEarn – Client Dashboard</title>
+    <title>UniEarn – {{ user.name }}'s Profile</title>
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 </head>
@@ -11,15 +14,25 @@
 
 <div class="dashboard-layout">
 
-    {# ── Sidebar ── #}
-    {% include 'frontOffice/client/profile/_sidebar.html.twig' with {'active': 'dashboard'} %}
+    {# Sidebar — client sees client sidebar, admin sees admin sidebar #}
+    {% set sidebar = sidebarInclude ?? 'frontOffice/user/profile/_sidebar.html.twig' %}
+    {% set active  = sidebarActive  ?? 'dashboard' %}
+    {% include sidebar with {'active': active} %}
 
-    {# ── Main content ── #}
     <div class="dashboard-main">
 
-        {# Top bar #}
         <div class="top-bar">
-            <span class="top-bar-title">Dashboard</span>
+            {% if viewerRole is defined and viewerRole == 'ADMIN' and backUrl is defined %}
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <a href="{{ backUrl }}" style="color:#2563EB;text-decoration:none;font-size:13px;font-weight:600;">
+                        ← Back to Users
+                    </a>
+                    <span style="color:#cbd5e0;">|</span>
+                    <span class="top-bar-title">{{ user.name }}'s Profile</span>
+                </div>
+            {% else %}
+                <span class="top-bar-title">Dashboard</span>
+            {% endif %}
             <div class="top-bar-right">
                 <span class="top-bar-user">👤 {{ user.name }}</span>
             </div>
@@ -27,7 +40,6 @@
 
         <div class="dashboard-content">
 
-            {# Flash messages #}
             {% for label, messages in app.flashes %}
                 {% for message in messages %}
                     <div class="flash flash-{{ label }}">{{ message }}</div>
@@ -39,20 +51,26 @@
                 <div class="profile-banner"></div>
                 <div class="profile-header-body">
 
-                    {# Avatar #}
+                    {# Avatar — editable only by the client themselves #}
                     <div class="avatar-wrap">
-                        <form method="post" action="{{ path('client_change_photo') }}" enctype="multipart/form-data" id="photoForm">
-                            <label for="photoInput" class="avatar-label" title="Change photo">
-                                {% if user.profilePicturePath %}
-                                    <img src="{{ asset(user.profilePicturePath) }}" class="profile-avatar" alt="Avatar">
-                                {% else %}
-                                    <img src="{{ asset('images/default-avatar.jpg') }}" class="profile-avatar" alt="Avatar">
-                                {% endif %}
-                                <span class="avatar-camera">📷</span>
-                            </label>
-                            <input type="file" id="photoInput" name="profile_photo" accept="image/*"
-                                   style="display:none" onchange="document.getElementById('photoForm').submit()">
-                        </form>
+                        {% if viewerRole is not defined or viewerRole == 'CLIENT' %}
+                            <form method="post" action="{{ path('client_change_photo') }}"
+                                  enctype="multipart/form-data" id="photoForm">
+                                <label for="photoInput" class="avatar-label" title="Change photo">
+                                    {% if user.profilePicturePath %}
+                                        <img src="{{ asset(user.profilePicturePath) }}" class="profile-avatar" alt="Avatar">
+                                    {% else %}
+                                        <img src="{{ asset('images/default-avatar.jpg') }}" class="profile-avatar" alt="Avatar">
+                                    {% endif %}
+                                    <span class="avatar-camera">📷</span>
+                                </label>
+                                <input type="file" id="photoInput" name="profile_photo" accept="image/*"
+                                       style="display:none" onchange="document.getElementById('photoForm').submit()">
+                            </form>
+                        {% else %}
+                            <img src="{{ asset(user.profilePicturePath ?? 'images/default-avatar.jpg') }}"
+                                class="profile-avatar" alt="{{ user.name }}">
+                        {% endif %}
                     </div>
 
                     {# Info #}
@@ -65,60 +83,90 @@
                         </div>
                     </div>
 
-                    {# Edit button #}
+                    {# Edit button — only for the client themselves #}
+                    {% if viewerRole is not defined or viewerRole == 'CLIENT' %}
                     <div class="profile-edit-btn-wrap">
                         <a href="{{ path('client_profile_edit') }}" class="btn-edit">✏️ Edit Profile</a>
                     </div>
+                    {% endif %}
+
+                    {# Admin actions — activate/deactivate #}
+                    {% if viewerRole == 'ADMIN' %}
+                    <div class="profile-edit-btn-wrap" style="display:flex;gap:8px;flex-direction:column;align-items:flex-end;">
+                        <form method="post" action="{{ path('admin_toggle_user', {id: user.idUser}) }}">
+                            <button type="submit" class="btn-edit"
+                                    style="background:{{ user.isActivated ? '#f59e0b' : '#16a34a' }};">
+                                {{ user.isActivated ? '🚫 Deactivate' : '✅ Activate' }}
+                            </button>
+                        </form>
+                        <form method="post" action="{{ path('admin_delete_user', {id: user.idUser}) }}"
+                            onsubmit="return confirm('Delete this user permanently?')">
+                            <button type="submit" class="btn-edit" style="background:#ef4444;">🗑 Delete</button>
+                        </form>
+                    </div>
+                    {% endif %}
+
                 </div>
             </div>
 
-            {# ── Posted Projects ── #}
+            {# ── Client Details (admin only extra info) ── #}
+            {% if viewerRole == 'ADMIN' and client %}
+            <div class="content-section" style="margin-top:20px;">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <span class="section-icon">📊</span>
+                        <h3 class="section-title">Client Details</h3>
+                    </div>
+                </div>
+                <hr class="section-divider">
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+                    <div>
+                        <p class="field-label">Company</p>
+                        <p style="font-weight:600;color:#1e293b;">{{ client.company ?: 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <p class="field-label">Industry</p>
+                        <p style="font-weight:600;color:#1e293b;">{{ client.industry ?: 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <p class="field-label">Balance</p>
+                        <p style="font-weight:600;color:#1e293b;">{{ client.amount }} TND</p>
+                    </div>
+                    <div>
+                        <p class="field-label">Rating</p>
+                        <p style="font-weight:600;color:#1e293b;">⭐ {{ client.rating }}</p>
+                    </div>
+                    <div>
+                        <p class="field-label">Status</p>
+                        <p style="font-weight:600;color:{{ user.isActivated ? '#16a34a' : '#dc2626' }};">
+                            {{ user.isActivated ? '✅ Active' : '🚫 Deactivated' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {# ── Posted Projects — only shown to the client themselves ── #}
+            {% if viewerRole is not defined or viewerRole == 'CLIENT' %}
             <div class="content-section" style="margin-top:24px;">
                 <div class="section-header">
                     <div class="section-title-wrap">
                         <span class="section-icon">📁</span>
                         <h3 class="section-title">Posted Projects</h3>
                     </div>
-                    <div class="section-filters">
-                        <input type="text" id="searchInput" placeholder="🔍 Search projects..."
-                               class="search-input" onkeyup="filterProjects()">
-                        <select id="statusFilter" class="filter-select" onchange="filterProjects()">
-                            <option value="">All Status</option>
-                            <option value="TODO">Active</option>
-                            <option value="DOING">In Progress</option>
-                            <option value="DONE">Completed</option>
-                        </select>
-                    </div>
                 </div>
                 <hr class="section-divider">
-
-                <div id="projectsContainer">
-                    {# Projects will be loaded here — placeholder for now #}
-                    <div class="empty-state">
-                        <span class="empty-icon">📋</span>
-                        <p class="empty-text">No projects posted yet</p>
-                        <p class="empty-subtext">Post your first project to get started!</p>
-                    </div>
+                <div class="empty-state">
+                    <span class="empty-icon">📋</span>
+                    <p class="empty-text">No projects posted yet</p>
+                    <p class="empty-subtext">Post your first project to get started!</p>
                 </div>
             </div>
+            {% endif %}
 
         </div>
     </div>
 </div>
-
-<script>
-function filterProjects() {
-    const search = document.getElementById('searchInput').value.toLowerCase();
-    const status = document.getElementById('statusFilter').value;
-    document.querySelectorAll('.project-card').forEach(card => {
-        const title = card.dataset.title?.toLowerCase() || '';
-        const cardStatus = card.dataset.status || '';
-        const matchSearch = title.includes(search);
-        const matchStatus = !status || cardStatus === status;
-        card.style.display = (matchSearch && matchStatus) ? '' : 'none';
-    });
-}
-</script>
 
 </body>
 </html>
