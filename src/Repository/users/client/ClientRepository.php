@@ -25,6 +25,7 @@ class ClientRepository extends ServiceEntityRepository
             ->join('c.user', 'u')
             ->where('u.idUser = :id')
             ->setParameter('id', $userId)
+            ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
     }

@@ -27,10 +27,27 @@
         .filter-bar input:focus, .filter-bar select:focus { outline:none; border-color:#2563EB; }
     </style>
 </head>
+<script>
+(function () {
+    const form    = document.querySelector('.filter-bar');
+    const search  = form.querySelector('input[name="search"]');
+    const selects = form.querySelectorAll('select');
+    let timer;
+
+    function submit() { form.submit(); }
+
+    search.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(submit, 400);
+    });
+
+    selects.forEach(s => s.addEventListener('change', submit));
+})();
+</script>
 <body class="dashboard-body">
 <div class="dashboard-layout">
 
-    {% include 'backOffice/_sidebar.html.twig' with {'active': 'users'} %}
+    {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': 'users'} %}
 
     <div class="dashboard-main">
         <div class="top-bar">
@@ -53,7 +70,7 @@
                 <form method="get" action="{{ path('admin_manage_users') }}" class="filter-bar">
                     <div>
                         <label class="field-label">Search</label>
-                        <input type="text" name="search" value="{{ search }}" placeholder="🔍 Name or email...">
+                        <input type="text" name="search" value="{{ search }}" style="width:600px;" placeholder="🔍 Name or email...">
                     </div>
                     <div>
                         <label class="field-label">Role</label>
@@ -82,7 +99,19 @@
                         </select>
                     </div>
                     <button type="submit" class="btn-edit" style="height:38px;">Apply</button>
-                    <a href="{{ path('admin_manage_users') }}" class="back-button" style="height:38px;padding:0 16px;text-decoration:none;display:flex;align-items:center;">Clear</a>
+                    <a href="{{ path('admin_manage_users') }}"
+                    class="back-button"
+                    style="
+                        height:38px;
+                        padding:0 10px;
+                        text-decoration:none;
+                        display:inline-flex;
+                        align-items:center;
+                        width:auto;
+                        flex:0 0 auto;
+                    ">
+                    Clear
+                    </a>
                 </form>
             </div>
 
@@ -133,7 +162,6 @@
                             <td>
                                 <div style="display:flex;gap:6px;justify-content:flex-end;">
                                     <a href="{{ path('admin_user_view', {id: user.idUser}) }}" class="action-btn btn-view">👁 View</a>
-
                                     <form method="post" action="{{ path('admin_toggle_user', {id: user.idUser}) }}" style="display:inline;">
                                         <button type="submit" class="action-btn {{ user.isActivated ? 'btn-deactivate' : 'btn-activate' }}">
                                             {{ user.isActivated ? '🚫 Deactivate' : '✅ Activate' }}

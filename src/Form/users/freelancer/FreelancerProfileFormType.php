@@ -12,6 +12,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\File;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\Length;
 
 class FreelancerProfileFormType extends AbstractType
 {
@@ -23,35 +24,25 @@ class FreelancerProfileFormType extends AbstractType
                 'scale' => 2,
                 'attr'  => ['placeholder' => '0.00'],
             ])
-            ->add('skillsInput', TextType::class, [
-                'label'    => 'Skills',
-                'mapped'   => false,
-                'required' => false,
-                'attr'     => [
+            ->add('skills', TextType::class, [
+                'label'      => 'Skills',
+                'required'   => true,
+                'empty_data' => '',
+                'attr'       => [
                     'placeholder' => 'e.g. PHP, JavaScript, Python (comma-separated)',
                     'id'          => 'skillsInput',
                 ],
                 'constraints' => [new NotBlank(message: 'Please add at least one skill.')],
             ])
             ->add('bio', TextareaType::class, [
-                'label' => 'Professional Bio',
-                'attr'  => [
+                'label'      => 'Professional Bio',
+                'empty_data' => '',
+                'attr'       => [
                     'placeholder' => 'Tell clients about yourself...',
                     'rows'        => 6,
                 ],
             ])
-            ->add('experience', ChoiceType::class, [
-                'label'    => 'Experience Level',
-                'mapped'   => false,
-                'required' => true,
-                'placeholder' => 'Select your experience level',
-                'choices'  => [
-                    'Beginner (0-1 years)'      => 'Beginner (0-1 years)',
-                    'Intermediate (1-3 years)'  => 'Intermediate (1-3 years)',
-                    'Advanced (3-5 years)'      => 'Advanced (3-5 years)',
-                    'Expert (5+ years)'         => 'Expert (5+ years)',
-                ],
-            ])
+
             ->add('cvFile', FileType::class, [
                 'label'    => 'Upload Your CV (PDF, max 5MB)',
                 'mapped'   => false,

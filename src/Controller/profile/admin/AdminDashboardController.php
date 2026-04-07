@@ -95,7 +95,7 @@ class AdminDashboardController extends AbstractController
             default      => fn($a, $b) => strcmp($a->getName(), $b->getName()),
         });
 
-        return $this->render('backOffice/manage-users.html.twig', [
+        return $this->render('backOffice/user/manage-users.html.twig', [
             'users'      => $users,
             'search'     => $search,
             'role'       => $role,
@@ -109,26 +109,66 @@ class AdminDashboardController extends AbstractController
 
     #[Route('/users/{id}/view', name: 'admin_user_view', methods: ['GET'])]
     public function viewUser(
-        int                  $id,
-        Request              $request,
-        UserRepository       $userRepo,
-        ClientRepository     $clientRepo,
-        FreelancerRepository $freelancerRepo
+        int                     $id,
+        Request                 $request,
+        UserRepository          $userRepo,
+        ClientRepository        $clientRepo,
+        FreelancerRepository    $freelancerRepo,
+        \App\Repository\users\freelancer\PortfolioRepository     $portfolioRepo,
+        \App\Repository\users\freelancer\PortfolioItemRepository $itemRepo
     ): Response {
         if ($r = $this->requireAdmin($request)) return $r;
 
-        $user       = $userRepo->find($id);
+        $user = $userRepo->find($id);
         if (!$user) throw $this->createNotFoundException();
 
-        $client     = $user->getRole() === 'CLIENT'     ? $clientRepo->findByUserId($id)     : null;
-        $freelancer = $user->getRole() === 'FREELANCER' ? $freelancerRepo->findByUserId($id) : null;
+        // ── CLIENT ──
+        if ($user->getRole() === 'CLIENT') {
+            $client = $clientRepo->findByUserId($id);
 
-        return $this->render('backOffice/user-detail.html.twig', [
-            'user'       => $user,
-            'client'     => $client,
-            'freelancer' => $freelancer,
-            'adminName'  => $request->getSession()->get('user_name'),
-        ]);
+            if (!$client) {
+                $this->addFlash('error', 'Client profile data not found for this user.');
+                return $this->redirectToRoute('admin_manage_users');
+            }
+
+            return $this->render('frontOffice/client/profile/dashboard.html.twig', [
+                'client'         => $client,
+                'user'           => $user,
+                'viewerRole'     => 'ADMIN',
+                'backUrl'        => $this->generateUrl('admin_manage_users'),
+                'sidebarInclude' => 'frontOffice/user/profile/_sidebar.html.twig',
+                'sidebarActive'  => 'users',
+            ]);
+        }
+
+        // ── FREELANCER ──
+        if ($user->getRole() === 'FREELANCER') {
+            $freelancer = $freelancerRepo->findByUserId($id);
+
+            // Guard: freelancer record missing
+            if (!$freelancer) {
+                $this->addFlash('error', 'Freelancer profile data not found for this user.');
+                return $this->redirectToRoute('admin_manage_users');
+            }
+
+            $portfolio = $portfolioRepo->findByFreelancerId($freelancer->getIdFreelancer());
+            $items     = $portfolio ? $itemRepo->findByPortfolioId($portfolio->getIdPortfolio()) : [];
+
+            return $this->render('frontOffice/freelancer/profile/dashboard.html.twig', [
+                'freelancer'     => $freelancer,
+                'user'           => $user,
+                'viewerRole'     => 'ADMIN',
+                'backUrl'        => $this->generateUrl('admin_manage_users'),
+                'portfolio'      => $portfolio,
+                'items'          => $items,
+                'sidebarInclude' => 'frontOffice/user/profile/_sidebar.html.twig',
+                'sidebarActive'  => 'users',
+            ]);
+        }
+
+        // ── ADMIN user — just redirect back ──
+        $this->addFlash('error', 'Cannot view admin profiles.');
+        return $this->redirectToRoute('admin_manage_users');
     }
 
     // ── TOGGLE ACTIVATE / DEACTIVATE ──────────────────────────────────

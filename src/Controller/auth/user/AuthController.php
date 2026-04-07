@@ -77,7 +77,6 @@ class AuthController extends AbstractController
 
             return $this->redirectToRoute('user_login');
         }
-
         return $this->render('frontOffice/user/auth/signup.html.twig', ['form' => $form]);
     }
 
@@ -115,10 +114,10 @@ class AuthController extends AbstractController
             return $this->redirectToRoute('user_dashboard');
         }
 
-        return $this->render('frontOffice/user/auth/login.html.twig', ['last_email' => '']);
+        return $this->render('frontOffice/user/auth/login.html.twig', ['last_email' => '']);    
     }
 
-    #[Route('/logout', name: 'user_logout')]
+    #[Route('/logout', name: 'user_logout', methods: ['GET'])]
     public function logout(Request $request): Response
     {
         $request->getSession()->invalidate();

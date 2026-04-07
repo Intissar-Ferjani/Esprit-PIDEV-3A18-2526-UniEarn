@@ -19,6 +19,7 @@ class PortfolioRepository extends ServiceEntityRepository
             ->join('p.freelancer', 'f')
             ->where('f.idFreelancer = :id')
             ->setParameter('id', $freelancerId)
+            ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
     }

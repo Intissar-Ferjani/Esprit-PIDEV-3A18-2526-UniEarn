@@ -17,17 +17,26 @@ class User
 
     #[ORM\Column(name: 'name', type: 'string', length: 50)]
     #[Assert\NotBlank(message: 'Name is required.')]
-    #[Assert\Length(min: 2, max: 50)]
+    #[Assert\Length(
+        min: 2, max: 50,
+        minMessage: 'Name must be at least 2 characters.',
+        maxMessage: 'Name cannot exceed 50 characters.'
+    )]
+    #[Assert\Regex(
+        pattern: '/^[\p{L}\s\-]+$/u',
+        message: 'Name can only contain letters, spaces, and hyphens.'
+    )]
     private ?string $name = null;
 
     #[ORM\Column(name: 'email', type: 'string', length: 50, unique: true)]
     #[Assert\NotBlank(message: 'Email is required.')]
-    #[Assert\Email(message: 'Please enter a valid email.')]
+    #[Assert\Email(message: 'Please enter a valid email address.')]
+    #[Assert\Length(max: 50, maxMessage: 'Email cannot exceed 50 characters.')]
     private ?string $email = null;
 
     #[ORM\Column(name: 'password', type: 'string', length: 255)]
     private ?string $password = null;
-
+    
     #[ORM\Column(name: 'profilePicturePath', type: 'string', length: 255, nullable: true)]
     private ?string $profilePicturePath = null;
 
