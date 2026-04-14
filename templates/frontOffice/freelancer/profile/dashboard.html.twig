@@ -12,7 +12,7 @@
 <div class="dashboard-layout">
 
     {# Sidebar — client sees client sidebar, freelancer sees freelancer sidebar #}
-    {% set sidebar = sidebarInclude ?? 'frontOffice/freelancer/_sidebar.html.twig' %}
+    {% set sidebar = sidebarInclude ?? 'frontOffice/user/profile/_sidebar.html.twig' %}
     {% set active  = sidebarActive  ?? 'dashboard' %}
     {% include sidebar with {'active': active} %}
 
