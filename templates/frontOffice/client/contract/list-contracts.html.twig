@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn – My Contracts</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': 'contracts'} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">📋 My Contracts</span>
+            <div class="top-bar-right">
+                <a href="{{ path('client_contract_templates') }}" class="btn-edit" style="padding:6px 16px;font-size:13px;">
+                    ➕ New Contract
+                </a>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            {# ── Status filter ── #}
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+                <span style="font-size:13px;color:#64748b;font-weight:600;">Filter by status:</span>
+                <a href="{{ path('client_contract_index') }}"
+                   style="padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;text-decoration:none;
+                          {{ currentStatus is not defined or currentStatus is null ? 'background:#2563EB;color:white;' : 'background:#e2e8f0;color:#475569;' }}">
+                    All
+                </a>
+                <a href="{{ path('client_contract_index', {status: 'pending'}) }}"
+                   style="padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;text-decoration:none;
+                          {{ currentStatus is defined and currentStatus == 'pending' ? 'background:#92400e;color:white;' : 'background:#fef3c7;color:#92400e;' }}">
+                    ⏳ Pending
+                </a>
+                <a href="{{ path('client_contract_index', {status: 'signed'}) }}"
+                   style="padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;text-decoration:none;
+                          {{ currentStatus is defined and currentStatus == 'signed' ? 'background:#166534;color:white;' : 'background:#dcfce7;color:#166534;' }}">
+                    ✅ Signed
+                </a>
+            </div>
+
+            <div class="content-section" style="padding:0;overflow:hidden;">
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">#</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Title</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Freelancer</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Amount</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Status</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for contract in contracts %}
+                        <tr style="border-bottom:1px solid #e2e8f0;transition:background .15s;"
+                            onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background=''">
+                            <td style="padding:12px 16px;color:#64748b;font-size:13px;">{{ contract.idContract }}</td>
+                            <td style="padding:12px 16px;font-weight:600;color:#1e293b;font-size:14px;">{{ contract.title }}</td>
+                            <td style="padding:12px 16px;color:#64748b;font-size:13px;">{{ contract.freelancer.name }}</td>
+                            <td style="padding:12px 16px;color:#1e293b;font-size:13px;font-weight:600;">${{ contract.amount }}</td>
+                            <td style="padding:12px 16px;">
+                                {% if contract.status == 'signed' %}
+                                    <span style="background:#dcfce7;color:#166534;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;">Signed</span>
+                                {% elseif contract.status == 'pending' %}
+                                    <span style="background:#fef3c7;color:#92400e;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;">Pending</span>
+                                {% else %}
+                                    <span style="background:#fee2e2;color:#991b1b;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;">{{ contract.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding:12px 16px;">
+                                <a href="{{ path('client_contract_show', {id: contract.idContract}) }}"
+                                   class="btn-edit" style="padding:5px 12px;font-size:12px;">View</a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;">
+                                No contracts yet. <a href="{{ path('client_contract_templates') }}" style="color:#2563EB;">Create your first contract</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

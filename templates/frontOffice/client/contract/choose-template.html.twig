@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn – Choose Template</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    <div class="dashboard-main" style="margin:0 auto;max-width:900px;padding:32px;">
+        <div class="top-bar">
+            <span class="top-bar-title">📋 Choose a Contract Template</span>
+            <div class="top-bar-right">
+                <a href="{{ path('client_contract_index') }}" style="color:#2563EB;text-decoration:none;font-size:13px;">← My Contracts</a>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            <p style="color:#64748b;font-size:14px;margin-bottom:24px;">
+                Select a template to create your contract.
+            </p>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;">
+                {% for tpl in templates %}
+                <div class="content-section" style="padding:20px;display:flex;flex-direction:column;gap:12px;">
+                    <h4 style="margin:0;color:#1e293b;font-size:16px;">{{ tpl.title }}</h4>
+                    <span style="background:#e8f0fe;color:#2563EB;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;width:fit-content;">
+                        {{ tpl.contractType }}
+                    </span>
+                    {% if tpl.description %}
+                        <p style="color:#64748b;font-size:13px;margin:0;">{{ tpl.description|length > 100 ? tpl.description[:100] ~ '...' : tpl.description }}</p>
+                    {% endif %}
+                    <a href="{{ path('client_contract_new', {templateId: tpl.idContractTemplate}) }}"
+                       class="btn-edit" style="padding:8px 20px;font-size:13px;text-align:center;margin-top:auto;">
+                        Use This Template
+                    </a>
+                </div>
+                {% else %}
+                    <div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;">
+                        No templates available yet.
+                    </div>
+                {% endfor %}
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

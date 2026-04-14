@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}UniEarn - Module{% endblock %}</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    {% block stylesheets %}{% endblock %}
+</head>
+<body class="dashboard-body">
+
+<div class="dashboard-layout">
+    {# ── Sidebar ── #}
+    {% if freelancer is defined and freelancer is not null %}
+        {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': active|default('dashboard')} %}
+    {% elseif client is defined and client is not null %}
+        {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': active|default('dashboard')} %}
+    {% else %}
+        {# Fallback for Admin or others if they access these routes #}
+        {% if user is defined and user is not null %}
+            {% if 'FREELANCER' in user.role %}
+                {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': active|default('dashboard')} %}
+            {% elseif 'CLIENT' in user.role %}
+                {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': active|default('dashboard')} %}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+
+    {# ── Main content ── #}
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">{% block page_title %}Dashboard{% endblock %}</span>
+            <div class="top-bar-right">
+                <span class="top-bar-user">
+                    👤 {{ user.name|default('User') }}
+                    {% if freelancer is defined and freelancer is not null %}
+                        <small>(Freelancer)</small>
+                    {% elseif client is defined and client is not null %}
+                        <small>(Client)</small>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% block javascripts %}{% endblock %}
+</body>
+</html>

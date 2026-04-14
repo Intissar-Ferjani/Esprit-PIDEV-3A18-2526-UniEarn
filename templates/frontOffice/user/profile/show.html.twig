@@ -1,0 +1,45 @@
+{# templates/backOffice/user/show.html.twig #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn Admin – User #{{ user.idUser }}</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; padding: 2rem; }
+        .card { background: white; border-radius: 12px; padding: 2rem; max-width: 480px; box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+        .avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; }
+        .label { color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+        .value { color: #1e293b; font-size: 15px; margin-bottom: 1rem; }
+        a { color: #2563EB; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    {% if user.profilePicturePath %}
+        <img src="{{ asset(user.profilePicturePath) }}" class="avatar" alt="Profile">
+    {% else %}
+        <img src="{{ asset('images/default-avatar.jpg') }}" class="avatar" alt="Profile">
+    {% endif %}
+
+    <p class="label">ID</p>
+    <p class="value">{{ user.idUser }}</p>
+
+    <p class="label">Name</p>
+    <p class="value">{{ user.name }}</p>
+
+    <p class="label">Email</p>
+    <p class="value">{{ user.email }}</p>
+
+    <p class="label">Role</p>
+    <p class="value">{{ user.role }}</p>
+
+    <p class="label">Status</p>
+    <p class="value">{{ user.isActivated ? '✅ Active' : '🚫 Inactive' }}</p>
+
+    <a href="{{ path('admin_user_index') }}">← Back to list</a>
+</div>
+
+</body>
+</html>

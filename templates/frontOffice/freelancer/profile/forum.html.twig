@@ -1,0 +1,400 @@
+{# templates/frontOffice/freelancer/profile/forum.html.twig #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniEarn – Freelancer Forum</title>
+    <meta name="description" content="Freelancer community forum — share posts, ask questions, and connect with peers on UniEarn.">
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/forum.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-body">
+
+<div class="dashboard-layout">
+
+    {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': 'forum'} %}
+
+    <div class="dashboard-main">
+
+        {# ── Top Bar ── #}
+        <div class="top-bar">
+            <span class="top-bar-title">💬 Community Forum</span>
+            <div class="top-bar-right">
+                <span class="top-bar-user">👤 {{ user.name }}</span>
+            </div>
+        </div>
+
+        <div class="dashboard-content forum-page">
+
+            {# ── Flash Messages ── #}
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            <div class="forum-layout">
+
+                {# ═══════════════════════════════════════════════════════ #}
+                {# LEFT COLUMN – Create Post + Feed                        #}
+                {# ═══════════════════════════════════════════════════════ #}
+                <div class="forum-feed-col">
+
+                    {# ── Create Post Card ── #}
+                    <div class="forum-card forum-create-card">
+                        <div class="forum-create-header">
+                            <div class="forum-avatar-sm">
+                                {% if user.profilePicturePath %}
+                                    <img src="{{ asset(user.profilePicturePath) }}" alt="avatar">
+                                {% else %}
+                                    <span>{{ user.name|first|upper }}</span>
+                                {% endif %}
+                            </div>
+                            <span class="forum-create-prompt">Share something with the community, <strong>{{ user.name }}</strong>…</span>
+                        </div>
+
+                        <form id="createPostForm" action="{{ path('freelancer_forum_create_post') }}" method="POST" class="forum-create-form" style="display:none;">
+                            <div class="field-wrap">
+                                <label class="field-label" for="post-title">Post Title</label>
+                                <input type="text" id="post-title" name="title" class="custom-field"
+                                       placeholder="e.g. How to get your first client?" required>
+                            </div>
+                            <div class="field-wrap">
+                                <label class="field-label" for="post-content">Content</label>
+                                <textarea id="post-content" name="content" class="custom-field"
+                                          rows="4" placeholder="Write your post content here (min 10 characters)…" required></textarea>
+                            </div>
+                            <div class="forum-create-footer">
+                                <select name="category" id="post-category" class="forum-category-select">
+                                    <option value="Technology">💻 Technology</option>
+                                    <option value="Design">🎨 Design</option>
+                                    <option value="Business">📊 Business</option>
+                                    <option value="Career">🚀 Career</option>
+                                    <option value="General" selected>💬 General</option>
+                                </select>
+                                <div class="forum-create-actions">
+                                    <button type="button" id="cancelPostBtn" class="btn-forum-secondary">Cancel</button>
+                                    <button type="submit" class="btn-forum-primary">Publish Post 🚀</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    {# ── Category Filter ── #}
+                    <div class="forum-filter-bar">
+                        <span class="filter-label">Filter by:</span>
+                        {% for cat in categories %}
+                            <a href="{{ path('freelancer_forum', {category: cat}) }}"
+                               class="filter-chip {{ currentCategory == cat ? 'active' : '' }}">
+                                {{ cat }}
+                            </a>
+                        {% endfor %}
+                    </div>
+
+                    {# ── Posts Feed ── #}
+                    {% if postsData is empty %}
+                        <div class="forum-empty">
+                            <div class="forum-empty-icon">📭</div>
+                            <p class="forum-empty-title">No posts yet</p>
+                            <p class="forum-empty-sub">Be the first to start a conversation!</p>
+                        </div>
+                    {% else %}
+                        {% for item in postsData %}
+                            {% set post = item.post %}
+                            {% set postId = post.postId %}
+
+                            <article class="forum-card forum-post-card" id="post-{{ postId }}">
+
+                                {# ── Post Header ── #}
+                                <div class="forum-post-header">
+                                    <div class="forum-author-row">
+                                        <div class="forum-avatar-sm forum-avatar-blue">
+                                            <span>{{ item.authorName|first|upper }}</span>
+                                        </div>
+                                        <div class="forum-author-info">
+                                            <span class="forum-author-name">{{ item.authorName }}</span>
+                                            <span class="forum-post-time">{{ post.createdAt|date('M d, Y \\a\\t h:i A') }}</span>
+                                        </div>
+                                    </div>
+
+                                    {% if post.category != 'General' %}
+                                        <span class="forum-category-badge">📁 {{ post.category }}</span>
+                                    {% endif %}
+
+                                    {# Edit/Delete — own posts only #}
+                                    {% if post.freelancerId == freelancer.idFreelancer %}
+                                        <div class="forum-post-actions-owner">
+                                            <button class="btn-icon-action" title="Edit post"
+                                                    onclick="toggleEditPost({{ postId }})">✏️</button>
+                                            <form action="{{ path('freelancer_forum_delete_post', {id: postId}) }}" method="POST"
+                                                  onsubmit="return confirm('Delete this post?')" style="display:inline;">
+                                                <button type="submit" class="btn-icon-action btn-icon-danger" title="Delete post">🗑️</button>
+                                            </form>
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                {# ── Post Body (view mode) ── #}
+                                <div id="post-view-{{ postId }}" class="forum-post-body">
+                                    <h2 class="forum-post-title">{{ post.title }}</h2>
+                                    <p class="forum-post-content">{{ post.content }}</p>
+                                </div>
+
+                                {# ── Post Body (edit mode — hidden by default) ── #}
+                                <div id="post-edit-{{ postId }}" class="forum-post-edit" style="display:none;">
+                                    <form action="{{ path('freelancer_forum_edit_post', {id: postId}) }}" method="POST">
+                                        <div class="field-wrap">
+                                            <input type="text" name="title" class="custom-field"
+                                                   value="{{ post.title }}" required>
+                                        </div>
+                                        <div class="field-wrap">
+                                            <textarea name="content" class="custom-field" rows="4" required>{{ post.content }}</textarea>
+                                        </div>
+                                        <div class="btn-row" style="gap:8px;margin-top:8px;">
+                                            <button type="submit" class="btn-forum-primary">💾 Save</button>
+                                            <button type="button" class="btn-forum-secondary"
+                                                    onclick="toggleEditPost({{ postId }})">Cancel</button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                {# ── Reaction + Stats Bar ── #}
+                                <div class="forum-action-bar">
+                                    {# Like #}
+                                    <form action="{{ path('freelancer_forum_react', {id: postId, type: 'like'}) }}"
+                                          method="POST" style="display:inline;">
+                                        <button type="submit"
+                                                class="btn-reaction {{ item.userLiked ? 'btn-reaction-liked' : '' }}">
+                                            👍 {{ item.likeCount }}
+                                        </button>
+                                    </form>
+
+                                    {# Dislike #}
+                                    <form action="{{ path('freelancer_forum_react', {id: postId, type: 'dislike'}) }}"
+                                          method="POST" style="display:inline;">
+                                        <button type="submit"
+                                                class="btn-reaction {{ item.userDisliked ? 'btn-reaction-disliked' : '' }}">
+                                            👎 {{ item.dislikeCount }}
+                                        </button>
+                                    </form>
+
+                                    {# Comments toggle #}
+                                    <button class="btn-reaction" onclick="toggleComments({{ postId }})">
+                                        💬 {{ item.commentCount }} Comment{{ item.commentCount != 1 ? 's' : '' }}
+                                    </button>
+
+                                    <span class="forum-views">👁 {{ post.views }}</span>
+                                </div>
+
+                                {# ── Comments Section (hidden by default) ── #}
+                                <div id="comments-{{ postId }}" class="forum-comments-section" style="display:none;">
+                                    <div class="forum-comments-list">
+                                        {% for c_item in item.comments %}
+                                            {% set comment = c_item.comment %}
+                                            <div class="forum-comment" id="comment-{{ c_item.id }}">
+                                                <div class="forum-comment-author-row">
+                                                    <div class="forum-avatar-xs">
+                                                        <span>{{ c_item.authorName|first|upper }}</span>
+                                                    </div>
+                                                    <span class="forum-comment-author">{{ c_item.authorName }}</span>
+                                                    <span class="forum-comment-time">{{ comment.createdAt|date('M d, Y \\a\\t h:i A') }}</span>
+
+                                                    {% if c_item.authorId == freelancer.idFreelancer %}
+                                                        <div class="forum-comment-actions-owner">
+                                                            <button class="btn-tiny-action"
+                                                                    onclick="toggleEditComment({{ c_item.id }})">✏️ Edit</button>
+                                                            <form action="{{ path('freelancer_forum_delete_comment', {id: c_item.id}) }}"
+                                                                  method="POST" style="display:inline;"
+                                                                  onsubmit="return confirm('Delete this comment?')">
+                                                                <button type="submit" class="btn-tiny-action btn-tiny-danger">🗑️ Delete</button>
+                                                            </form>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+
+                                                {# Comment view mode #}
+                                                <div id="comment-view-{{ c_item.id }}" class="forum-comment-body">
+                                                    {{ comment.commentText }}
+                                                </div>
+
+                                                {# Comment edit mode #}
+                                                <div id="comment-edit-{{ c_item.id }}" class="forum-comment-edit" style="display:none;">
+                                                    <form action="{{ path('freelancer_forum_edit_comment', {id: c_item.id}) }}" method="POST">
+                                                        <div class="forum-comment-edit-row">
+                                                            <input type="text" name="content" class="custom-field forum-comment-edit-input"
+                                                                   value="{{ comment.commentText }}" required>
+                                                            <button type="submit" class="btn-forum-primary btn-sm">Save</button>
+                                                            <button type="button" class="btn-forum-secondary btn-sm"
+                                                                    onclick="toggleEditComment({{ c_item.id }})">Cancel</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <p class="forum-no-comments">No comments yet. Be the first!</p>
+                                        {% endfor %}
+                                    </div>
+
+                                    {# ── New Comment Input ── #}
+                                    <form action="{{ path('freelancer_forum_add_comment', {id: postId}) }}"
+                                          method="POST" class="forum-new-comment-form">
+                                        <div class="forum-avatar-xs">
+                                            <span>{{ user.name|first|upper }}</span>
+                                        </div>
+                                        <input type="text" name="content" class="custom-field forum-comment-input"
+                                               placeholder="Write a comment…" required minlength="2">
+                                        <button type="submit" class="btn-forum-primary btn-sm">Send</button>
+                                    </form>
+                                </div>
+
+                            </article>
+                        {% endfor %}
+                    {% endif %}
+
+                </div>
+
+                {# ═══════════════════════════════════════════════════════ #}
+                {# RIGHT COLUMN – Sidebar widgets                          #}
+                {# ═══════════════════════════════════════════════════════ #}
+                <aside class="forum-sidebar-col">
+
+                    {# ── User Card ── #}
+                    <div class="forum-widget">
+                        <div class="forum-widget-user">
+                            <div class="forum-avatar-lg">
+                                {% if user.profilePicturePath %}
+                                    <img src="{{ asset(user.profilePicturePath) }}" alt="avatar">
+                                {% else %}
+                                    <span>{{ user.name|first|upper }}</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div class="forum-widget-name">{{ user.name }}</div>
+                                <div class="forum-widget-role">Freelancer</div>
+                            </div>
+                        </div>
+                        <hr class="forum-widget-divider">
+                        <div class="forum-widget-stats">
+                            <div class="forum-widget-stat">
+                                <span class="fw-stat-count">{{ postsData|length }}</span>
+                                <span class="fw-stat-label">Posts</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# ── Forum Rules ── #}
+                    <div class="forum-widget">
+                        <h3 class="forum-widget-title">📋 Forum Rules</h3>
+                        <ul class="forum-rules-list">
+                            <li>🙌 Be respectful to others</li>
+                            <li>🔤 Titles: letters &amp; spaces only</li>
+                            <li>📝 Content: minimum 10 characters</li>
+                            <li>🚫 No toxic or inappropriate language</li>
+                            <li>💡 Stay on topic</li>
+                        </ul>
+                    </div>
+
+                    {# ── Categories ── #}
+                    <div class="forum-widget">
+                        <h3 class="forum-widget-title">🗂️ Categories</h3>
+                        <div class="forum-widget-cats">
+                            {% for cat in categories %}
+                                {% if cat != 'All' %}
+                                    <a href="{{ path('freelancer_forum', {category: cat}) }}"
+                                       class="forum-cat-link {{ currentCategory == cat ? 'active' : '' }}">
+                                        {{ cat }}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                </aside>
+
+            </div>{# end .forum-layout #}
+
+        </div>{# end .dashboard-content #}
+    </div>{# end .dashboard-main #}
+</div>{# end .dashboard-layout #}
+
+<script>
+// ── Create post form toggle ────────────────────────────────────────────
+const createPrompt = document.querySelector('.forum-create-prompt');
+const createForm   = document.getElementById('createPostForm');
+const cancelBtn    = document.getElementById('cancelPostBtn');
+
+if (createPrompt) {
+    createPrompt.addEventListener('click', () => {
+        createForm.style.display = 'block';
+        createPrompt.closest('.forum-create-header').style.display = 'none';
+    });
+}
+if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+        createForm.style.display = 'none';
+        document.querySelector('.forum-create-header').style.display = 'flex';
+    });
+}
+
+// ── Toggle comments section ────────────────────────────────────────────
+function toggleComments(postId) {
+    const section = document.getElementById('comments-' + postId);
+    if (section) {
+        section.style.display = section.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
+// ── Toggle inline post edit ────────────────────────────────────────────
+function toggleEditPost(postId) {
+    const viewEl = document.getElementById('post-view-' + postId);
+    const editEl = document.getElementById('post-edit-' + postId);
+    if (!viewEl || !editEl) return;
+    const editing = editEl.style.display !== 'none';
+    viewEl.style.display = editing ? 'block' : 'none';
+    editEl.style.display = editing ? 'none'  : 'block';
+}
+
+// ── Toggle inline comment edit ─────────────────────────────────────────
+function toggleEditComment(commentId) {
+    const viewEl = document.getElementById('comment-view-' + commentId);
+    const editEl = document.getElementById('comment-edit-' + commentId);
+    if (!viewEl || !editEl) return;
+    const editing = editEl.style.display !== 'none';
+    viewEl.style.display = editing ? 'block' : 'none';
+    editEl.style.display = editing ? 'none'  : 'block';
+}
+
+// ── Client-side form validation (mirrors Java controller validation) ────
+document.getElementById('createPostForm')?.addEventListener('submit', function(e) {
+    const title   = document.getElementById('post-title').value.trim();
+    const content = document.getElementById('post-content').value.trim();
+
+    if (!title || !content) {
+        e.preventDefault();
+        alert('Please fill in both title and content!');
+        return;
+    }
+    if (!/^[a-zA-Z\s]+$/.test(title)) {
+        e.preventDefault();
+        alert('Title must contain only letters and spaces (no numbers or symbols)!');
+        return;
+    }
+    if (content.length < 10) {
+        e.preventDefault();
+        alert('Post content must be at least 10 characters long!');
+    }
+});
+
+// ── Auto-dismiss flash messages after 4 s ─────────────────────────────
+document.querySelectorAll('.flash').forEach(el => {
+    setTimeout(() => el.style.opacity = '0', 3500);
+    setTimeout(() => el.remove(), 4000);
+});
+</script>
+
+</body>
+</html>

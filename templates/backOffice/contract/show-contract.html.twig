@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn Admin – Contract Details</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': 'contracts'} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">📄 Contract Details</span>
+            <div class="top-bar-right">
+                <a href="{{ path('admin_contract_index') }}" style="color:#2563EB;text-decoration:none;font-size:13px;">← Back to Contracts</a>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+
+            <div class="content-section" style="max-width:750px;">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <span class="section-icon">📄</span>
+                        <h3 class="section-title">{{ contract.title }}</h3>
+                    </div>
+                    {% if contract.status == 'signed' %}
+                        <span style="background:#dcfce7;color:#166534;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;">✅ Signed</span>
+                    {% elseif contract.status == 'pending' %}
+                        <span style="background:#fef3c7;color:#92400e;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;">⏳ Pending</span>
+                    {% else %}
+                        <span style="background:#fee2e2;color:#991b1b;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;">{{ contract.status }}</span>
+                    {% endif %}
+                </div>
+                <hr class="section-divider">
+
+                <div style="display:flex;flex-direction:column;gap:16px;">
+
+                    {# ── Parties & Details ── #}
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div>
+                            <span class="field-label">Client</span>
+                            <p style="margin:4px 0 0;color:#1e293b;font-weight:600;">{{ contract.client.name }}</p>
+                        </div>
+                        <div>
+                            <span class="field-label">Freelancer</span>
+                            <p style="margin:4px 0 0;color:#1e293b;font-weight:600;">{{ contract.freelancer.name }}</p>
+                        </div>
+                        <div>
+                            <span class="field-label">Amount</span>
+                            <p style="margin:4px 0 0;color:#1e293b;font-weight:600;">${{ contract.amount }}</p>
+                        </div>
+                        <div>
+                            <span class="field-label">Template</span>
+                            <p style="margin:4px 0 0;">
+                                <a href="{{ path('admin_contract_template_show', {id: contract.template.idContractTemplate}) }}"
+                                   style="color:#2563EB;text-decoration:none;font-weight:600;">{{ contract.template.title }}</a>
+                            </p>
+                        </div>
+                        <div>
+                            <span class="field-label">Start Date</span>
+                            <p style="margin:4px 0 0;color:#374151;">{{ contract.startDate|date('M d, Y') }}</p>
+                        </div>
+                        <div>
+                            <span class="field-label">End Date</span>
+                            <p style="margin:4px 0 0;color:#374151;">{{ contract.endDate|date('M d, Y') }}</p>
+                        </div>
+                    </div>
+
+                    {# ── Content ── #}
+                    <div>
+                        <span class="field-label">Contract Content</span>
+                        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-top:4px;white-space:pre-wrap;font-size:13px;color:#374151;line-height:1.6;">{{ contract.content }}</div>
+                    </div>
+
+                    {# ── Signatures ── #}
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;">
+                        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:center;">
+                            <span class="field-label">Client Signature</span>
+                            {% if contract.clientSignatureImage %}
+                                <img src="{{ contract.clientSignatureImage }}" alt="Client Signature" style="max-width:100%;height:80px;margin-top:8px;border:1px solid #e2e8f0;border-radius:4px;">
+                                <p style="color:#166534;font-weight:600;margin:8px 0 0;font-size:12px;">Signed on {{ contract.clientSignature|date('M d, Y H:i') }}</p>
+                            {% elseif contract.clientSignature %}
+                                <p style="color:#166534;font-weight:600;margin:8px 0 0;">✅ Signed on {{ contract.clientSignature|date('M d, Y H:i') }}</p>
+                            {% else %}
+                                <p style="color:#94a3b8;margin:8px 0 0;">Not signed yet</p>
+                            {% endif %}
+                        </div>
+                        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:center;">
+                            <span class="field-label">Freelancer Signature</span>
+                            {% if contract.freelancerSignatureImage %}
+                                <img src="{{ contract.freelancerSignatureImage }}" alt="Freelancer Signature" style="max-width:100%;height:80px;margin-top:8px;border:1px solid #e2e8f0;border-radius:4px;">
+                                <p style="color:#166534;font-weight:600;margin:8px 0 0;font-size:12px;">Signed on {{ contract.freelancerSignature|date('M d, Y H:i') }}</p>
+                            {% elseif contract.freelancerSignature %}
+                                <p style="color:#166534;font-weight:600;margin:8px 0 0;">✅ Signed on {{ contract.freelancerSignature|date('M d, Y H:i') }}</p>
+                            {% else %}
+                                <p style="color:#94a3b8;margin:8px 0 0;">Not signed yet</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {# ── Timestamps ── #}
+                    <div style="display:flex;gap:24px;color:#64748b;font-size:12px;margin-top:8px;">
+                        <span>Created: {{ contract.createdAt|date('M d, Y H:i') }}</span>
+                        <span>Updated: {{ contract.updatedAt|date('M d, Y H:i') }}</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

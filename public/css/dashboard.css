@@ -704,6 +704,251 @@ textarea.custom-field { height: auto; resize: vertical; }
     margin: 0;
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   CONTRACT FORMS  —  modern card-based form styling
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Form card ── */
+.form-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.07);
+    overflow: hidden;
+    max-width: 720px;
+}
+
+.form-card-header {
+    background: linear-gradient(135deg, #2563EB 0%, #1d4ed8 100%);
+    padding: 28px 32px 24px;
+    position: relative;
+}
+
+.form-card-header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: white;
+    border-radius: 20px 20px 0 0;
+}
+
+.form-card-header h2 {
+    color: white;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-card-header p {
+    color: rgba(255,255,255,.8);
+    font-size: 13px;
+    margin: 6px 0 0;
+}
+
+.form-card-body {
+    padding: 28px 32px 32px;
+}
+
+/* ── Form groups ── */
+.form-group {
+    margin-bottom: 22px;
+    position: relative;
+}
+
+.form-group label,
+.form-group .field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 8px;
+    letter-spacing: .01em;
+}
+
+.form-group label .field-icon {
+    margin-right: 6px;
+    font-size: 14px;
+}
+
+/* ── Input styling (applies to .form-input class) ── */
+.form-input,
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="date"],
+.form-group input[type="email"],
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #1e293b;
+    font-family: inherit;
+    transition: border-color .25s ease, background .25s ease, box-shadow .25s ease;
+    outline: none;
+}
+
+.form-input:hover,
+.form-group input:hover,
+.form-group textarea:hover,
+.form-group select:hover {
+    border-color: #cbd5e1;
+    background: #fff;
+}
+
+.form-input:focus,
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: #2563EB;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(37,99,235,.1);
+}
+
+.form-group textarea.form-input,
+.form-group textarea {
+    min-height: 120px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.form-group select.form-input,
+.form-group select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath fill='%2364748b' d='M1.4 0L6 4.6 10.6 0 12 1.4l-6 6-6-6z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+}
+
+/* ── Date row (side by side) ── */
+.form-row {
+    display: flex;
+    gap: 16px;
+}
+.form-row > .form-group {
+    flex: 1;
+}
+
+/* ── Validation errors ── */
+.form-group ul {
+    list-style: none;
+    padding: 0;
+    margin: 6px 0 0;
+}
+
+.form-group li,
+.form-group .form-error-message {
+    color: #dc2626;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.form-group li::before {
+    content: '⚠';
+    font-size: 11px;
+}
+
+/* Error state on inputs */
+.form-group.has-error .form-input,
+.form-group.has-error input,
+.form-group.has-error textarea,
+.form-group.has-error select {
+    border-color: #fca5a5;
+    background: #fef2f2;
+}
+.form-group.has-error .form-input:focus,
+.form-group.has-error input:focus,
+.form-group.has-error textarea:focus,
+.form-group.has-error select:focus {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 4px rgba(220,38,38,.1);
+}
+
+/* ── Form buttons ── */
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.btn-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #2563EB 0%, #1d4ed8 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 32px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .25s ease;
+    box-shadow: 0 4px 14px rgba(37,99,235,.35);
+}
+.btn-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(37,99,235,.45);
+}
+.btn-submit:active {
+    transform: translateY(0);
+}
+
+.btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: white;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 28px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color .2s, color .2s, background .2s;
+}
+.btn-cancel:hover {
+    border-color: #94a3b8;
+    color: #334155;
+    background: #f8fafc;
+}
+
+/* ── Helper/hint text ── */
+.form-hint {
+    font-size: 11.5px;
+    color: #94a3b8;
+    margin-top: 5px;
+}
+
+/* ── Character counter ── */
+.char-counter {
+    font-size: 11px;
+    color: #94a3b8;
+    text-align: right;
+    margin-top: 4px;
+}
+.char-counter.warn { color: #f59e0b; }
+.char-counter.over { color: #dc2626; }
+
 /* ── Deactivate confirm box (CSS-only toggle) ── */
 .deactivate-confirm-box {
     display: none;
