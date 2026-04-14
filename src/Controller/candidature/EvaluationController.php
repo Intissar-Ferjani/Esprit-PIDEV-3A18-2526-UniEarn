@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Enum\EvaluationType as EnumEvaluationType;
+use App\Service\SentimentAnalysisService;
 
 #[Route('/evaluation')]
 class EvaluationController extends AbstractController
@@ -36,9 +37,12 @@ class EvaluationController extends AbstractController
         $evaluationsGiven    = $evaluationRepository->findBy(['evaluator' => $currentUser], ['createdAt' => 'DESC']);
         $evaluationsReceived = $evaluationRepository->findBy(['evaluated' => $currentUser], ['createdAt' => 'DESC']);
 
+        $reputationScore = $evaluationRepository->calculateReputation($currentUser);
+
         return $this->render('candidature/evaluation/index.html.twig', [
             'evaluationsGiven'    => $evaluationsGiven,
             'evaluationsReceived' => $evaluationsReceived,
+            'reputationScore'     => $reputationScore,
             'freelancer' => $freelancer,
             'client'     => $client,
             'user'       => $currentUser,
@@ -52,7 +56,8 @@ class EvaluationController extends AbstractController
         EntityManagerInterface $entityManager,
         FreelancerRepository $freelancerRepo,
         ClientRepository $clientRepo,
-        UserRepository $userRepo
+        UserRepository $userRepo,
+        SentimentAnalysisService $sentimentService
     ): Response {
         $userId = $request->getSession()->get('user_id');
         if (!$userId) return $this->redirectToRoute('user_login');
@@ -106,11 +111,16 @@ class EvaluationController extends AbstractController
             } else {
                 $evaluation->setType(EnumEvaluationType::USER_TO_USER);
             }
+
+            // API Integration: Sentiment Analysis
+            $sentimentResult = $sentimentService->analyze($evaluation->getComment());
+            $evaluation->setSentiment($sentimentResult['label']);
+            $evaluation->setSentimentScore($sentimentResult['score']);
             
             $entityManager->persist($evaluation);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Evaluation submitted successfully!');
+            $this->addFlash('success', 'Evaluation submitted successfully! Detected sentiment: ' . ucfirst($sentimentResult['label']));
             return $this->redirectToRoute('app_evaluation_index', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -153,7 +163,8 @@ class EvaluationController extends AbstractController
         EntityManagerInterface $entityManager,
         FreelancerRepository $freelancerRepo,
         ClientRepository $clientRepo,
-        UserRepository $userRepo
+        UserRepository $userRepo,
+        SentimentAnalysisService $sentimentService
     ): Response {
         $userId = $request->getSession()->get('user_id');
         if (!$userId) return $this->redirectToRoute('user_login');
@@ -194,9 +205,14 @@ class EvaluationController extends AbstractController
                 ]);
             }
 
+            // API Integration: Sentiment Analysis
+            $sentimentResult = $sentimentService->analyze($evaluation->getComment());
+            $evaluation->setSentiment($sentimentResult['label']);
+            $evaluation->setSentimentScore($sentimentResult['score']);
+
             $entityManager->flush();
 
-            $this->addFlash('success', 'Evaluation updated successfully!');
+            $this->addFlash('success', 'Evaluation updated successfully! Detected sentiment: ' . ucfirst($sentimentResult['label']));
             return $this->redirectToRoute('app_evaluation_index', [], Response::HTTP_SEE_OTHER);
         }
 

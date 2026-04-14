@@ -52,6 +52,12 @@ class Application
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $updatedAt = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?float $compatibilityScore = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $aiAnalysis = null;
+
     public function __construct()
     {
         $this->appliedAt = new \DateTime();
@@ -164,6 +170,30 @@ class Application
     public function setUpdatedAt(\DateTimeInterface $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+    public function getCompatibilityScore(): ?float
+    {
+        return $this->compatibilityScore;
+    }
+
+    public function setCompatibilityScore(?float $compatibilityScore): static
+    {
+        $this->compatibilityScore = $compatibilityScore;
+
+        return $this;
+    }
+
+    public function getAiAnalysis(): ?string
+    {
+        return $this->aiAnalysis;
+    }
+
+    public function setAiAnalysis(?string $aiAnalysis): static
+    {
+        $this->aiAnalysis = $aiAnalysis;
 
         return $this;
     }

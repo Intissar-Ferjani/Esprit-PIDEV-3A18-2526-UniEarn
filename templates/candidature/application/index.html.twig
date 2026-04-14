@@ -96,6 +96,7 @@
                         <th style="padding:10px 14px;">Budget</th>
                         <th style="padding:10px 14px;">Duration</th>
                         <th style="padding:10px 14px;">Applied</th>
+                        <th style="padding:10px 14px;">Compatibility</th>
                         <th style="padding:10px 14px; text-align:right;">Actions</th>
                     </tr>
                 </thead>
@@ -120,6 +121,14 @@
                         <td style="padding:12px 14px; color:#10b981; font-weight:600;">{{ app.proposedBudget }} TND</td>
                         <td style="padding:12px 14px; color:#64748b;">{{ app.estimatedDuration }}d</td>
                         <td style="padding:12px 14px; color:#94a3b8; font-size:12px;">{{ app.appliedAt|date('d M Y') }}</td>
+                        <td style="padding:12px 14px;">
+                            <div style="width:100%; max-width:60px; height:6px; background:#f1f5f9; border-radius:3px; overflow:hidden; margin-bottom:4px;">
+                                <div style="width:{{ app.compatibilityScore|default(0) }}%; height:100%; background:{{ app.compatibilityScore|default(0) > 70 ? '#10b981' : (app.compatibilityScore|default(0) > 40 ? '#f59e0b' : '#ef4444') }};"></div>
+                            </div>
+                            <span style="font-size:11px; font-weight:700; color:{{ app.compatibilityScore|default(0) > 70 ? '#059669' : (app.compatibilityScore|default(0) > 40 ? '#d97706' : '#dc2626') }};">
+                                {{ app.compatibilityScore|default(0) }}%
+                            </span>
+                        </td>
                         <td style="padding:12px 14px; text-align:right;">
                             <div style="display:flex; justify-content:flex-end; gap:6px; align-items:center;">
                                 <a href="{{ path('app_application_show', {'id': app.id}) }}"
@@ -199,6 +208,7 @@
                         <th style="padding:10px 14px;">Budget</th>
                         <th style="padding:10px 14px;">Status</th>
                         <th style="padding:10px 14px;">Date</th>
+                        <th style="padding:10px 14px;">Compatibility</th>
                         <th style="padding:10px 14px; text-align:right;">Actions</th>
                     </tr>
                 </thead>
@@ -230,6 +240,14 @@
                             </span>
                         </td>
                         <td style="padding:12px 14px; color:#94a3b8; font-size:12px;">{{ app.appliedAt|date('d M Y') }}</td>
+                        <td style="padding:12px 14px;">
+                            <div style="width:100%; max-width:60px; height:6px; background:#f1f5f9; border-radius:3px; overflow:hidden; margin-bottom:4px;">
+                                <div style="width:{{ app.compatibilityScore|default(0) }}%; height:100%; background:{{ app.compatibilityScore|default(0) > 70 ? '#10b981' : (app.compatibilityScore|default(0) > 40 ? '#f59e0b' : '#ef4444') }};"></div>
+                            </div>
+                            <span style="font-size:11px; font-weight:700; color:{{ app.compatibilityScore|default(0) > 70 ? '#059669' : (app.compatibilityScore|default(0) > 40 ? '#d97706' : '#dc2626') }};">
+                                {{ app.compatibilityScore|default(0) }}%
+                            </span>
+                        </td>
                         <td style="padding:12px 14px; text-align:right;">
                             <div style="display:flex; justify-content:flex-end; gap:6px; align-items:center;">
                                 <a href="{{ path('app_application_show', {'id': app.id}) }}"

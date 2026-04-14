@@ -49,6 +49,12 @@ class Evaluation
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $updatedAt = null;
 
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $sentiment = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $sentimentScore = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTime();
@@ -160,6 +166,30 @@ class Evaluation
     public function setUpdatedAt(\DateTimeInterface $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+    public function getSentiment(): ?string
+    {
+        return $this->sentiment;
+    }
+
+    public function setSentiment(?string $sentiment): static
+    {
+        $this->sentiment = $sentiment;
+
+        return $this;
+    }
+
+    public function getSentimentScore(): ?float
+    {
+        return $this->sentimentScore;
+    }
+
+    public function setSentimentScore(?float $sentimentScore): static
+    {
+        $this->sentimentScore = $sentimentScore;
 
         return $this;
     }

@@ -43,6 +43,10 @@
                class="nav-item {{ active == 'contract_templates' ? 'active' : '' }}">
                 📝 <span>Contract Templates</span>
             </a>
+            <a href="{{ path('admin_application_index') }}"
+               class="nav-item {{ active == 'applications' ? 'active' : '' }}">
+                📋 <span>All Applications</span>
+            </a>
             <a href="{{ path('admin_contract_index') }}"
                class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
                 📋 <span>All Contracts</span>

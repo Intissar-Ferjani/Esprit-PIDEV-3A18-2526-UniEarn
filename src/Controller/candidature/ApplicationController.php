@@ -15,6 +15,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Dompdf\Dompdf;
 use Dompdf\Options;
+use App\Service\AiAnalysisService;
+use App\Service\PdfService;
 
 #[Route('/application')]
 class ApplicationController extends AbstractController
@@ -68,7 +70,8 @@ class ApplicationController extends AbstractController
     public function new(
         Request $request, 
         EntityManagerInterface $entityManager, 
-        FreelancerRepository $freelancerRepository
+        FreelancerRepository $freelancerRepository,
+        AiAnalysisService $aiService
     ): Response {
         $userId = $request->getSession()->get('user_id');
         if (!$userId) return $this->redirectToRoute('user_login');
@@ -86,10 +89,24 @@ class ApplicationController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Advanced Business Logic: Compatibility Score
+            $score = 0.5; // Default
+            if ($application->getProposedBudget() > 0) {
+                // Heuristic: lower budget might be better for clients, but more duration is worse
+                $budgetFactor = min(1.0, 5000 / $application->getProposedBudget());
+                $durationFactor = max(0.2, 1.0 - ($application->getEstimatedDuration() / 100));
+                $score = ($budgetFactor * 0.6) + ($durationFactor * 0.4);
+            }
+            $application->setCompatibilityScore(round($score * 100, 2));
+
+            // AI Integration: Cover Letter Analysis
+            $aiResults = $aiService->analyzeCoverLetter($application->getCoverLetter());
+            $application->setAiAnalysis(json_encode($aiResults));
+
             $entityManager->persist($application);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Application submitted successfully!');
+            $this->addFlash('success', 'Application submitted successfully! Our AI gave your cover letter a score of ' . round($aiResults['score'] * 100) . '%.');
             return $this->redirectToRoute('app_application_index', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -115,8 +132,14 @@ class ApplicationController extends AbstractController
         $freelancer = $freelancerRepo->findByUserId($userId);
         $client = $clientRepo->findByUserId($userId);
 
+        $aiData = null;
+        if ($application->getAiAnalysis()) {
+            $aiData = json_decode($application->getAiAnalysis(), true);
+        }
+
         return $this->render('candidature/application/show.html.twig', [
             'application' => $application,
+            'aiData' => $aiData,
             'freelancer' => $freelancer,
             'client' => $client,
             'user' => $freelancer ? $freelancer->getUser() : ($client ? $client->getUser() : null),
@@ -180,24 +203,20 @@ class ApplicationController extends AbstractController
     }
 
     #[Route('/{id}/pdf', name: 'app_application_pdf', methods: ['GET'])]
-    public function generatePdf(Application $application): Response
+    public function generatePdf(Application $application, PdfService $pdfService): Response
     {
-        $pdfOptions = new Options();
-        $pdfOptions->set('defaultFont', 'Arial');
-        $pdfOptions->set('isRemoteEnabled', true);
+        $aiData = null;
+        if ($application->getAiAnalysis()) {
+            $aiData = json_decode($application->getAiAnalysis(), true);
+        }
 
-        $dompdf = new Dompdf($pdfOptions);
-
-        $html = $this->renderView('candidature/application/pdf.html.twig', [
-            'application' => $application
+        $binary = $pdfService->generateBinaryPdf('candidature/application/pdf.html.twig', [
+            'application' => $application,
+            'aiData' => $aiData
         ]);
 
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-
         return new Response(
-            $dompdf->output(),
+            $binary,
             Response::HTTP_OK,
             [
                 'Content-Type' => 'application/pdf',

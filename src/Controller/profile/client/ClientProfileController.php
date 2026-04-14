@@ -80,17 +80,8 @@ class ClientProfileController extends AbstractController
             $newPassword     = $form->get('newPassword')->getData();
             $confirmPassword = $form->get('confirmPassword')->getData();
 
-            if ($newPassword !== '') {
-                $dbPassword = $user->getPassword();
-                $isCurrentMatch = false;
-
-                if (str_starts_with($dbPassword, '$2') && password_verify($currentPassword, $dbPassword)) {
-                    $isCurrentMatch = true;
-                } elseif ($dbPassword === $currentPassword) {
-                    $isCurrentMatch = true;
-                }
-
-                if (!$isCurrentMatch) {
+            if ($newPassword) {
+                if ($user->getPassword() !== $currentPassword) {
                     $this->addFlash('error', 'Current password is incorrect.');
                     return $this->render('frontOffice/client/profile/edit-profile.html.twig', [
                         'form'   => $form->createView(),

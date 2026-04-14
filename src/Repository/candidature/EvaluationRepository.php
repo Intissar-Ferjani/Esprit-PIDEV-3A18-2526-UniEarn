@@ -38,4 +38,28 @@ class EvaluationRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    /**
+     * Calculates a reputation score (0-100) for a user.
+     */
+    public function calculateReputation(\App\Entity\users\user\User $user): float
+    {
+        $evals = $this->findBy(['evaluated' => $user]);
+        if (empty($evals)) return 50.0; // Neutral starting point
+
+        $totalScore = 0;
+        foreach ($evals as $eval) {
+            // Rating (1-5) contributes up to 80% of the score
+            $ratingScore = ($eval->getRating() / 5) * 80;
+            
+            // Sentiment contributes up to 20%
+            $sentimentBonus = 0;
+            if ($eval->getSentiment() === 'pos') $sentimentBonus = 20;
+            elseif ($eval->getSentiment() === 'neutral') $sentimentBonus = 10;
+            
+            $totalScore += ($ratingScore + $sentimentBonus);
+        }
+
+        return round($totalScore / count($evals), 2);
+    }
 }

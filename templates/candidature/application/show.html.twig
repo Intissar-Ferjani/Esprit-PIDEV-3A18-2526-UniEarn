@@ -160,11 +160,30 @@
                 <span class="metric-title">Duration</span>
                 <span class="metric-value">{{ application.estimatedDuration }} Days</span>
             </div>
-            <div class="metric-box" style="--accent: #8b5cf6;">
-                <span class="metric-title">Applied On</span>
-                <span class="metric-value" style="font-size: 16px; margin-top: auto;">{{ application.appliedAt|date('M d, Y • g:i A') }}</span>
+            <div class="metric-box" style="--accent: #4f46e5;">
+                <span class="metric-title">Compatibility</span>
+                <div style="display:flex; align-items:center; gap:10px; margin-top:5px;">
+                    <div style="flex-grow:1; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
+                        <div style="width:{{ application.compatibilityScore }}%; height:100%; background:linear-gradient(90deg, #4f46e5, #7c3aed);"></div>
+                    </div>
+                    <span style="font-weight:800; color:#4f46e5; font-size:18px;">{{ application.compatibilityScore }}%</span>
+                </div>
             </div>
         </div>
+
+        {% if aiData %}
+            <div style="margin-bottom: 30px; padding: 20px; background: #e0e7ff; border-radius: 12px; border: 1px solid #c7d2fe; display: flex; align-items: flex-start; gap: 15px;">
+                <div style="font-size: 40px;">🤖</div>
+                <div style="flex-grow: 1;">
+                    <h4 style="margin: 0 0 5px; color: #3730a3; font-weight: 700; font-size: 16px;">AI Assistant Feedback</h4>
+                    <p style="margin: 0; color: #4338ca; font-size: 14px; line-height: 1.5;">{{ aiData.feedback }}</p>
+                    <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 12px; font-weight: 700; color: #4f46e5; text-transform: uppercase;">Professionalism Score:</span>
+                        <span style="font-weight: 800; color: #1e1b4b;">{{ (aiData.score * 100)|round }}%</span>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
 
         <div>
             <h4 style="font-size: 18px; color: #1e293b; margin-bottom: 15px; font-weight: 700;">Cover Letter</h4>
