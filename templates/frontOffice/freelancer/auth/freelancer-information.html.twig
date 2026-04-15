@@ -101,41 +101,46 @@
 
                 <div class="form-divider">About You</div>
 
-                <div class="field">
-                    {{ form_label(form.bio) }}
-                    {{ form_widget(form.bio, {'attr': {'class': 'field-input', 'rows': 3, 'placeholder': 'Tell clients about yourself…'}}) }}
-                    <div class="field-errors">{{ form_errors(form.bio) }}</div>
-                </div>
-
-
-                <div class="form-divider">Documents</div>
-
+                <!-- ═══ CV Upload + AI Bio Section ═══ -->
                 <div class="upload-wrapper">
-                    <div class="upload-card">
+                    <div class="upload-card" style="background:#f8faff; border-color:#c7d7f5;">
                         <div class="upload-header">
                             <div>
-                                <h4>Upload your CV</h4>
-                                <p>PDF only • Maximum size 5MB</p>
+                                <h4>📄 Upload Your CV</h4>
+                                <p>We'll auto-generate your bio using AI</p>
                             </div>
                         </div>
 
                         <div class="upload-action">
                             {{ form_widget(form.cvFile, { attr: { class: 'cv-input' } }) }}
 
-                            <button type="button" class="upload-btn">
+                            <button type="button" class="upload-btn" id="cvUploadBtn">
                                 Select file
                             </button>
 
-                            <span class="file-chip hidden">
-                                <span class="file-name"></span>
-                                <span class="remove-file">✕</span>
+                            <span class="file-chip hidden" id="cvFileChip">
+                                <span class="file-name" id="cvFileName"></span>
+                                <span class="remove-file" id="cvRemoveFile">✕</span>
                             </span>
                         </div>
 
-                        <div class="field-errors">
-                            {{ form_errors(form.cvFile) }}
-                        </div>
+                        <div style="margin-top:8px; font-size:11px; color:#94a3b8;">✓ Only accepted format are JPG, PNG or PDF · max 5 MB</div>
+
+                        <div id="ai-status" style="display:none; margin-top:12px; padding:10px 14px; border-radius:8px; font-size:12px; font-weight:600;"></div>
+
+                        <div class="field-errors">{{ form_errors(form.cvFile) }}</div>
                     </div>
+                </div>
+
+                <!-- ═══ Professional Bio ═══ -->
+                <div class="field" style="position:relative;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <label class="field-label" style="margin:0;">Professional Bio</label>
+                        <span id="bioSpinner" style="display:none; animation: spin 0.8s linear infinite; font-size:14px;">⟳</span>
+                    </div>
+                    {{ form_widget(form.bio, {'attr': {'class': 'field-input', 'rows': 5, 'placeholder': 'Upload your CV above to auto-generate, or write manually…'}}) }}
+                    <div style="margin-top:4px; font-size:11px; color:#94a3b8;">ℹ Between 50 and 500 characters · AI-generated bio is fully editable</div>
+                    <div class="field-errors">{{ form_errors(form.bio) }}</div>
                 </div>
 
                 <div class="btn-row">
@@ -145,7 +150,11 @@
 
             {{ form_end(form) }}
 
+<style>
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
 <script>
+// ── Skills Tags ──
 const tags = [];
 const wrap = document.getElementById('skillTagsWrap');
 const typeInput = document.getElementById('skillTypingInput');
@@ -172,27 +181,83 @@ typeInput.addEventListener('keydown', e => {
     if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addSkill(typeInput.value); typeInput.value = ''; }
 });
 typeInput.addEventListener('blur', () => { if (typeInput.value.trim()) { addSkill(typeInput.value); typeInput.value = ''; } });
-</script>
-<script>
-const fileInput = document.querySelector('.cv-input');
-const uploadBtn = document.querySelector('.upload-btn');
-const fileChip = document.querySelector('.file-chip');
-const fileName = document.querySelector('.file-name');
-const removeBtn = document.querySelector('.remove-file');
 
-uploadBtn.addEventListener('click', () => fileInput.click());
+// ── CV Upload + AI Bio Generation ──
+const cvInput     = document.getElementById('{{ form.cvFile.vars.id }}');
+const cvUploadBtn = document.getElementById('cvUploadBtn');
+const cvFileChip  = document.getElementById('cvFileChip');
+const cvFileName  = document.getElementById('cvFileName');
+const cvRemove    = document.getElementById('cvRemoveFile');
+const aiStatus    = document.getElementById('ai-status');
+const bioField    = document.getElementById('{{ form.bio.vars.id }}');
+const bioSpinner  = document.getElementById('bioSpinner');
 
-fileInput.addEventListener('change', () => {
-    if (fileInput.files.length > 0) {
-        fileName.textContent = fileInput.files[0].name;
-        fileChip.classList.remove('hidden');
+cvUploadBtn.addEventListener('click', () => cvInput.click());
+
+cvInput.addEventListener('change', async () => {
+    if (cvInput.files.length > 0) {
+        const file = cvInput.files[0];
+        cvFileName.textContent = file.name;
+        cvFileChip.classList.remove('hidden');
+
+        // Auto-trigger AI bio generation
+        await generateBioFromCv(file);
     }
 });
 
-removeBtn.addEventListener('click', () => {
-    fileInput.value = '';
-    fileChip.classList.add('hidden');
+cvRemove.addEventListener('click', () => {
+    cvInput.value = '';
+    cvFileChip.classList.add('hidden');
+    aiStatus.style.display = 'none';
 });
+
+async function generateBioFromCv(file) {
+    // Show loading state
+    aiStatus.textContent = '✨ Analyzing CV and generating bio with AI...';
+    aiStatus.style.display = 'block';
+    aiStatus.style.background = '#eff6ff';
+    aiStatus.style.color = '#2563EB';
+    aiStatus.style.border = '1.5px solid #bfdbfe';
+    bioSpinner.style.display = 'inline-block';
+    bioField.placeholder = 'Generating your professional bio with AI...';
+    cvUploadBtn.disabled = true;
+
+    const formData = new FormData();
+    formData.append('cvFile', file);
+
+    try {
+        const response = await fetch("{{ path('freelancer_generate_bio') }}", {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success && result.bio) {
+            bioField.value = result.bio;
+            aiStatus.textContent = '✅ Bio generated! Feel free to edit it.';
+            aiStatus.style.background = '#f0fdf4';
+            aiStatus.style.color = '#16a34a';
+            aiStatus.style.border = '1.5px solid #bbf7d0';
+        } else {
+            const msg = result.failMessage || result.message || 'Could not generate bio.';
+            aiStatus.textContent = '❌ ' + msg;
+            aiStatus.style.background = '#fef2f2';
+            aiStatus.style.color = '#dc2626';
+            aiStatus.style.border = '1.5px solid #fecaca';
+            bioField.placeholder = 'Tell clients about yourself, your experience, and what makes you unique...';
+        }
+    } catch (error) {
+        console.error('Bio generation error:', error);
+        aiStatus.textContent = '❌ An error occurred. Please write your bio manually.';
+        aiStatus.style.background = '#fef2f2';
+        aiStatus.style.color = '#dc2626';
+        aiStatus.style.border = '1.5px solid #fecaca';
+    } finally {
+        bioSpinner.style.display = 'none';
+        cvUploadBtn.disabled = false;
+    }
+}
 </script>
 </body>
 </html>
