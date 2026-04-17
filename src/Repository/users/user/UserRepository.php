@@ -18,6 +18,39 @@ class UserRepository extends ServiceEntityRepository
         return $this->findOneBy(['email' => strtolower(trim($email))]);
     }
 
+    public function getAdminSearchQueryBuilder(string $search, string $role, string $status, string $sort)
+    {
+        $qb = $this->createQueryBuilder('u')
+            ->where('u.role != :admin')
+            ->setParameter('admin', 'ADMIN');
+
+        if ($search) {
+            $qb->andWhere('u.name LIKE :s OR u.email LIKE :s')
+               ->setParameter('s', '%' . $search . '%');
+        }
+
+        if ($role !== 'All') {
+            $qb->andWhere('u.role = :role')
+               ->setParameter('role', strtoupper($role));
+        }
+
+        if ($status === 'Active') {
+            $qb->andWhere('u.activated = true');
+        } elseif ($status === 'Deactivated') {
+            $qb->andWhere('u.activated = false');
+        }
+
+        switch ($sort) {
+            case 'name_desc': $qb->orderBy('u.name', 'DESC'); break;
+            case 'email_asc': $qb->orderBy('u.email', 'ASC'); break;
+            case 'role':      $qb->orderBy('u.role', 'ASC'); break;
+            case 'status':    $qb->orderBy('u.activated', 'DESC'); break;
+            default:          $qb->orderBy('u.name', 'ASC'); break;
+        }
+
+        return $qb;
+    }
+
     /** Returns all non-admin users */
     public function findAllUsers(): array
     {

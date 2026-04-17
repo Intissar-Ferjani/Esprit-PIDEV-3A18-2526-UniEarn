@@ -1,0 +1,13 @@
+knp_paginator:
+    page_range: 5
+    default_options:
+        page_name: page
+        sort_field_name: p_sort       # Rename this to avoid conflicts with custom 'sortBy'
+        sort_direction_name: p_direction
+        distinct: true
+        filter_field_name: p_filter
+        filter_value_name: p_filter_value
+    template:
+        pagination: '@KnpPaginator/Pagination/sliding.html.twig'
+        sortable: '@KnpPaginator/Pagination/sortable_link.html.twig'
+        filtration: '@KnpPaginator/Pagination/filtration.html.twig'

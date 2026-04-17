@@ -62,7 +62,7 @@
             <div class="feature-list">
                 <div class="feature-item"><div class="feature-dot">🔒</div><span>Safe & secure verification</span></div>
                 <div class="feature-item"><div class="feature-dot">🎓</div><span>Students-only platform</span></div>
-                <div class="feature-item"><div class="feature-dot">✅</div><span>Builds trust with clients</span></div>
+                <div class="feature-item"><div class="feature-dot">✓</div><span>Builds trust with clients</span></div>
                 <div class="feature-item"><div class="feature-dot">⚡</div><span>Quick review process</span></div>
             </div>
         </div>
@@ -168,7 +168,7 @@ window.addEventListener('DOMContentLoaded', () => {
         fileChip.classList.remove('hidden');
         
         statusDiv.textContent = isVerified 
-           ? "✅ Previously verified card restored." 
+           ? " Previously verified card restored." 
            : "⚠️ Card found but needs verification.";
         statusDiv.style.background = isVerified ? "#f0fdf4" : "#fffbeb";
         statusDiv.style.color = isVerified ? "#16a34a" : "#92400e";
@@ -210,7 +210,7 @@ fileInput.addEventListener('change', async () => {
 
             const result = await response.json();
             
-            statusDiv.textContent = (result.success ? "✅ " : "❌ ") + result.message;
+            statusDiv.textContent = (result.success ? " " : "❌ ") + result.message;
             
             if (result.success) {
                 statusDiv.style.background = "#f0fdf4";

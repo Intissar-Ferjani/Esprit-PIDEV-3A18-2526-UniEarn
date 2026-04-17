@@ -1,0 +1,167 @@
+{% if pageCount > 1 or totalCount > 0 %}
+<style>
+.uniearn-pagination {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 13px;
+}
+
+.pagination-left,
+.pagination-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Rows per page */
+.pagination-limit-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #475569;
+}
+
+.pagination-limit-select {
+    appearance: none;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 8px;
+    padding: 6px 28px 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    position: relative;
+}
+
+.pagination-limit-select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+}
+
+/* Range info */
+.pagination-info {
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* Navigation */
+.pagination-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pagination-nav-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+}
+
+.pagination-nav-btn:hover:not(:disabled) {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+.pagination-nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pagination-nav-btn i {
+    font-size: 14px;
+}
+</style>
+
+<div class="uniearn-pagination">
+
+    <!-- LEFT -->
+    <div class="pagination-left">
+        <div class="pagination-limit-wrap">
+            <span>Rows:</span>
+            <select class="pagination-limit-select" onchange="updatePaginationLimit(this.value)">
+                {% for l in [5, 10, 20, 50] %}
+                    <option value="{{ l }}" {{ numItemsPerPage == l ? 'selected' : '' }}>{{ l }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="pagination-info">
+            {% set start = (current - 1) * numItemsPerPage + 1 %}
+            {% set end = start + numItemsPerPage - 1 %}
+            {% if end > totalCount %}{% set end = totalCount %}{% endif %}
+            {{ start }}–{{ end }} of {{ totalCount }}
+        </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="pagination-right">
+        <div class="pagination-nav">
+            {% if previous is defined %}
+                <a href="{{ path(route, query|merge({(pageParameterName): previous})) }}"
+                   class="pagination-nav-btn pagination-ajax-link"
+                   title="Previous">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            {% else %}
+                <button class="pagination-nav-btn" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            {% endif %}
+
+            {% if next is defined %}
+                <a href="{{ path(route, query|merge({(pageParameterName): next})) }}"
+                   class="pagination-nav-btn pagination-ajax-link"
+                   title="Next">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            {% else %}
+                <button class="pagination-nav-btn" disabled>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<script>
+if (typeof updatePaginationLimit === 'undefined') {
+    window.updatePaginationLimit = function(newLimit) {
+        const form = document.querySelector('.filter-bar');
+        if (!form) return;
+
+        let limitInput = form.querySelector('input[name="limit"]');
+        if (!limitInput) {
+            limitInput = document.createElement('input');
+            limitInput.type = 'hidden';
+            limitInput.name = 'limit';
+            form.appendChild(limitInput);
+        }
+        limitInput.value = newLimit;
+
+        if (typeof updateResults === 'function') {
+            updateResults();
+        } else {
+            form.submit();
+        }
+    };
+}
+</script>
+{% endif %}

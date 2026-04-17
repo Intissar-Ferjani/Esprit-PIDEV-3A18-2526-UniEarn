@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service;
+namespace App\Service\users\freelancer;
 
 use thiagoalessio\TesseractOCR\TesseractOCR;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;

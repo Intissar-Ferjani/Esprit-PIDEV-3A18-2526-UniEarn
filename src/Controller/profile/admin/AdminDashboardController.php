@@ -54,53 +54,37 @@ class AdminDashboardController extends AbstractController
         Request              $request,
         UserRepository       $userRepo,
         ClientRepository     $clientRepo,
-        FreelancerRepository $freelancerRepo
+        FreelancerRepository $freelancerRepo,
+        \Knp\Component\Pager\PaginatorInterface $paginator
     ): Response {
         if ($r = $this->requireAdmin($request)) return $r;
 
         $search = trim($request->query->get('search', ''));
         $role   = $request->query->get('role', 'All');
         $status = $request->query->get('status', 'All');
-        $sort   = $request->query->get('sort', 'name_asc');
+        $sortBy = $request->query->get('sortBy', 'name_asc');
+        $limit  = $request->query->getInt('limit', 10);
 
-        $users = $userRepo->findAllUsers();
+        $queryBuilder = $userRepo->getAdminSearchQueryBuilder($search, $role, $status, $sortBy);
 
-        // Search
-        if ($search) {
-            $users = array_filter($users, fn($u) =>
-                str_contains(strtolower($u->getName()), strtolower($search)) ||
-                str_contains(strtolower($u->getEmail()), strtolower($search))
-            );
-        }
+        $pagination = $paginator->paginate(
+            $queryBuilder,
+            $request->query->getInt('page', 1),
+            $limit
+        );
 
-        // Role filter
-        if ($role !== 'All') {
-            $users = array_filter($users, fn($u) => $u->getRole() === strtoupper($role));
-        }
+        $template = $request->query->get('ajax')
+            ? 'backOffice/admin/_user_table_results.html.twig'
+            : 'backOffice/admin/manage-users.html.twig';
 
-        // Status filter
-        if ($status === 'Active') {
-            $users = array_filter($users, fn($u) => $u->isActivated());
-        } elseif ($status === 'Deactivated') {
-            $users = array_filter($users, fn($u) => !$u->isActivated());
-        }
-
-        // Sort
-        $users = array_values($users);
-        usort($users, match ($sort) {
-            'name_desc'  => fn($a, $b) => strcmp($b->getName(), $a->getName()),
-            'email_asc'  => fn($a, $b) => strcmp($a->getEmail(), $b->getEmail()),
-            'role'       => fn($a, $b) => strcmp($a->getRole(), $b->getRole()),
-            'status'     => fn($a, $b) => $b->isActivated() <=> $a->isActivated(),
-            default      => fn($a, $b) => strcmp($a->getName(), $b->getName()),
-        });
-
-        return $this->render('backOffice/user/manage-users.html.twig', [
-            'users'      => $users,
+        return $this->render($template, [
+            'pagination' => $pagination,
+            'users'      => $pagination, // Map to users for compatibility
             'search'     => $search,
             'role'       => $role,
             'status'     => $status,
-            'sort'       => $sort,
+            'sortBy'     => $sortBy,
+            'limit'      => $limit,
             'adminName'  => $request->getSession()->get('user_name'),
         ]);
     }

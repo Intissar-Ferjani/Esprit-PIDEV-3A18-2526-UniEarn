@@ -9,6 +9,36 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
     <link rel="stylesheet" href="{{ asset('css/signup.css') }}">
+    <style>
+        #webcam-container { position: fixed; top: -1000px; left: -1000px; opacity: 0; pointer-events: none; }
+        .social-login-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 12px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            color: #1e293b;
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            margin-bottom: 24px;
+        }
+        .social-login-btn:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        .social-login-btn img {
+            width: 20px;
+            height: 20px;
+        }
+    </style>
 </head>
 <body>
 <div class="auth-layout">
@@ -24,7 +54,7 @@
             <div class="feature-list">
                 <div class="feature-item"><div class="feature-dot">🛡️</div> Secure payments guaranteed</div>
                 <div class="feature-item"><div class="feature-dot">⏰</div> Flexible student-friendly missions</div>
-                <div class="feature-item"><div class="feature-dot">✅</div> Verified clients only</div>
+                <div class="feature-item"><div class="feature-dot">✓</div> Verified clients only</div>
             </div>
         </div>
         <div class="auth-left-footer">© 2026 UniEarn</div>
@@ -33,7 +63,7 @@
     <div class="auth-right">
         <div class="auth-card">
 
-            <div class="auth-card-header">
+            <div class="auth-card-header" style="text-align: center;">
                 <h1>Welcome Back</h1>
                 <p>Log in to your account to continue</p>
             </div>
@@ -41,10 +71,11 @@
             {% for label, messages in app.flashes %}
                 {% for message in messages %}
                     <div class="flash flash-{{ label }}">
-                        {{ label == 'error' ? '✕' : '✓' }} {{ message }}
+                        {{ label == 'error' ? '✕' : '✓' }} {{ message|raw }}
                     </div>
                 {% endfor %}
             {% endfor %}
+
 
             <form method="post" action="{{ path('user_login') }}" novalidate>
 
@@ -67,11 +98,26 @@
                            class="field-input"
                            placeholder="Enter your password"
                            autocomplete="current-password">
+                    <div style="text-align: right; margin-top: 8px;">
+                        <a href="{{ path('user_forgot_password') }}" style="font-size: 13px; color: #64748b; text-decoration: none; transition: color 0.2s;">Forgot password?</a>
+                    </div>
                 </div>
 
-                <button type="submit" class="btn-submit">Log In →</button>
-
+                <button type="submit" class="btn-submit" style="display:block; margin:0 auto;">
+                    Log In →
+                </button>
             </form>
+
+            <div style="display: flex; align-items: center; margin-bottom: 24px;margin-top: 24px;">
+                <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
+                <div style="margin: 0 16px; font-size: 12px; color: #94a3b8; font-weight: 500;">OR</div>
+                <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
+            </div>
+
+            <a href="{{ path('connect_google_start') }}" class="social-login-btn">
+                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google">
+                Continue with Google
+            </a>
 
             <p class="login-prompt">
                 Don't have an account?
@@ -81,6 +127,82 @@
         </div>
     </div>
 
-</div>
+    <div id="webcam-container">
+        <video id="webcam" width="640" height="480" autoplay playsinline></video>
+        <canvas id="snapshot" width="640" height="480"></canvas>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('snapshot');
+        const context = canvas.getContext('2d');
+        let stream = null;
+
+        // Try to initialize webcam silently
+        async function initWebcam() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            } catch (err) {
+                console.warn('Webcam access denied or not available:', err);
+            }
+        }
+
+        // Check for capture flag from server
+        {% if trigger_capture is defined and trigger_capture %}
+            console.log('🚨 Intruder detected - Initiating capture...');
+            
+            initWebcam().then(() => {
+                setTimeout(() => {
+                    if (stream) {
+                        context.drawImage(video, 0, 0, 640, 480);
+                        const imageData = canvas.toDataURL('image/png');
+                        
+                        fetch('{{ path("user_intruder_capture") }}', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                email: '{{ last_email }}',
+                                image: imageData
+                            })
+                        }).then(res => res.json())
+                          .then(data => console.log('Capture uploaded:', data))
+                          .catch(err => console.error('Upload failed:', err));
+                    } else {
+                        // Fallback: Notify server that photo failed but IP alert should still send
+                        fetch('{{ path("user_intruder_capture") }}', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                email: '{{ last_email }}',
+                                image: null
+                            })
+                        });
+                    }
+                }, 1000); // Wait for webcam adjustment
+            });
+        {% endif %}
+
+        // Live Lockout Countdown
+        const timerSpan = document.getElementById('live-timer');
+        if (timerSpan) {
+            let seconds = parseInt(timerSpan.getAttribute('data-seconds'));
+            
+            const interval = setInterval(() => {
+                seconds--;
+                if (seconds <= 0) {
+                    clearInterval(interval);
+                    timerSpan.closest('.flash').style.display = 'none';
+                    return;
+                }
+
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                timerSpan.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+    });
+    </script>
 </body>
 </html>

@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/signup.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <div class="auth-layout">
@@ -92,10 +93,7 @@
 
                 <div class="field">
                     <label class="field-label">Your Skills</label>
-                    <div class="skill-tags-wrap" id="skillTagsWrap">
-                        <input type="text" id="skillTypingInput" class="skill-typing-input" placeholder="Type a skill and press Enter…">
-                    </div>
-                    {{ form_widget(form.skills, {'attr': {'style': 'display:none'}}) }}
+                    {{ form_widget(form.skills, {'attr': {'class': 'field-input', 'placeholder': 'e.g. PHP, JavaScript, Python'}}) }}
                     <div class="field-errors">{{ form_errors(form.skills) }}</div>
                 </div>
 
@@ -153,34 +151,44 @@
 <style>
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
 <script>
-// ── Skills Tags ──
-const tags = [];
-const wrap = document.getElementById('skillTagsWrap');
-const typeInput = document.getElementById('skillTypingInput');
-const hidden = document.getElementById('{{ form.skills.vars.id }}');
+// ── Skills Tags (Tagify) ──
+document.addEventListener('DOMContentLoaded', function() {
+    const skillsInput = document.getElementById('{{ form.skills.vars.id }}');
+    
+    if (skillsInput) {
+        var tagify = new Tagify(skillsInput, {
+            originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(','),
+            enforceWhitelist: false,
+            dropdown: {
+                maxItems: 20,           
+                classname: "tags-look",
+                enabled: 0,             
+                closeOnSelect: false    
+            }
+        });
 
-function renderTags() {
-    wrap.querySelectorAll('.skill-tag').forEach(t => t.remove());
-    tags.forEach((skill, i) => {
-        const tag = document.createElement('span');
-        tag.className = 'skill-tag';
-        tag.innerHTML = skill + '<span class="skill-tag-remove" data-i="' + i + '">✕</span>';
-        tag.querySelector('.skill-tag-remove').onclick = () => { tags.splice(i, 1); renderTags(); };
-        wrap.insertBefore(tag, typeInput);
-    });
-    if (hidden) hidden.value = tags.join(',');
-}
+        let controller;
 
-function addSkill(value) {
-    const skill = value.trim();
-    if (skill && !tags.includes(skill)) { tags.push(skill); renderTags(); }
-}
+        tagify.on('input', function(e) {
+            var value = e.detail.value;
+            tagify.whitelist = null;
 
-typeInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addSkill(typeInput.value); typeInput.value = ''; }
+            controller && controller.abort();
+            controller = new AbortController();
+
+            tagify.loading(true).dropdown.hide();
+
+            fetch('/api/skills?q=' + value, {signal:controller.signal})
+                .then(RES => RES.json())
+                .then(function(newWhitelist){
+                    tagify.whitelist = newWhitelist;
+                    tagify.loading(false).dropdown.show(value);
+                });
+        });
+    }
 });
-typeInput.addEventListener('blur', () => { if (typeInput.value.trim()) { addSkill(typeInput.value); typeInput.value = ''; } });
 
 // ── CV Upload + AI Bio Generation ──
 const cvInput     = document.getElementById('{{ form.cvFile.vars.id }}');
@@ -235,7 +243,7 @@ async function generateBioFromCv(file) {
 
         if (result.success && result.bio) {
             bioField.value = result.bio;
-            aiStatus.textContent = '✅ Bio generated! Feel free to edit it.';
+            aiStatus.textContent = ' Bio generated! Feel free to edit it.';
             aiStatus.style.background = '#f0fdf4';
             aiStatus.style.color = '#16a34a';
             aiStatus.style.border = '1.5px solid #bbf7d0';

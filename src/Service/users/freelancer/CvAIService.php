@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service;
+namespace App\Service\users\freelancer;
 
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -387,7 +387,7 @@ class CvAIService
                 return null;
             }
 
-            error_log("CvAIService: ✅ Bio generated successfully and validated.");
+            error_log("CvAIService: Bio generated successfully and validated.");
             return $content;
         } catch (\Throwable $e) {
             error_log("CvAIService: Failed to parse response: " . $e->getMessage());

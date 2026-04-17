@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>UniEarn – Manage Users</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <style>
@@ -28,21 +29,77 @@
     </style>
 </head>
 <script>
-(function () {
+document.addEventListener('DOMContentLoaded', function() {
     const form    = document.querySelector('.filter-bar');
     const search  = form.querySelector('input[name="search"]');
     const selects = form.querySelectorAll('select');
+    const results = document.getElementById('user-results-container');
     let timer;
 
-    function submit() { form.submit(); }
+    async function updateResults() {
+        const formData = new FormData(form);
+        const params   = new URLSearchParams(formData);
+        
+        // Update browser URL without reloading
+        const cleanParams = new URLSearchParams(formData);
+        window.history.replaceState({}, '', `${window.location.pathname}?${cleanParams.toString()}`);
+
+        // Fetch partial view
+        params.append('ajax', '1');
+        
+        // Show loading state
+        results.style.opacity = '0.5';
+        
+        try {
+            const response = await fetch(`${form.action}?${params.toString()}`);
+            const html     = await response.text();
+            results.innerHTML = html;
+        } catch (err) {
+            console.error('Admin AJAX Filter error:', err);
+        } finally {
+            results.style.opacity = '1';
+        }
+    }
+
+    // Make updateResults globally available for the pagination include
+    window.updateResults = updateResults;
 
     search.addEventListener('input', () => {
         clearTimeout(timer);
-        timer = setTimeout(submit, 400);
+        timer = setTimeout(updateResults, 400); // 400ms debounce
     });
 
-    selects.forEach(s => s.addEventListener('change', submit));
-})();
+    selects.forEach(s => {
+        s.addEventListener('change', updateResults);
+    });
+
+    // Intercept pagination clicks for AJAX
+    results.addEventListener('click', function(e) {
+        const link = e.target.closest('.pagination-ajax-link');
+        if (link) {
+            e.preventDefault();
+            const url = new URL(link.href);
+            const page = url.searchParams.get('page');
+            
+            const formData = new FormData(form);
+            const params   = new URLSearchParams(formData);
+            params.set('page', page);
+            
+            const cleanParams = new URL(link.href).search;
+            window.history.replaceState({}, '', `${window.location.pathname}${cleanParams}`);
+            
+            params.append('ajax', '1');
+            results.style.opacity = '0.5';
+            fetch(`${form.action}?${params.toString()}`)
+                .then(r => r.text())
+                .then(html => {
+                    results.innerHTML = html;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                })
+                .finally(() => results.style.opacity = '1');
+        }
+    });
+});
 </script>
 <body class="dashboard-body">
 <div class="dashboard-layout">
@@ -90,12 +147,12 @@
                     </div>
                     <div>
                         <label class="field-label">Sort by</label>
-                        <select name="sort">
-                            <option value="name_asc"  {{ sort == 'name_asc'  ? 'selected' : '' }}>Name (A-Z)</option>
-                            <option value="name_desc" {{ sort == 'name_desc' ? 'selected' : '' }}>Name (Z-A)</option>
-                            <option value="email_asc" {{ sort == 'email_asc' ? 'selected' : '' }}>Email (A-Z)</option>
-                            <option value="role"      {{ sort == 'role'      ? 'selected' : '' }}>Role</option>
-                            <option value="status"    {{ sort == 'status'    ? 'selected' : '' }}>Status</option>
+                        <select name="sortBy">
+                            <option value="name_asc"  {{ sortBy == 'name_asc'  ? 'selected' : '' }}>Name (A-Z)</option>
+                            <option value="name_desc" {{ sortBy == 'name_desc' ? 'selected' : '' }}>Name (Z-A)</option>
+                            <option value="email_asc" {{ sortBy == 'email_asc' ? 'selected' : '' }}>Email (A-Z)</option>
+                            <option value="role"      {{ sortBy == 'role'      ? 'selected' : '' }}>Role</option>
+                            <option value="status"    {{ sortBy == 'status'    ? 'selected' : '' }}>Status</option>
                         </select>
                     </div>
                     <button type="submit" class="btn-edit" style="height:38px;">Apply</button>
@@ -115,71 +172,9 @@
                 </form>
             </div>
 
-            {# ── Users table ── #}
-            <div class="content-section">
-                <div class="section-header">
-                    <div class="section-title-wrap">
-                        <span class="section-icon">👥</span>
-                        <h3 class="section-title">Users</h3>
-                    </div>
-                    <span style="color:#64748b;font-size:13px;">{{ users|length }} user{{ users|length != 1 ? 's' : '' }}</span>
-                </div>
-                <hr class="section-divider">
-
-                {% if users is empty %}
-                    <div class="empty-state">
-                        <span class="empty-icon">🔍</span>
-                        <p class="empty-text">No users found</p>
-                        <p class="empty-subtext">Try adjusting your search or filters</p>
-                    </div>
-                {% else %}
-                <div style="overflow-x:auto;">
-                <table class="users-table">
-                    <thead class="table-head">
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th style="text-align:right;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="table-body">
-                    {% for user in users %}
-                        <tr>
-                            <td style="font-weight:600;">{{ user.name }}</td>
-                            <td style="color:#64748b;">{{ user.email }}</td>
-                            <td>
-                                <span class="role-badge role-{{ user.role|lower }}">{{ user.role }}</span>
-                            </td>
-                            <td>
-                                {% if user.isActivated %}
-                                    <span class="status-active">Active</span>
-                                {% else %}
-                                    <span class="status-inactive">Deactivated</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div style="display:flex;gap:6px;justify-content:flex-end;">
-                                    <a href="{{ path('admin_user_view', {id: user.idUser}) }}" class="action-btn btn-view">👁 View</a>
-                                    <form method="post" action="{{ path('admin_toggle_user', {id: user.idUser}) }}" style="display:inline;">
-                                        <button type="submit" class="action-btn {{ user.isActivated ? 'btn-deactivate' : 'btn-activate' }}">
-                                            {{ user.isActivated ? '🚫 Deactivate' : '✅ Activate' }}
-                                        </button>
-                                    </form>
-
-                                    <form method="post" action="{{ path('admin_delete_user', {id: user.idUser}) }}"
-                                          onsubmit="return confirm('Delete {{ user.name }}? This cannot be undone.')" style="display:inline;">
-                                        <button type="submit" class="action-btn btn-delete">🗑 Delete</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-                </div>
-                {% endif %}
+            {# ── User table container for AJAX ── #}
+            <div class="content-section" id="user-results-container" style="transition: opacity 0.2s ease;">
+                {% include 'backOffice/admin/_user_table_results.html.twig' %}
             </div>
 
         </div>
