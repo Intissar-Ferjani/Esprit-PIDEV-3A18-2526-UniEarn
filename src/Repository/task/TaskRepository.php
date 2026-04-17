@@ -2,6 +2,8 @@
 
 namespace App\Repository\task;
 
+use App\Enum\TaskStatus;
+use App\Entity\project\Project;
 use App\Entity\task\Task;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -81,5 +83,69 @@ class TaskRepository extends ServiceEntityRepository
             ->orderBy('t.idTask', 'DESC')
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * @param Project[] $projects
+     * @return array<int, array{percentage:int,total:int,done:int,inProgress:int}>
+     */
+    public function getProgressByProjects(array $projects): array
+    {
+        $progressByProject = [];
+
+        foreach ($projects as $project) {
+            $projectId = $project->getIdProject();
+            if ($projectId === null) {
+                continue;
+            }
+
+            $progressByProject[$projectId] = [
+                'percentage' => 0,
+                'total' => 0,
+                'done' => 0,
+                'inProgress' => 0,
+            ];
+        }
+
+        if ($progressByProject === []) {
+            return [];
+        }
+
+        $tasks = $this->createQueryBuilder('t')
+            ->select('t', 'p')
+            ->join('t.project', 'p')
+            ->andWhere('p.idProject IN (:projectIds)')
+            ->setParameter('projectIds', array_keys($progressByProject))
+            ->getQuery()
+            ->getResult();
+
+        foreach ($tasks as $task) {
+            $projectId = $task->getProject()?->getIdProject();
+            if ($projectId === null || !isset($progressByProject[$projectId])) {
+                continue;
+            }
+
+            $progressByProject[$projectId]['total']++;
+
+            if ($task->getTaskStatus() === TaskStatus::DONE) {
+                $progressByProject[$projectId]['done']++;
+                continue;
+            }
+
+            if ($task->getTaskStatus() === TaskStatus::IN_PROGRESS) {
+                $progressByProject[$projectId]['inProgress']++;
+            }
+        }
+
+        foreach ($progressByProject as $projectId => $progress) {
+            if ($progress['total'] === 0) {
+                continue;
+            }
+
+            $weightedDone = $progress['done'] + (0.5 * $progress['inProgress']);
+            $progressByProject[$projectId]['percentage'] = (int) round(($weightedDone / $progress['total']) * 100);
+        }
+
+        return $progressByProject;
     }
 }

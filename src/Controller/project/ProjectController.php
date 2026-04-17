@@ -5,6 +5,7 @@ namespace App\Controller\project;
 use App\Entity\project\Project;
 use App\Form\project\ProjectType;
 use App\Repository\project\ProjectRepository;
+use App\Repository\task\TaskRepository;
 use App\Repository\users\client\ClientRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,6 +20,7 @@ final class ProjectController extends AbstractController
     public function index(
         Request $request,
         ProjectRepository $projectRepository,
+        TaskRepository $taskRepository,
         ClientRepository $clientRepository,
         EntityManagerInterface $entityManager
     ): Response
@@ -55,6 +57,7 @@ final class ProjectController extends AbstractController
 
         return $this->render('frontOffice/client/project/projet.html.twig', [
             'projects' => $projects,
+            'project_progress' => $taskRepository->getProgressByProjects($projects),
             'project' => $project,
             'form' => $form,
             'is_edit' => false,
@@ -66,6 +69,7 @@ final class ProjectController extends AbstractController
         int $id,
         Request $request,
         ProjectRepository $projectRepository,
+        TaskRepository $taskRepository,
         ClientRepository $clientRepository,
         EntityManagerInterface $entityManager
     ): Response
@@ -104,6 +108,7 @@ final class ProjectController extends AbstractController
 
         return $this->render('frontOffice/client/project/projet.html.twig', [
             'projects' => $projects,
+            'project_progress' => $taskRepository->getProgressByProjects($projects),
             'project' => $project,
             'form' => $form,
             'is_edit' => true,
