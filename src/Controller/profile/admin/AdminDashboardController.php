@@ -2,6 +2,7 @@
 
 namespace App\Controller\profile\admin;
 
+use App\Entity\contract\Contract;
 use App\Repository\users\user\UserRepository;
 use App\Repository\users\client\ClientRepository;
 use App\Repository\users\freelancer\FreelancerRepository;
@@ -198,7 +199,32 @@ class AdminDashboardController extends AbstractController
         if ($r = $this->requireAdmin($request)) return $r;
 
         $user = $repo->find($id);
-        if ($user) { $em->remove($user); $em->flush(); }
+        if (!$user) {
+            $this->addFlash('error', 'User not found.');
+            return $this->redirectToRoute('admin_manage_users');
+        }
+
+        // Check if this user has linked contracts (as client or freelancer)
+        $contractRepo = $em->getRepository(Contract::class);
+        $contractCount = 0;
+
+        $client = $em->getRepository(\App\Entity\users\client\Client::class)->findOneBy(['user' => $user]);
+        if ($client) {
+            $contractCount += $contractRepo->count(['client' => $client]);
+        }
+
+        $freelancer = $em->getRepository(\App\Entity\users\freelancer\Freelancer::class)->findOneBy(['user' => $user]);
+        if ($freelancer) {
+            $contractCount += $contractRepo->count(['freelancer' => $freelancer]);
+        }
+
+        if ($contractCount > 0) {
+            $this->addFlash('error', "Cannot delete this user: $contractCount contract(s) are still linked to them.");
+            return $this->redirectToRoute('admin_manage_users');
+        }
+
+        $em->remove($user);
+        $em->flush();
 
         $this->addFlash('success', 'User deleted successfully.');
         return $this->redirectToRoute('admin_manage_users');
