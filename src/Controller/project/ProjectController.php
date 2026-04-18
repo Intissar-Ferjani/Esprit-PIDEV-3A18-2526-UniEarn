@@ -3,6 +3,7 @@
 namespace App\Controller\project;
 
 use App\Entity\project\Project;
+use App\Enum\TaskStatus;
 use App\Form\project\ProjectType;
 use App\Repository\project\ProjectRepository;
 use App\Repository\task\TaskRepository;
@@ -58,6 +59,7 @@ final class ProjectController extends AbstractController
         return $this->render('frontOffice/client/project/projet.html.twig', [
             'projects' => $projects,
             'project_progress' => $taskRepository->getProgressByProjects($projects),
+            'review_tasks' => count($projects) ? $taskRepository->findBy(['project' => $projects, 'taskStatus' => TaskStatus::REVIEW], ['idTask' => 'DESC']) : [],
             'project' => $project,
             'form' => $form,
             'is_edit' => false,
@@ -109,6 +111,7 @@ final class ProjectController extends AbstractController
         return $this->render('frontOffice/client/project/projet.html.twig', [
             'projects' => $projects,
             'project_progress' => $taskRepository->getProgressByProjects($projects),
+            'review_tasks' => count($projects) ? $taskRepository->findBy(['project' => $projects, 'taskStatus' => TaskStatus::REVIEW], ['idTask' => 'DESC']) : [],
             'project' => $project,
             'form' => $form,
             'is_edit' => true,

@@ -50,6 +50,15 @@ class Task
     #[Assert\Choice(choices: ['High', 'Medium', 'Low'], message: 'Choose a valid priority: High, Medium, or Low.')]
     private ?string $priority = 'Medium';
 
+    #[ORM\Column(name: 'submission_link', type: 'string', length: 255, nullable: true)]
+    private ?string $submissionLink = null;
+
+    #[ORM\Column(name: 'submission_file', type: 'string', length: 255, nullable: true)]
+    private ?string $submissionFile = null;
+
+    #[ORM\Column(name: 'client_feedback', type: Types::TEXT, nullable: true)]
+    private ?string $clientFeedback = null;
+
     #[ORM\ManyToOne(targetEntity: Project::class)]
     #[ORM\JoinColumn(name: 'idProject', referencedColumnName: 'idProject', nullable: false)]
     private ?Project $project = null;
@@ -139,6 +148,39 @@ class Task
     public function setPriority(string $priority): static
     {
         $this->priority = $priority;
+        return $this;
+    }
+
+    public function getSubmissionLink(): ?string
+    {
+        return $this->submissionLink;
+    }
+
+    public function setSubmissionLink(?string $submissionLink): static
+    {
+        $this->submissionLink = $submissionLink;
+        return $this;
+    }
+
+    public function getSubmissionFile(): ?string
+    {
+        return $this->submissionFile;
+    }
+
+    public function setSubmissionFile(?string $submissionFile): static
+    {
+        $this->submissionFile = $submissionFile;
+        return $this;
+    }
+
+    public function getClientFeedback(): ?string
+    {
+        return $this->clientFeedback;
+    }
+
+    public function setClientFeedback(?string $clientFeedback): static
+    {
+        $this->clientFeedback = $clientFeedback;
         return $this;
     }
 

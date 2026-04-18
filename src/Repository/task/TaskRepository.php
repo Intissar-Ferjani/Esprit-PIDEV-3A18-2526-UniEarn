@@ -148,4 +148,109 @@ class TaskRepository extends ServiceEntityRepository
 
         return $progressByProject;
     }
+
+    /**
+     * @param Project[] $projects
+     * @return array<int, array{completed:int,remaining:int,total:int,daysLeft:int|null,deadline:\DateTimeInterface|null,prediction:string}>
+     */
+    public function getForecastByProjects(array $projects): array
+    {
+        $forecastByProject = [];
+
+        foreach ($projects as $project) {
+            $projectId = $project->getIdProject();
+            if ($projectId === null) {
+                continue;
+            }
+
+            $forecastByProject[$projectId] = [
+                'completed' => 0,
+                'remaining' => 0,
+                'total' => 0,
+                'daysLeft' => null,
+                'deadline' => null,
+                'prediction' => 'on_time',
+            ];
+        }
+
+        if ($forecastByProject === []) {
+            return [];
+        }
+
+        $tasks = $this->createQueryBuilder('t')
+            ->select('t', 'p')
+            ->join('t.project', 'p')
+            ->andWhere('p.idProject IN (:projectIds)')
+            ->setParameter('projectIds', array_keys($forecastByProject))
+            ->orderBy('t.deadline', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        $now = new \DateTimeImmutable();
+
+        foreach ($tasks as $task) {
+            $projectId = $task->getProject()?->getIdProject();
+            if ($projectId === null || !isset($forecastByProject[$projectId])) {
+                continue;
+            }
+
+            $forecastByProject[$projectId]['total']++;
+
+            if ($task->getTaskStatus() === TaskStatus::DONE) {
+                $forecastByProject[$projectId]['completed']++;
+            } else {
+                $forecastByProject[$projectId]['remaining']++;
+            }
+
+            $deadline = $task->getDeadline();
+            if (
+                $deadline !== null &&
+                (
+                    $forecastByProject[$projectId]['deadline'] === null ||
+                    $deadline > $forecastByProject[$projectId]['deadline']
+                )
+            ) {
+                $forecastByProject[$projectId]['deadline'] = $deadline;
+            }
+        }
+
+        foreach ($forecastByProject as $projectId => $forecast) {
+            $deadline = $forecast['deadline'];
+
+            if ($forecast['remaining'] === 0) {
+                $forecastByProject[$projectId]['prediction'] = 'on_time';
+                $forecastByProject[$projectId]['daysLeft'] = $deadline instanceof \DateTimeInterface
+                    ? (int) $now->diff(\DateTimeImmutable::createFromInterface($deadline))->format('%r%a')
+                    : null;
+                continue;
+            }
+
+            if (!$deadline instanceof \DateTimeInterface) {
+                $forecastByProject[$projectId]['prediction'] = 'delayed';
+                continue;
+            }
+
+            $daysLeft = (int) $now->diff(\DateTimeImmutable::createFromInterface($deadline))->format('%r%a');
+            $forecastByProject[$projectId]['daysLeft'] = $daysLeft;
+
+            if ($daysLeft < 0) {
+                $forecastByProject[$projectId]['prediction'] = 'delayed';
+                continue;
+            }
+
+            $safeDaysLeft = max(1, $daysLeft);
+            $remaining = $forecast['remaining'];
+            $completed = $forecast['completed'];
+
+            if ($completed === 0) {
+                $forecastByProject[$projectId]['prediction'] = $remaining > $safeDaysLeft ? 'delayed' : 'on_time';
+                continue;
+            }
+
+            $completionCapacity = $completed + $safeDaysLeft;
+            $forecastByProject[$projectId]['prediction'] = $remaining > $completionCapacity ? 'delayed' : 'on_time';
+        }
+
+        return $forecastByProject;
+    }
 }

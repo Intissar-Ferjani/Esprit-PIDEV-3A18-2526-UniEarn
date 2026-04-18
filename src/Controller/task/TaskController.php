@@ -63,15 +63,21 @@ final class TaskController extends AbstractController
             $tasks = array_values(array_filter($tasks, static fn (Task $item): bool => str_contains(strtolower($item->getTitle() ?? ''), strtolower($search))));
         }
 
-        $projectFilter = $request->query->get('project');
-        if ($projectFilter !== null && $projectFilter !== '') {
-            $projectId = (int) $projectFilter;
-            $tasks = array_values(array_filter($tasks, static fn (Task $item): bool => $item->getProject()?->getIdProject() === $projectId));
+        $projectFilter = trim((string) $request->query->get('project', ''));
+        $selectedProjectId = $projectFilter !== '' ? (int) $projectFilter : null;
+        if ($selectedProjectId !== null) {
+            $tasks = array_values(array_filter($tasks, static fn (Task $item): bool => $item->getProject()?->getIdProject() === $selectedProjectId));
         }
+
+        $boardView = $request->query->get('view') === 'project' ? 'project' : 'status';
 
         return $this->render('frontOffice/freelancer/Tasks/task.html.twig', [
             'tasks' => $tasks,
             'form_projects' => $projects,
+            'project_progress' => $taskRepository->getProgressByProjects($projects),
+            'project_forecast' => $taskRepository->getForecastByProjects($projects),
+            'selected_project_id' => $selectedProjectId,
+            'board_view' => $boardView,
             'form' => $form,
             'is_edit' => false,
         ]);
@@ -128,10 +134,26 @@ final class TaskController extends AbstractController
         }
 
         $tasks = count($projects) ? $taskRepository->findBy(['project' => $projects], ['idTask' => 'DESC']) : [];
+        $search = trim((string) $request->query->get('search', ''));
+        if ($search !== '') {
+            $tasks = array_values(array_filter($tasks, static fn (Task $item): bool => str_contains(strtolower($item->getTitle() ?? ''), strtolower($search))));
+        }
+
+        $projectFilter = trim((string) $request->query->get('project', ''));
+        $selectedProjectId = $projectFilter !== '' ? (int) $projectFilter : null;
+        if ($selectedProjectId !== null) {
+            $tasks = array_values(array_filter($tasks, static fn (Task $item): bool => $item->getProject()?->getIdProject() === $selectedProjectId));
+        }
+
+        $boardView = $request->query->get('view') === 'project' ? 'project' : 'status';
 
         return $this->render('frontOffice/freelancer/Tasks/task.html.twig', [
             'tasks' => $tasks,
             'form_projects' => $projects,
+            'project_progress' => $taskRepository->getProgressByProjects($projects),
+            'project_forecast' => $taskRepository->getForecastByProjects($projects),
+            'selected_project_id' => $selectedProjectId,
+            'board_view' => $boardView,
             'form' => $form,
             'is_edit' => true,
         ]);

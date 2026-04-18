@@ -185,6 +185,73 @@
             font-size: 11px;
             color: #64748b;
         }
+        .review-section {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+        }
+        .review-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 14px;
+            background: #f8fafc;
+        }
+        .review-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            color: #475569;
+            font-size: 13px;
+        }
+        .review-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .review-proof {
+            font-size: 13px;
+            color: #475569;
+            margin-bottom: 12px;
+        }
+        .review-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-action-accept {
+            background: #16a34a;
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .btn-action-accept:hover {
+            background: #15803d;
+        }
+        .btn-action-deny {
+            background: #dc2626;
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-action-deny:hover {
+            background: #b91c1c;
+        }
     </style>
 </head>
 <body class="dashboard-body">
@@ -358,6 +425,49 @@
                     </table>
                 </div>
 
+            </div>
+
+            <div class="review-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="font-size: 17px; margin: 0; font-weight: bold; color: #1e293b;">Tasks Waiting For Review</h3>
+                    <span style="font-size: 13px; color: #64748b;">{{ review_tasks|length }} task(s)</span>
+                </div>
+                <hr style="border: 0; border-top: 1px solid #e1e8ed; margin-bottom: 20px;">
+
+                {% for task in review_tasks %}
+                    <div class="review-card">
+                        <div class="review-meta">
+                            <span>Project: {{ task.project ? task.project.title : 'N/A' }}</span>
+                            <span>Deadline: {{ task.deadline ? task.deadline|date('d/m/Y') : 'N/A' }}</span>
+                            <span>Status: {{ task.taskStatus ? task.taskStatus.getDisplayName() : 'N/A' }}</span>
+                        </div>
+                        <div class="review-title">{{ task.title }}</div>
+                        <div class="review-proof">
+                            {% if task.submissionLink %}
+                                Link:
+                                <a href="{{ task.submissionLink }}" target="_blank" rel="noopener noreferrer">{{ task.submissionLink }}</a>
+                            {% else %}
+                                Link: none
+                            {% endif %}
+                            <br>
+                            {% if task.submissionFile %}
+                                File:
+                                <a href="{{ asset('uploads/task_submissions/' ~ task.submissionFile) }}" target="_blank" rel="noopener noreferrer">{{ task.submissionFile }}</a>
+                            {% else %}
+                                File: none
+                            {% endif %}
+                        </div>
+                        <div class="review-actions">
+                            <form method="post" action="{{ path('client_task_accept_review', {'id': task.idTask}) }}" style="display:inline-block; margin:0;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('accept-review' ~ task.idTask) }}">
+                                <button type="submit" class="btn-action-accept">Accept</button>
+                            </form>
+                            <a href="{{ path('client_task_deny_review', {'id': task.idTask}) }}" class="btn-action-deny">Deny</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <p style="color: #95a5a6; font-size: 13px; margin: 0;">No tasks are waiting for client review.</p>
+                {% endfor %}
             </div>
         </div>
     </div>
