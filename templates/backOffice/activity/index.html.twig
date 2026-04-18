@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn – Activity Log</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <style>
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            text-align: left;
+        }
+        .log-table th, .log-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .log-table th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+        }
+        .log-table tr:hover {
+            background-color: #f1f5f9;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #fff;
+        }
+        .badge-CREATE { background-color: #10b981; }
+        .badge-UPDATE { background-color: #3b82f6; }
+        .badge-DELETE { background-color: #ef4444; }
+        
+        .changes-box {
+            font-family: monospace;
+            background: #f8fafc;
+            padding: 8px;
+            border-radius: 4px;
+            color: #334155;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin: 0;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': 'dashboard'} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">👀 System Activity Log</span>
+            <div class="top-bar-right">
+                <span class="top-bar-user">👤 {{ adminName }}</span>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <span class="section-icon">📈</span>
+                        <h3 class="section-title">Recent Activities</h3>
+                    </div>
+                </div>
+                <hr class="section-divider">
+                
+                <table class="log-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>User ID</th>
+                            <th>Action</th>
+                            <th>Entity</th>
+                            <th>Entity ID</th>
+                            <th>Detailed Changes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                            <tr>
+                                <td style="white-space: nowrap; color: #64748b;">{{ log.createdAt|date('Y-m-d H:i:s') }}</td>
+                                <td style="font-weight: bold;">{{ log.userId ? '#' ~ log.userId : 'System/Unknown' }}</td>
+                                <td><span class="badge badge-{{ log.actionType|upper }}">{{ log.actionType|upper }}</span></td>
+                                <td style="font-weight: bold; color: #0f172a;">{{ log.entityName }}</td>
+                                <td>{{ log.entityId }}</td>
+                                <td>
+                                    {% if log.changes and log.changes|length > 0 %}
+                                        <pre class="changes-box">{{ log.changes|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+                                    {% else %}
+                                        <span style="color: #94a3b8; font-style: italic;">No specific diff recorded</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #94a3b8; padding: 24px;">No activity logs found.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

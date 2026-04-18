@@ -32,6 +32,7 @@ class TaskDenialType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Task::class,
+            'validation_groups' => false,
         ]);
     }
 }

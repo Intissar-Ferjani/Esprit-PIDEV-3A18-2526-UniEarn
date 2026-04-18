@@ -165,7 +165,7 @@ final class TaskReviewController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $task->setTaskStatus(TaskStatus::REVIEW);
+            $task->setTaskStatus(TaskStatus::IN_PROGRESS);
             $entityManager->flush();
 
             return $this->redirectToRoute('client_project_index');

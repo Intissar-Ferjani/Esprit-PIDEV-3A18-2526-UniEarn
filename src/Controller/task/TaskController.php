@@ -83,6 +83,83 @@ final class TaskController extends AbstractController
         ]);
     }
 
+    #[Route('/ai-suggest', name: 'freelancer_task_ai_suggest', methods: ['POST'])]
+    public function aiSuggest(
+        Request $request,
+        ProjectRepository $projectRepository,
+        \App\Service\AISuggestionService $aiService,
+        EntityManagerInterface $entityManager,
+        FreelancerRepository $freelancerRepository,
+        ApplicationRepository $applicationRepository
+    ): Response {
+        $userId = $request->getSession()->get('user_id');
+        if (!$userId) {
+            return $this->json(['error' => 'Not authenticated'], 403);
+        }
+
+        $freelancer = $freelancerRepository->findByUserId($userId);
+        if (!$freelancer) {
+            return $this->json(['error' => 'Not a freelancer'], 403);
+        }
+
+        $projectId = $request->request->get('projectId');
+        if (!$projectId) {
+            $this->addFlash('error', 'Please select a project first.');
+            return $this->redirectToRoute('freelancer_task_index');
+        }
+
+        $project = $projectRepository->find($projectId);
+        
+        $assignedProjects = $projectRepository->findByFreelancer($freelancer->getIdFreelancer());
+        $acceptedProjectIds = $applicationRepository->findAcceptedProjectIdsForFreelancer($freelancer->getIdFreelancer());
+        $acceptedProjects = $projectRepository->findByIds($acceptedProjectIds);
+        $allowedProjectIds = array_map(static fn ($p) => $p->getIdProject(), array_merge($assignedProjects, $acceptedProjects));
+        
+        if (!$project || !in_array($project->getIdProject(), $allowedProjectIds, true)) {
+            $this->addFlash('error', 'Invalid project selected.');
+            return $this->redirectToRoute('freelancer_task_index');
+        }
+
+        $suggestions = $aiService->suggestTasks($project->getTitle() ?? 'Untitled Project', $project->getDescription() ?? '');
+
+        if (empty($suggestions)) {
+            $this->addFlash('error', 'AI could not generate suggestions at this time. Please try again.');
+        } else {
+            $count = 0;
+            foreach ($suggestions as $s) {
+                if (!isset($s['title'], $s['description'], $s['priority'], $s['deadlineDaysFromNow'])) continue;
+
+                $task = new Task();
+                $task->setTitle(mb_substr($s['title'], 0, 255));
+                $task->setDescription(mb_substr($s['description'], 0, 255));
+                $task->setPriority(in_array($s['priority'], ['High', 'Medium', 'Low']) ? $s['priority'] : 'Medium');
+                
+                $days = (int) $s['deadlineDaysFromNow'];
+                $deadline = new \DateTime();
+                if ($days > 0) $deadline->modify("+{$days} days");
+                else $deadline->modify("+1 day");
+                $task->setDeadline($deadline);
+                
+                $task->setTaskStatus(\App\Enum\TaskStatus::TODO);
+                $task->setRole('Freelancer Assigned Task');
+                $task->setProject($project);
+                $task->setDateAssign(new \DateTime());
+                
+                $entityManager->persist($task);
+                $count++;
+            }
+            
+            if ($count > 0) {
+                $entityManager->flush();
+                $this->addFlash('success', "AI successfully created $count new tasks for you!");
+            } else {
+                $this->addFlash('error', 'AI response was invalid or empty.');
+            }
+        }
+
+        return $this->redirectToRoute('freelancer_task_index');
+    }
+
     #[Route('/new', name: 'freelancer_task_new', methods: ['GET'])]
     public function new(): Response
     {

@@ -613,7 +613,7 @@
                         </div>
 
                         <div class="control-group">
-                            <label class="control-label" for="projectSelector">Project filter</label>
+                            <label class="control-label" for="projectSelector">Project Selector</label>
                             <select id="projectSelector" name="project" class="control-input">
                                 <option value="">All projects</option>
                                 {% for project in form_projects|default([]) %}
@@ -649,10 +649,7 @@
                                 </a>
                             </div>
                         </div>
-
                         <input type="hidden" name="view" value="{{ board_view }}">
-                        <button type="submit" class="btn-filter">Apply Filters</button>
-                        <a href="{{ path('freelancer_task_index') }}" class="btn-reset">Reset</a>
                     </form>
                 </div>
             </div>
@@ -727,6 +724,8 @@
                     </div>
 
                     <button type="submit" class="btn-primary">{{ is_edit|default(false) ? 'Update Task' : 'Create Task' }}</button>
+                    <a href="{{ path('freelancer_task_index') }}" class="btn-reset">Reset</a>
+
                     {{ form_end(form) }}
                 </div>
             {% endif %}
@@ -896,7 +895,13 @@
 
 <script>
     function handleAISuggestions() {
-        alert('AI suggestions will be added soon.');
+        document.getElementById('aiModal').classList.add('is-open');
+    }
+
+    function closeAIModal(event) {
+        if (!event || event.target.id === 'aiModal') {
+            document.getElementById('aiModal').classList.remove('is-open');
+        }
     }
 
     function openReviewModal(action, taskTitle) {
@@ -920,6 +925,33 @@
         this.form.submit();
     });
 </script>
+
+<div id="aiModal" class="modal-backdrop" onclick="closeAIModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+        <h2 class="modal-title">Generate AI Suggestions</h2>
+        <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">
+            The AI will analyze the selected project description and automatically generate 3 to 5 logical sub-tasks with estimated deadlines and priorities.
+        </p>
+        <form method="post" action="{{ path('freelancer_task_ai_suggest') }}" onsubmit="document.getElementById('aiLoadingSpinner').style.display = 'block'; document.getElementById('aiSubmitBtn').disabled = true;">
+            <label class="modal-label" for="aiProjectSelector">Select Project</label>
+            <select id="aiProjectSelector" name="projectId" class="modal-input" required>
+                <option value="" disabled selected>Select a project...</option>
+                {% for project in form_projects|default([]) %}
+                    <option value="{{ project.idProject }}">{{ project.title }}</option>
+                {% endfor %}
+            </select>
+            
+            <div id="aiLoadingSpinner" style="display: none; margin-top: 15px; color: #1d4ed8; font-weight: bold; font-size: 14px;">
+                Connecting to AI... Please wait, this may take a few seconds.
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-modal-cancel" onclick="closeAIModal()">Cancel</button>
+                <button type="submit" id="aiSubmitBtn" class="btn-modal-submit" style="background: #10b981;">Generate Tasks</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 </body>
 </html>
