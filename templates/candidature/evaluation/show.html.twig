@@ -113,7 +113,7 @@
 
         <div class="eval-meta">
             {% if evaluation.projectId %}
-                <span title="Project ID">📁 Project #{{ evaluation.projectId }}</span>
+                <span title="Project">📁 {{ projectTitle|default('Project') }}</span>
             {% endif %}
             <span title="Date Submitted">📅 {{ evaluation.createdAt|date('M d, Y') }}</span>
         </div>

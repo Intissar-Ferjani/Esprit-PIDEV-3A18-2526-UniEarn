@@ -64,7 +64,8 @@ class ProjectRepository extends ServiceEntityRepository
     public function findAvailableProjects(): array
     {
         return $this->createQueryBuilder('p')
-            ->andWhere('p.freelancer IS NULL')
+            ->andWhere('p.status IN (:availableStatuses)')
+            ->setParameter('availableStatuses', ['TODO', 'Review'])
             ->orderBy('p.idProject', 'DESC')
             ->getQuery()
             ->getResult();

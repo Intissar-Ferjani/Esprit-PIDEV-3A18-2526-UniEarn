@@ -140,7 +140,6 @@
         <div class="header-flex">
             <h3 class="app-title">
                 <span style="font-size:32px;">📄</span> Application Details
-                <span style="color:#94a3b8; font-weight:400; font-size: 20px;">#{{ application.id }}</span>
             </h3>
             {% set statusClass = 'status-' ~ application.status.value %}
             {% if statusClass not in ['status-PENDING', 'status-ACCEPTED', 'status-REJECTED'] %}{% set statusClass = 'status-DEFAULT' %}{% endif %}
@@ -149,8 +148,8 @@
 
         <div class="grid-metrics">
             <div class="metric-box" style="--accent: #4f46e5;">
-                <span class="metric-title">Project ID</span>
-                <span class="metric-value">#{{ application.projectId }}</span>
+                <span class="metric-title">Project Name</span>
+                <span class="metric-value">{{ projectTitle }}</span>
             </div>
             <div class="metric-box" style="--accent: #10b981;">
                 <span class="metric-title">Proposed Budget</span>

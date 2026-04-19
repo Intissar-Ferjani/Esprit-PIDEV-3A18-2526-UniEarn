@@ -33,7 +33,6 @@
 <body>
     <div class="hero">
         <h1>Application Report</h1>
-        <div class="badge">Reference ID: #{{ application.id }}</div>
     </div>
 
     <div class="container">
@@ -59,8 +58,8 @@
             <div class="section-title">Job Details</div>
             <table class="grid">
                 <tr>
-                    <td class="label">Project ID</td>
-                    <td class="value">#{{ application.projectId }}</td>
+                    <td class="label">Project Name</td>
+                    <td class="value">{{ projectTitle }}</td>
                 </tr>
                 <tr>
                     <td class="label">Standard Status</td>

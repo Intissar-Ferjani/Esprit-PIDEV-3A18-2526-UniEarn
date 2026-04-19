@@ -5,6 +5,7 @@ namespace App\Controller\candidature;
 use App\Entity\candidature\Application;
 use App\Form\candidature\ApplicationType;
 use App\Repository\candidature\ApplicationRepository;
+use App\Repository\project\ProjectRepository;
 use App\Repository\users\client\ClientRepository;
 use App\Repository\users\freelancer\FreelancerRepository;
 use App\Repository\users\user\UserRepository;
@@ -29,6 +30,7 @@ class ApplicationController extends AbstractController
         ApplicationRepository $applicationRepository,
         FreelancerRepository $freelancerRepo,
         ClientRepository $clientRepo,
+        ProjectRepository $projectRepo,
         PaginatorInterface $paginator
     ): Response {
         $userId = $request->getSession()->get('user_id');
@@ -43,13 +45,24 @@ class ApplicationController extends AbstractController
         if ($freelancer) {
             $all = $applicationRepository->findBySearchAndSort($freelancer, $search, $sortBy);
         } elseif ($client) {
-            $all = $applicationRepository->findBySearchAndSort(null, $search, $sortBy);
+            // Get client's projects to filter applications
+            $projects = $projectRepo->findBy(['client' => $client]);
+            $projectIds = array_map(fn($p) => $p->getIdProject(), $projects);
+            $all = $applicationRepository->findBySearchAndSort(null, $search, $sortBy, $projectIds);
         } else {
             return $this->redirectToRoute('user_login');
         }
 
         $pendingQuery = array_filter($all, fn($a) => $a->getStatus()->value === 'PENDING');
         $treatedQuery = array_filter($all, fn($a) => $a->getStatus()->value !== 'PENDING');
+
+        // Fetch project titles for all applications in this view
+        $allUniqueProjectIds = array_unique(array_map(fn($a) => $a->getProjectId(), $all));
+        $projectsList = $projectRepo->findByIds($allUniqueProjectIds);
+        $projectTitles = [];
+        foreach ($projectsList as $p) {
+            $projectTitles[$p->getIdProject()] = $p->getTitle();
+        }
 
         $paginationPending = $paginator->paginate(
             array_values($pendingQuery),
@@ -76,6 +89,7 @@ class ApplicationController extends AbstractController
             'applicationsPending' => $paginationPending,
             'applicationsTreated' => $paginationTreated,
             'clientByProject'     => $clientByProject,
+            'projectTitles'       => $projectTitles,
             'freelancer' => $freelancer ?? null,
             'client'     => $client ?? null,
             'user'       => $freelancer ? $freelancer->getUser() : ($client ? $client->getUser() : null),
@@ -172,6 +186,7 @@ class ApplicationController extends AbstractController
         Application $application,
         FreelancerRepository $freelancerRepo,
         ClientRepository $clientRepo,
+        ProjectRepository $projectRepo,
         CurrencyService $currencyService
     ): Response {
         $userId = $request->getSession()->get('user_id');
@@ -180,18 +195,21 @@ class ApplicationController extends AbstractController
         $freelancer = $freelancerRepo->findByUserId($userId);
         $client = $clientRepo->findByUserId($userId);
 
-        $aiData = null;
-        if ($application->getAiAnalysis()) {
-            $aiData = json_decode($application->getAiAnalysis(), true);
-        }
+        $project = $projectRepo->find($application->getProjectId());
 
-        // API A: Currency Conversion
-        $convertedBudgets = $currencyService->convertFromTnd($application->getProposedBudget());
+        $converted = [];
+        if ($application->getProposedBudget() > 0) {
+            $converted = [
+                'USD' => $currencyService->convertToUSD($application->getProposedBudget()),
+                'EUR' => $currencyService->convertToEUR($application->getProposedBudget())
+            ];
+        }
 
         return $this->render('candidature/application/show.html.twig', [
             'application' => $application,
-            'aiData' => $aiData,
-            'convertedBudgets' => $convertedBudgets,
+            'projectTitle' => $project ? $project->getTitle() : ('#' . $application->getProjectId()),
+            'aiData' => json_decode($application->getAiAnalysis(), true),
+            'convertedBudgets' => $converted,
             'freelancer' => $freelancer,
             'client' => $client,
             'user' => $freelancer ? $freelancer->getUser() : ($client ? $client->getUser() : null),
@@ -255,15 +273,18 @@ class ApplicationController extends AbstractController
     }
 
     #[Route('/{id}/pdf', name: 'app_application_pdf', methods: ['GET'])]
-    public function generatePdf(Application $application, PdfService $pdfService): Response
+    public function generatePdf(Application $application, PdfService $pdfService, ProjectRepository $projectRepo): Response
     {
         $aiData = null;
         if ($application->getAiAnalysis()) {
             $aiData = json_decode($application->getAiAnalysis(), true);
         }
 
+        $project = $projectRepo->find($application->getProjectId());
+
         $binary = $pdfService->generateBinaryPdf('candidature/application/pdf.html.twig', [
             'application' => $application,
+            'projectTitle' => $project ? $project->getTitle() : ('#' . $application->getProjectId()),
             'aiData' => $aiData
         ]);
 

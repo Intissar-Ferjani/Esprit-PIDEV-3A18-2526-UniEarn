@@ -8,6 +8,7 @@ use App\Repository\candidature\EvaluationRepository;
 use App\Repository\users\client\ClientRepository;
 use App\Repository\users\freelancer\FreelancerRepository;
 use App\Repository\users\user\UserRepository;
+use App\Repository\project\ProjectRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,6 +28,7 @@ class EvaluationController extends AbstractController
         FreelancerRepository $freelancerRepo,
         ClientRepository $clientRepo,
         UserRepository $userRepo,
+        ProjectRepository $projectRepo,
         PaginatorInterface $paginator
     ): Response {
         $userId = $request->getSession()->get('user_id');
@@ -36,18 +38,28 @@ class EvaluationController extends AbstractController
         $client = $clientRepo->findByUserId($userId);
         $currentUser = $userRepo->find($userId);
 
-        $evaluationsGivenQuery    = $evaluationRepository->findBy(['evaluator' => $currentUser], ['createdAt' => 'DESC']);
-        $evaluationsReceivedQuery = $evaluationRepository->findBy(['evaluated' => $currentUser], ['createdAt' => 'DESC']);
+        $evaluationsGiven    = $evaluationRepository->findBy(['evaluator' => $currentUser], ['createdAt' => 'DESC']);
+        $evaluationsReceived = $evaluationRepository->findBy(['evaluated' => $currentUser], ['createdAt' => 'DESC']);
+
+        // Fetch project titles for all evaluations in this view
+        $allEvals = array_merge($evaluationsGiven, $evaluationsReceived);
+        $allUniqueProjectIds = array_unique(array_filter(array_map(fn($e) => $e->getProjectId(), $allEvals)));
+        
+        $projectsList = $projectRepo->findByIds($allUniqueProjectIds);
+        $projectTitles = [];
+        foreach ($projectsList as $p) {
+            $projectTitles[$p->getIdProject()] = $p->getTitle();
+        }
 
         $paginationGiven = $paginator->paginate(
-            $evaluationsGivenQuery,
+            $evaluationsGiven,
             $request->query->getInt('page_given', 1),
             5,
             ['pageParameterName' => 'page_given']
         );
 
         $paginationReceived = $paginator->paginate(
-            $evaluationsReceivedQuery,
+            $evaluationsReceived,
             $request->query->getInt('page_received', 1),
             5,
             ['pageParameterName' => 'page_received']
@@ -58,6 +70,7 @@ class EvaluationController extends AbstractController
         return $this->render('candidature/evaluation/index.html.twig', [
             'evaluationsGiven'    => $paginationGiven,
             'evaluationsReceived' => $paginationReceived,
+            'projectTitles'       => $projectTitles,
             'reputationScore'     => $reputationScore,
             'freelancer' => $freelancer,
             'client'     => $client,
@@ -181,6 +194,7 @@ class EvaluationController extends AbstractController
         Request $request,
         Evaluation $evaluation,
         FreelancerRepository $freelancerRepo,
+        ProjectRepository $projectRepo,
         ClientRepository $clientRepo
     ): Response {
         $userId = $request->getSession()->get('user_id');
@@ -189,8 +203,11 @@ class EvaluationController extends AbstractController
         $freelancer = $freelancerRepo->findByUserId($userId);
         $client = $clientRepo->findByUserId($userId);
 
+        $project = $projectRepo->find($evaluation->getProjectId());
+
         return $this->render('candidature/evaluation/show.html.twig', [
             'evaluation' => $evaluation,
+            'projectTitle' => $project ? $project->getTitle() : ('#' . $evaluation->getProjectId()),
             'freelancer' => $freelancer,
             'client' => $client,
             'user' => $freelancer ? $freelancer->getUser() : ($client ? $client->getUser() : null),

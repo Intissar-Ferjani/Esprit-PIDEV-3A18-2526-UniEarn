@@ -73,7 +73,7 @@
 
 {# ══════════════════════════════════════════
    PANEL: Pending applications
-══════════════════════════════════════════ #}
+ ══════════════════════════════════════════ #}
 <div id="panel-pending" class="content-section" style="border-top:none; border-radius:0 0 10px 10px;">
 
     {% if applicationsPending is empty %}
@@ -87,7 +87,6 @@
             <table class="table" style="width:100%; border-collapse:separate; border-spacing:0 8px;">
                 <thead style="position:sticky; top:0; background:#f8fafc; z-index:1;">
                     <tr style="color:#718096; font-size:12px; text-transform:uppercase; letter-spacing:0.05em;">
-                        <th style="padding:10px 14px;">ID</th>
                         <th style="padding:10px 14px;">{{ freelancer is defined and freelancer is not null ? 'Client' : 'Freelancer' }}</th>
                         <th style="padding:10px 14px;">Project</th>
                         <th style="padding:10px 14px;">Budget</th>
@@ -101,7 +100,6 @@
                 {% for app in applicationsPending %}
                     <tr style="background:white; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,0.06); transition: transform 0.2s;"
                         onmouseover="this.style.transform='scale(1.002)'" onmouseout="this.style.transform='scale(1)'">
-                        <td style="padding:12px 14px; color:#94a3b8; font-size:12px;">#{{ app.id }}</td>
                         <td style="padding:12px 14px; font-weight:700; color:#1e293b;">
                             {% if freelancer is not null %}
                                 {% set ci = clientByProject[app.projectId] ?? null %}
@@ -114,7 +112,7 @@
                                 {{ app.freelancer.user.name ?? ('Freelancer #' ~ app.freelancer.idFreelancer) }}
                             {% endif %}
                         </td>
-                        <td style="padding:12px 14px; color:#64748b; font-weight:500;">📁 #{{ app.projectId }}</td>
+                        <td style="padding:12px 14px; color:#64748b; font-weight:700;">📁 {{ projectTitles[app.projectId] ?? ('#' ~ app.projectId) }}</td>
                         <td style="padding:12px 14px; color:#10b981; font-weight:700;">{{ app.proposedBudget }} TND</td>
                         <td style="padding:12px 14px; color:#64748b;">{{ app.estimatedDuration }}d</td>
                         <td style="padding:12px 14px; color:#94a3b8; font-size:12px;">{{ app.appliedAt|date('d M Y') }}</td>
@@ -161,7 +159,7 @@
 
 {# ══════════════════════════════════════════
    PANEL: Treated applications
-══════════════════════════════════════════ #}
+ ══════════════════════════════════════════ #}
 <div id="panel-treated" class="content-section" style="display:none; border-top:none; border-radius:0 0 10px 10px;">
 
     {% if applicationsTreated is empty %}
@@ -175,7 +173,6 @@
             <table class="table" style="width:100%; border-collapse:separate; border-spacing:0 8px;">
                 <thead style="position:sticky; top:0; background:#f8fafc; z-index:1;">
                     <tr style="color:#718096; font-size:12px; text-transform:uppercase; letter-spacing:0.05em;">
-                        <th style="padding:10px 14px;">ID</th>
                         <th style="padding:10px 14px;">{{ freelancer is defined and freelancer is not null ? 'Client' : 'Freelancer' }}</th>
                         <th style="padding:10px 14px;">Project</th>
                         <th style="padding:10px 14px;">Budget</th>
@@ -190,7 +187,6 @@
                     {% set statusColor = app.status.value == 'ACCEPTED' ? '#10b981' : (app.status.value == 'REJECTED' ? '#ef4444' : '#64748b') %}
                     {% set statusBg    = app.status.value == 'ACCEPTED' ? 'rgba(16, 185, 129, 0.1)' : (app.status.value == 'REJECTED' ? 'rgba(239, 68, 68, 0.1)' : '#f1f5f9') %}
                     <tr style="background:white; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,0.06);">
-                        <td style="padding:12px 14px; color:#94a3b8; font-size:12px;">#{{ app.id }}</td>
                         <td style="padding:12px 14px; font-weight:700; color:#1e293b;">
                             {% if freelancer is not null %}
                                 {% set ci = clientByProject[app.projectId] ?? null %}
@@ -203,7 +199,7 @@
                                 {{ app.freelancer.user.name ?? ('Freelancer #' ~ app.freelancer.idFreelancer) }}
                             {% endif %}
                         </td>
-                        <td style="padding:12px 14px; color:#64748b; font-weight:500;">📁 #{{ app.projectId }}</td>
+                        <td style="padding:12px 14px; color:#64748b; font-weight:700;">📁 {{ projectTitles[app.projectId] ?? ('#' ~ app.projectId) }}</td>
                         <td style="padding:12px 14px; color:#64748b; font-weight:600;">{{ app.proposedBudget }} TND</td>
                         <td style="padding:12px 14px;">
                             <span style="padding:5px 12px; border-radius:20px; font-size:11px; font-weight:800;

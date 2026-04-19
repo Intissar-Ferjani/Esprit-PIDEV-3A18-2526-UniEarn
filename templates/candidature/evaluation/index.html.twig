@@ -44,7 +44,7 @@
 
 {# ══════════════════════════════════════════
    PANEL: Evaluations Given
-══════════════════════════════════════════ #}
+ ══════════════════════════════════════════ #}
 <div id="panel-given" class="content-section" style="border-top:none; border-radius:0 0 10px 10px;">
 
     {% if evaluationsGiven is empty %}
@@ -89,8 +89,8 @@
                             {% endif %}
                             {{ eval.comment|length > 50 ? eval.comment|slice(0, 50) ~ '…' : eval.comment }}
                         </td>
-                        <td style="padding:12px 14px; color:#64748b; font-size:13px;">
-                            {{ eval.projectId ? '📁 #' ~ eval.projectId : '—' }}
+                        <td style="padding:12px 14px; color:#64748b; font-size:13px; font-weight: 700;">
+                            📁 {{ projectTitles[eval.projectId]|default('Project') }}
                         </td>
                         <td style="padding:12px 14px; color:#94a3b8; font-size:13px;">
                             {{ eval.createdAt|date('d M Y') }}
@@ -121,7 +121,7 @@
                                         <button style="background:#f8fafc; border:none; color:#94a3b8; cursor:pointer;
                                                        font-weight:600; font-size:12px; padding:4px 10px; border-radius:6px; transition:all 0.2s;"
                                                 onmouseover="this.style.background='#e2e8f0'; this.style.color='#64748b'"
-                                                onmouseout="this.style.background='#f8fafc'; this.style.color reviewer'#94a3b8'">🗑</button>
+                                                onmouseout="this.style.background='#f8fafc'; this.style.color='#94a3b8'">🗑</button>
                                     </form>
                                 {% endif %}
                             </div>
@@ -139,7 +139,7 @@
 
 {# ══════════════════════════════════════════
    PANEL: Evaluations Received
-══════════════════════════════════════════ #}
+ ══════════════════════════════════════════ #}
 <div id="panel-received" class="content-section" style="display:none; border-top:none; border-radius:0 0 10px 10px;">
 
     {% if evaluationsReceived is empty %}
@@ -176,8 +176,8 @@
                             </span>
                             <span style="color:#94a3b8; font-size:11px;">({{ eval.rating }}/5)</span>
                         </td>
-                        <td style="padding:12px 14px; color:#64748b; font-size:13px;">
-                            {{ eval.projectId ? '📁 #' ~ eval.projectId : '—' }}
+                        <td style="padding:12px 14px; color:#64748b; font-size:13px; font-weight: 700;">
+                            📁 {{ projectTitles[eval.projectId]|default('Project') }}
                         </td>
                         <td style="padding:12px 14px; color:#475569; font-size:13px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                             {{ eval.comment|length > 55 ? eval.comment|slice(0, 55) ~ '…' : eval.comment }}
@@ -219,10 +219,13 @@
 function switchTab(tab) {
     const panels = ['given', 'received'];
     panels.forEach(function(p) {
-        document.getElementById('panel-' + p).style.display = (p === tab) ? 'block' : 'none';
+        var panel = document.getElementById('panel-' + p);
+        if (panel) panel.style.display = (p === tab) ? 'block' : 'none';
         var btn = document.getElementById('tab-' + p);
-        btn.style.borderBottomColor  = (p === tab) ? '#4f46e5' : 'transparent';
-        btn.style.color              = (p === tab) ? '#4f46e5'  : '#64748b';
+        if (btn) {
+            btn.style.borderBottomColor  = (p === tab) ? '#4f46e5' : 'transparent';
+            btn.style.color              = (p === tab) ? '#4f46e5'  : '#64748b';
+        }
     });
 }
 </script>

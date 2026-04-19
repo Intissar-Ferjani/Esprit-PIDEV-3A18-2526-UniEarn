@@ -58,13 +58,22 @@ class ApplicationRepository extends ServiceEntityRepository
      * Finds applications matching search and sort criteria.
      * Complies with MVC standard: handles filtering/sorting in the persistence layer.
      */
-    public function findBySearchAndSort(?\App\Entity\users\freelancer\Freelancer $freelancer, string $search, string $sortBy): array
+    public function findBySearchAndSort(?\App\Entity\users\freelancer\Freelancer $freelancer, string $search, string $sortBy, ?array $projectIds = null): array
     {
         $qb = $this->createQueryBuilder('a');
 
         if ($freelancer) {
             $qb->andWhere('a.freelancer = :freelancer')
                ->setParameter('freelancer', $freelancer);
+        }
+
+        if ($projectIds !== null) {
+            if (empty($projectIds)) {
+                // Return no results if projectIds list is provided but empty
+                return [];
+            }
+            $qb->andWhere('a.projectId IN (:projectIds)')
+               ->setParameter('projectIds', $projectIds);
         }
 
         if (!empty($search)) {
@@ -91,7 +100,6 @@ class ApplicationRepository extends ServiceEntityRepository
 
     /**
      * Returns a map of projectId => ['userID' => int, 'name' => string, 'company' => string]
-
      * by reading the project table directly via DBAL.
      *
      * @param int[] $projectIds
