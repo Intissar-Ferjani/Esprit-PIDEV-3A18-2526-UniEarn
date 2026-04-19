@@ -9,6 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Knp\Component\Pager\PaginatorInterface;
 
 #[Route('/freelancer/contracts')]
 class FreelancerContractController extends AbstractController
@@ -24,7 +25,7 @@ class FreelancerContractController extends AbstractController
     // ── LIST FREELANCER CONTRACTS ───────────────────────────────────────
 
     #[Route('/', name: 'freelancer_contract_index', methods: ['GET'])]
-    public function index(Request $request, ContractRepository $repo, FreelancerRepository $freelancerRepo): Response
+    public function index(Request $request, ContractRepository $repo, FreelancerRepository $freelancerRepo, PaginatorInterface $paginator): Response
     {
         if ($r = $this->requireFreelancer($request)) return $r;
 
@@ -38,8 +39,15 @@ class FreelancerContractController extends AbstractController
             $status = null;
         }
 
+        $contractsQuery = $repo->findByFreelancerId($freelancer->getIdFreelancer(), $status);
+        $pagination = $paginator->paginate(
+            $contractsQuery,
+            $request->query->getInt('page', 1), /* page number */
+            5 /* limit per page */
+        );
+
         return $this->render('frontOffice/freelancer/contract/list-contracts.html.twig', [
-            'contracts'     => $repo->findByFreelancerId($freelancer->getIdFreelancer(), $status),
+            'contracts'     => $pagination,
             'currentStatus' => $status,
         ]);
     }
