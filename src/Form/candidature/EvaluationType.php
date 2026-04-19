@@ -28,8 +28,12 @@ class EvaluationType extends AbstractType
                 'multiple' => false,
             ])
             ->add('comment', TextareaType::class, [
-                'label' => 'Comment',
-                'attr' => ['rows' => 4, 'placeholder' => 'Leave your comment (minimum 15 characters)...']
+                'label' => '⭐ Detailed Feedback',
+                'attr' => [
+                    'rows' => 4, 
+                    'placeholder' => 'What did you like? What could be improved? (Minimum 15 characters)...',
+                    'class' => 'premium-input'
+                ]
             ])
             ->add('projectId', \Symfony\Component\Form\Extension\Core\Type\HiddenType::class, [
                 'required' => false,

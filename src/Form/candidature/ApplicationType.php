@@ -20,8 +20,12 @@ class ApplicationType extends AbstractType
                 // Project would normally be an EntityType, but we use an Integer for now
             ])
             ->add('coverLetter', TextareaType::class, [
-                'label' => 'Cover Letter',
-                'attr' => ['rows' => 6, 'placeholder' => 'Write a cover letter of at least 20 characters...']
+                'label' => '✉️ Professional Cover Letter',
+                'attr' => [
+                    'rows' => 6, 
+                    'placeholder' => 'Sell your skills! Highlight your experience and why you are the best fit for this project...',
+                    'class' => 'premium-input'
+                ]
             ])
             ->add('proposedBudget', MoneyType::class, [
                 'label' => 'Proposed Budget',

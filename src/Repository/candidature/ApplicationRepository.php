@@ -125,4 +125,19 @@ class ApplicationRepository extends ServiceEntityRepository
             return [];
         }
     }
+
+    /**
+     * Fetches the budget of a specific project via DBAL.
+     */
+    public function getProjectBudget(int $projectId): ?float
+    {
+        try {
+            $conn = $this->getEntityManager()->getConnection();
+            $sql = 'SELECT budget FROM project WHERE idProject = :id';
+            $result = $conn->executeQuery($sql, ['id' => $projectId])->fetchOne();
+            return $result ? (float)$result : null;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
 }

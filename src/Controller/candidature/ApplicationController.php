@@ -17,6 +17,8 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 use App\Service\AiAnalysisService;
 use App\Service\PdfService;
+use App\Service\CurrencyService;
+use Knp\Component\Pager\PaginatorInterface;
 
 #[Route('/application')]
 class ApplicationController extends AbstractController
@@ -26,7 +28,8 @@ class ApplicationController extends AbstractController
         Request $request, 
         ApplicationRepository $applicationRepository,
         FreelancerRepository $freelancerRepo,
-        ClientRepository $clientRepo
+        ClientRepository $clientRepo,
+        PaginatorInterface $paginator
     ): Response {
         $userId = $request->getSession()->get('user_id');
         if (!$userId) return $this->redirectToRoute('user_login');
@@ -45,8 +48,22 @@ class ApplicationController extends AbstractController
             return $this->redirectToRoute('user_login');
         }
 
-        $pending = array_filter($all, fn($a) => $a->getStatus()->value === 'PENDING');
-        $treated = array_filter($all, fn($a) => $a->getStatus()->value !== 'PENDING');
+        $pendingQuery = array_filter($all, fn($a) => $a->getStatus()->value === 'PENDING');
+        $treatedQuery = array_filter($all, fn($a) => $a->getStatus()->value !== 'PENDING');
+
+        $paginationPending = $paginator->paginate(
+            array_values($pendingQuery),
+            $request->query->getInt('page_pending', 1),
+            5,
+            ['pageParameterName' => 'page_pending']
+        );
+
+        $paginationTreated = $paginator->paginate(
+            array_values($treatedQuery),
+            $request->query->getInt('page_treated', 1),
+            5,
+            ['pageParameterName' => 'page_treated']
+        );
 
         // For freelancers, look up which client owns each project
         $clientByProject = [];
@@ -56,8 +73,8 @@ class ApplicationController extends AbstractController
         }
 
         return $this->render('candidature/application/index.html.twig', [
-            'applicationsPending' => array_values($pending),
-            'applicationsTreated' => array_values($treated),
+            'applicationsPending' => $paginationPending,
+            'applicationsTreated' => $paginationTreated,
             'clientByProject'     => $clientByProject,
             'freelancer' => $freelancer ?? null,
             'client'     => $client ?? null,
@@ -71,6 +88,7 @@ class ApplicationController extends AbstractController
         Request $request, 
         EntityManagerInterface $entityManager, 
         FreelancerRepository $freelancerRepository,
+        ApplicationRepository $applicationRepo,
         AiAnalysisService $aiService
     ): Response {
         $userId = $request->getSession()->get('user_id');
@@ -89,24 +107,48 @@ class ApplicationController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Advanced Business Logic: Compatibility Score
-            $score = 0.5; // Default
-            if ($application->getProposedBudget() > 0) {
-                // Heuristic: lower budget might be better for clients, but more duration is worse
-                $budgetFactor = min(1.0, 5000 / $application->getProposedBudget());
-                $durationFactor = max(0.2, 1.0 - ($application->getEstimatedDuration() / 100));
-                $score = ($budgetFactor * 0.6) + ($durationFactor * 0.4);
+            // Metier Avancé 1: Application Limit (3 pending max)
+            $existingPending = $applicationRepo->findBy([
+                'freelancer' => $freelancer,
+                'status' => \App\Enum\ApplicationStatus::PENDING
+            ]);
+            if (count($existingPending) >= 3) {
+                $this->addFlash('error', 'You already have 3 pending applications. Please wait for them to be treated before applying again.');
+                return $this->redirectToRoute('app_application_index');
             }
-            $application->setCompatibilityScore(round($score * 100, 2));
 
             // AI Integration: Cover Letter Analysis
             $aiResults = $aiService->analyzeCoverLetter($application->getCoverLetter());
             $application->setAiAnalysis(json_encode($aiResults));
 
+            // Metier Avancé 2: Auto-rejection if AI score is too low (Threshold: 0.1)
+            if ($aiResults['score'] < 0.1) {
+                $application->setStatus(\App\Enum\ApplicationStatus::REJECTED);
+                $entityManager->persist($application);
+                $entityManager->flush();
+                $this->addFlash('warning', 'Your application was automatically rejected due to a low-quality cover letter (AI Score: ' . round($aiResults['score'] * 100) . '%). Please improve it and try again.');
+                return $this->redirectToRoute('app_application_index');
+            }
+
+            // Metier Avancé 3: Budget Range Validation (Metier + Repository logic)
+            $projectBudget = $applicationRepo->getProjectBudget($application->getProjectId());
+            if ($projectBudget && $application->getProposedBudget() > $projectBudget * 1.5) {
+                $this->addFlash('warning', 'Note: Your proposed budget is significantly higher than the client\'s initial budget for this project.');
+            }
+
+            // Advanced Business Logic: Compatibility Score
+            $score = 0.5; // Default
+            if ($application->getProposedBudget() > 0) {
+                $budgetFactor = $projectBudget ? min(1.0, $projectBudget / $application->getProposedBudget()) : 0.5;
+                $durationFactor = max(0.2, 1.0 - ($application->getEstimatedDuration() / 100));
+                $score = ($budgetFactor * 0.6) + ($durationFactor * 0.4);
+            }
+            $application->setCompatibilityScore(round($score * 100, 2));
+
             $entityManager->persist($application);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Application submitted successfully! Our AI gave your cover letter a score of ' . round($aiResults['score'] * 100) . '%.');
+            $this->addFlash('success', 'Application submitted! AI cover letter score: ' . round($aiResults['score'] * 100) . '%.');
             return $this->redirectToRoute('app_application_index', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -124,7 +166,8 @@ class ApplicationController extends AbstractController
         Request $request,
         Application $application,
         FreelancerRepository $freelancerRepo,
-        ClientRepository $clientRepo
+        ClientRepository $clientRepo,
+        CurrencyService $currencyService
     ): Response {
         $userId = $request->getSession()->get('user_id');
         if (!$userId) return $this->redirectToRoute('user_login');
@@ -137,9 +180,13 @@ class ApplicationController extends AbstractController
             $aiData = json_decode($application->getAiAnalysis(), true);
         }
 
+        // API A: Currency Conversion
+        $convertedBudgets = $currencyService->convertFromTnd($application->getProposedBudget());
+
         return $this->render('candidature/application/show.html.twig', [
             'application' => $application,
             'aiData' => $aiData,
+            'convertedBudgets' => $convertedBudgets,
             'freelancer' => $freelancer,
             'client' => $client,
             'user' => $freelancer ? $freelancer->getUser() : ($client ? $client->getUser() : null),

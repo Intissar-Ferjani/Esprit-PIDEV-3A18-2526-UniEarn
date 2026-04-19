@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Enum\EvaluationType as EnumEvaluationType;
 use App\Service\SentimentAnalysisService;
+use Knp\Component\Pager\PaginatorInterface;
 
 #[Route('/evaluation')]
 class EvaluationController extends AbstractController
@@ -25,7 +26,8 @@ class EvaluationController extends AbstractController
         EvaluationRepository $evaluationRepository,
         FreelancerRepository $freelancerRepo,
         ClientRepository $clientRepo,
-        UserRepository $userRepo
+        UserRepository $userRepo,
+        PaginatorInterface $paginator
     ): Response {
         $userId = $request->getSession()->get('user_id');
         if (!$userId) return $this->redirectToRoute('user_login');
@@ -34,14 +36,28 @@ class EvaluationController extends AbstractController
         $client = $clientRepo->findByUserId($userId);
         $currentUser = $userRepo->find($userId);
 
-        $evaluationsGiven    = $evaluationRepository->findBy(['evaluator' => $currentUser], ['createdAt' => 'DESC']);
-        $evaluationsReceived = $evaluationRepository->findBy(['evaluated' => $currentUser], ['createdAt' => 'DESC']);
+        $evaluationsGivenQuery    = $evaluationRepository->findBy(['evaluator' => $currentUser], ['createdAt' => 'DESC']);
+        $evaluationsReceivedQuery = $evaluationRepository->findBy(['evaluated' => $currentUser], ['createdAt' => 'DESC']);
+
+        $paginationGiven = $paginator->paginate(
+            $evaluationsGivenQuery,
+            $request->query->getInt('page_given', 1),
+            5,
+            ['pageParameterName' => 'page_given']
+        );
+
+        $paginationReceived = $paginator->paginate(
+            $evaluationsReceivedQuery,
+            $request->query->getInt('page_received', 1),
+            5,
+            ['pageParameterName' => 'page_received']
+        );
 
         $reputationScore = $evaluationRepository->calculateReputation($currentUser);
 
         return $this->render('candidature/evaluation/index.html.twig', [
-            'evaluationsGiven'    => $evaluationsGiven,
-            'evaluationsReceived' => $evaluationsReceived,
+            'evaluationsGiven'    => $paginationGiven,
+            'evaluationsReceived' => $paginationReceived,
             'reputationScore'     => $reputationScore,
             'freelancer' => $freelancer,
             'client'     => $client,
@@ -57,7 +73,8 @@ class EvaluationController extends AbstractController
         FreelancerRepository $freelancerRepo,
         ClientRepository $clientRepo,
         UserRepository $userRepo,
-        SentimentAnalysisService $sentimentService
+        SentimentAnalysisService $sentimentService,
+        EvaluationRepository $evaluationRepository
     ): Response {
         $userId = $request->getSession()->get('user_id');
         if (!$userId) return $this->redirectToRoute('user_login');
@@ -117,10 +134,35 @@ class EvaluationController extends AbstractController
             $evaluation->setSentiment($sentimentResult['label']);
             $evaluation->setSentimentScore($sentimentResult['score']);
             
+            // API B (API + Metier): Detailed Flagging & Sentiment Handling
+            if ($sentimentResult['label'] === 'neg') {
+                if ($sentimentResult['score'] > 0.8) {
+                    $evaluation->setIsFlagged(true); // Aggressive/Toxic
+                } else if ($sentimentResult['score'] > 0.5) {
+                    // Mild Negative - Not flagged as toxic but warned
+                }
+            }
+
             $entityManager->persist($evaluation);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Evaluation submitted successfully! Detected sentiment: ' . ucfirst($sentimentResult['label']));
+            // Metier Avancé: Synchronization of Freelancer rating
+            if ($evaluation->getType() === EnumEvaluationType::CLIENT_TO_FREELANCER) {
+                $evaluatedFreelancer = $freelancerRepo->findByUserId($evaluation->getEvaluated()->getIdUser());
+                if ($evaluatedFreelancer) {
+                    $newReputation = $evaluationRepository->calculateReputation($evaluation->getEvaluated());
+                    $evaluatedFreelancer->setRating($newReputation);
+                    $entityManager->flush();
+                }
+            }
+
+            if ($evaluation->isFlagged()) {
+                $this->addFlash('warning', 'Review required: Your evaluation contains high-confidence negative content and has been flagged for moderation.');
+            } elseif ($evaluation->getSentiment() === 'neg') {
+                $this->addFlash('warning', 'Evaluation submitted. Note: A negative tone was detected in your feedback.');
+            } else {
+                $this->addFlash('success', 'Great! Your evaluation has been published successfully.');
+            }
             return $this->redirectToRoute('app_evaluation_index', [], Response::HTTP_SEE_OTHER);
         }
 

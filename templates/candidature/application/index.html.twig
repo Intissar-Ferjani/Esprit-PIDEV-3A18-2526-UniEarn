@@ -5,16 +5,7 @@
 
 {% block content %}
 
-{# ─── Flash messages ─────────────────────────────────────────────── #}
-{% for label, messages in app.flashes %}
-    {% for msg in messages %}
-        <div style="padding:12px 18px; border-radius:8px; margin-bottom:14px; font-size:13px;
-                    background:{{ label == 'success' ? '#dcfce7' : '#fee2e2' }};
-                    color:{{ label == 'success' ? '#166534' : '#991b1b' }};">
-            {{ msg }}
-        </div>
-    {% endfor %}
-{% endfor %}
+{# ─── Flash messages (Styling is now in layout) ──────────────────── #}
 
 {# ─── Header ─────────────────────────────────────────────────────── #}
 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
@@ -29,47 +20,53 @@
         </p>
     </div>
     {% if freelancer is defined and freelancer is not null %}
-        <a href="{{ path('app_application_new') }}" class="btn-primary"
-           style="display:inline-flex; align-items:center; gap:6px; white-space:nowrap;">
-            + New Application
+        <a href="{{ path('app_application_new') }}" 
+           style="display:inline-flex; align-items:center; gap:8px; background: linear-gradient(135deg, #4f46e5, #7c3aed); color:white; padding:10px 20px; border-radius:12px; font-weight:700; text-decoration:none; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); transition: all 0.3s;"
+           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 15px rgba(79, 70, 229, 0.3)'"
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(79, 70, 229, 0.2)'">
+            <span style="font-size:18px;">+</span> New Application
         </a>
     {% endif %}
 </div>
 
-{# ─── Search and Sort ───────────────────────────────────────────── #}
-<div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
-    <form method="get" action="{{ path('app_application_index') }}" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-        <div style="flex-grow: 1; min-width: 200px;">
-            <input type="text" name="search" value="{{ app.request.query.get('search') }}" placeholder="Search by status or keyword..." style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+{# ─── Search and Sort (Premium Design) ───────────────────────────── #}
+<div style="background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); padding: 18px; border-radius: 16px; margin-bottom: 24px; border: 1px solid rgba(226, 232, 240, 0.8); box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+    <form method="get" action="{{ path('app_application_index') }}" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <div style="flex-grow: 1; min-width: 250px; position: relative;">
+            <input type="text" name="search" value="{{ app.request.query.get('search') }}" placeholder="Search by status or keyword..." 
+                   style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; background: white; font-size: 14px; outline: none; transition: border-color 0.2s;"
+                   onfocus="this.style.borderColor='#4f46e5'">
         </div>
         
-        <select name="sort" style="padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; min-width: 150px;">
-            <option value="date" {% if app.request.query.get('sort') == 'date' %}selected{% endif %}>Sort by Date</option>
-            <option value="budget" {% if app.request.query.get('sort') == 'budget' %}selected{% endif %}>Sort by Budget</option>
-            <option value="duration" {% if app.request.query.get('sort') == 'duration' %}selected{% endif %}>Sort by Duration</option>
+        <select name="sort" style="padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; background: white; min-width: 160px; font-size: 14px; color: #475569; outline: none;">
+            <option value="date" {% if app.request.query.get('sort') == 'date' %}selected{% endif %}>📅 Sort by Date</option>
+            <option value="budget" {% if app.request.query.get('sort') == 'budget' %}selected{% endif %}>💰 Sort by Budget</option>
+            <option value="duration" {% if app.request.query.get('sort') == 'duration' %}selected{% endif %}>⏱ Sort by Duration</option>
         </select>
         
-        <button type="submit" class="btn-primary" style="padding: 10px 20px;">Search</button>
-        <a href="{{ path('app_application_index') }}" class="btn-primary" style="padding: 10px 20px; background: #94a3b8; border-color: #94a3b8; text-decoration: none;">Reset</a>
+        <button type="submit" style="padding: 12px 24px; background: #1e293b; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: background 0.2s;"
+                onmouseover="this.style.background='#0f172a'"
+                onmouseout="this.style.background='#1e293b'">Search</button>
+        <a href="{{ path('app_application_index') }}" style="padding: 12px 20px; background: #f1f5f9; color: #475569; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px;">Reset</a>
     </form>
 </div>
 
 {# ─── Tab Bar ────────────────────────────────────────────────────── #}
 <div style="display:flex; gap:0; border-bottom:2px solid #e2e8f0; margin-bottom:0;">
     <button id="tab-pending" onclick="switchTab('pending')"
-            style="padding:12px 24px; font-size:14px; font-weight:600; border:none; background:none;
-                   cursor:pointer; border-bottom:3px solid #f59e0b; color:#f59e0b; margin-bottom:-2px;">
+            style="padding:14px 28px; font-size:14px; font-weight:700; border:none; background:none;
+                   cursor:pointer; border-bottom:3px solid #f59e0b; color:#f59e0b; margin-bottom:-2px; transition: all 0.3s;">
         ⏳ Pending
-        <span style="background:#fff3e0; color:#b45309; padding:2px 8px; border-radius:12px; font-size:11px; margin-left:6px;">
-            {{ applicationsPending|length }}
+        <span style="background:#fff3e0; color:#b45309; padding:2px 8px; border-radius:12px; font-size:11px; margin-left:8px;">
+            {{ applicationsPending.getTotalItemCount }}
         </span>
     </button>
     <button id="tab-treated" onclick="switchTab('treated')"
-            style="padding:12px 24px; font-size:14px; font-weight:600; border:none; background:none;
-                   cursor:pointer; border-bottom:3px solid transparent; color:#64748b; margin-bottom:-2px;">
+            style="padding:14px 28px; font-size:14px; font-weight:700; border:none; background:none;
+                   cursor:pointer; border-bottom:3px solid transparent; color:#64748b; margin-bottom:-2px; transition: all 0.3s;">
         ✅ Treated
-        <span style="background:#f0fdf4; color:#166534; padding:2px 8px; border-radius:12px; font-size:11px; margin-left:6px;">
-            {{ applicationsTreated|length }}
+        <span style="background:#f0fdf4; color:#166534; padding:2px 8px; border-radius:12px; font-size:11px; margin-left:8px;">
+            {{ applicationsTreated.getTotalItemCount }}
         </span>
     </button>
 </div>
@@ -102,10 +99,10 @@
                 </thead>
                 <tbody>
                 {% for app in applicationsPending %}
-                    <tr style="background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                    <tr style="background:white; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,0.06); transition: transform 0.2s;"
+                        onmouseover="this.style.transform='scale(1.002)'" onmouseout="this.style.transform='scale(1)'">
                         <td style="padding:12px 14px; color:#94a3b8; font-size:12px;">#{{ app.id }}</td>
-                        {# ── Show Client for freelancer, Freelancer for client ── #}
-                        <td style="padding:12px 14px; font-weight:600; color:#1e293b;">
+                        <td style="padding:12px 14px; font-weight:700; color:#1e293b;">
                             {% if freelancer is not null %}
                                 {% set ci = clientByProject[app.projectId] ?? null %}
                                 {% if ci %}
@@ -117,42 +114,47 @@
                                 {{ app.freelancer.user.name ?? ('Freelancer #' ~ app.freelancer.idFreelancer) }}
                             {% endif %}
                         </td>
-                        <td style="padding:12px 14px; color:#64748b;">📁 #{{ app.projectId }}</td>
-                        <td style="padding:12px 14px; color:#10b981; font-weight:600;">{{ app.proposedBudget }} TND</td>
+                        <td style="padding:12px 14px; color:#64748b; font-weight:500;">📁 #{{ app.projectId }}</td>
+                        <td style="padding:12px 14px; color:#10b981; font-weight:700;">{{ app.proposedBudget }} TND</td>
                         <td style="padding:12px 14px; color:#64748b;">{{ app.estimatedDuration }}d</td>
                         <td style="padding:12px 14px; color:#94a3b8; font-size:12px;">{{ app.appliedAt|date('d M Y') }}</td>
                         <td style="padding:12px 14px;">
-                            <div style="width:100%; max-width:60px; height:6px; background:#f1f5f9; border-radius:3px; overflow:hidden; margin-bottom:4px;">
-                                <div style="width:{{ app.compatibilityScore|default(0) }}%; height:100%; background:{{ app.compatibilityScore|default(0) > 70 ? '#10b981' : (app.compatibilityScore|default(0) > 40 ? '#f59e0b' : '#ef4444') }};"></div>
+                            {% set cScore = app.compatibilityScore|default(0) %}
+                            {% set cColor = cScore > 70 ? '#10b981' : (cScore > 40 ? '#f59e0b' : '#ef4444') %}
+                            {% set cBg = cScore > 70 ? '#ecfdf5' : (cScore > 40 ? '#fffbeb' : '#fef2f2') %}
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="flex-grow: 1; min-width: 50px; height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden;">
+                                    <div style="width:{{ cScore }}%; height:100%; background: {{ cColor }};"></div>
+                                </div>
+                                <span style="font-size: 11px; font-weight: 800; color: {{ cColor }}; background: {{ cBg }}; padding: 2px 6px; border-radius: 6px;">
+                                    {{ cScore }}%
+                                </span>
                             </div>
-                            <span style="font-size:11px; font-weight:700; color:{{ app.compatibilityScore|default(0) > 70 ? '#059669' : (app.compatibilityScore|default(0) > 40 ? '#d97706' : '#dc2626') }};">
-                                {{ app.compatibilityScore|default(0) }}%
-                            </span>
                         </td>
                         <td style="padding:12px 14px; text-align:right;">
                             <div style="display:flex; justify-content:flex-end; gap:6px; align-items:center;">
                                 <a href="{{ path('app_application_show', {'id': app.id}) }}"
-                                   style="font-size:12px; font-weight:600; text-decoration:none; padding:4px 10px; border-radius:6px; background:#f1f5f9; color:#475569; transition:all 0.2s;"
+                                   style="font-size:12px; font-weight:700; text-decoration:none; padding:6px 14px; border-radius:8px; background:#f1f5f9; color:#475569; transition:all 0.2s;"
                                    onmouseover="this.style.background='#e2e8f0'; this.style.color='#1e293b'"
                                    onmouseout="this.style.background='#f1f5f9'; this.style.color='#475569'">View</a>
-                            
-                            {% if client is defined and client is not null %}
-                            {% endif %}
-                            <form method="post" action="{{ path('app_application_delete', {'id': app.id}) }}"
-                                  style="display:inline; margin:0;"
-                                  onsubmit="return confirm('Delete this application?');">
-                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ app.id) }}">
-                                <button style="background:#f8fafc; border:none; color:#94a3b8; cursor:pointer;
-                                               font-weight:600; font-size:12px; padding:4px 10px; border-radius:6px; transition:all 0.2s;"
-                                        onmouseover="this.style.background='#e2e8f0'; this.style.color='#64748b'"
-                                        onmouseout="this.style.background='#f8fafc'; this.style.color='#94a3b8'">🗑</button>
-                            </form>
+                                <form method="post" action="{{ path('app_application_delete', {'id': app.id}) }}"
+                                      style="display:inline; margin:0;"
+                                      onsubmit="return confirm('Delete this application?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ app.id) }}">
+                                    <button style="background:#fef2f2; border:none; color:#ef4444; cursor:pointer;
+                                                   padding:6px 12px; border-radius:8px; transition:all 0.2s;"
+                                            onmouseover="this.style.background='#fee2e2'"
+                                            onmouseout="this.style.background='#fef2f2'">🗑</button>
+                                </form>
                             </div>
                         </td>
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
+        </div>
+        <div style="margin-top:24px; display:flex; justify-content:center;">
+            {{ knp_pagination_render(applicationsPending) }}
         </div>
     {% endif %}
 </div>
@@ -169,35 +171,6 @@
             <p class="empty-subtext">Accepted, rejected, or withdrawn applications will appear here.</p>
         </div>
     {% else %}
-        {# ── Mini stats ──────────────────────────────────────────── #}
-        {% set accepted = applicationsTreated|filter(a => a.status.value == 'ACCEPTED')|length %}
-        {% set rejected = applicationsTreated|filter(a => a.status.value == 'REJECTED')|length %}
-        {% set withdrawn = applicationsTreated|filter(a => a.status.value == 'WITHDRAWN')|length %}
-
-        <div style="display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
-            <div style="background:#dcfce7; border-radius:10px; padding:10px 18px; display:flex; align-items:center; gap:8px;">
-                <span>✅</span>
-                <div>
-                    <div style="font-size:17px; font-weight:700; color:#166534;">{{ accepted }}</div>
-                    <div style="font-size:11px; color:#15803d;">Accepted</div>
-                </div>
-            </div>
-            <div style="background:#fee2e2; border-radius:10px; padding:10px 18px; display:flex; align-items:center; gap:8px;">
-                <span>❌</span>
-                <div>
-                    <div style="font-size:17px; font-weight:700; color:#b91c1c;">{{ rejected }}</div>
-                    <div style="font-size:11px; color:#991b1b;">Rejected</div>
-                </div>
-            </div>
-            <div style="background:#f1f5f9; border-radius:10px; padding:10px 18px; display:flex; align-items:center; gap:8px;">
-                <span>↩</span>
-                <div>
-                    <div style="font-size:17px; font-weight:700; color:#475569;">{{ withdrawn }}</div>
-                    <div style="font-size:11px; color:#64748b;">Withdrawn</div>
-                </div>
-            </div>
-        </div>
-
         <div style="overflow-y:auto; max-height:420px;">
             <table class="table" style="width:100%; border-collapse:separate; border-spacing:0 8px;">
                 <thead style="position:sticky; top:0; background:#f8fafc; z-index:1;">
@@ -214,12 +187,11 @@
                 </thead>
                 <tbody>
                 {% for app in applicationsTreated %}
-                    {% set statusColor = app.status.value == 'ACCEPTED' ? '#10b981' : (app.status.value == 'REJECTED' ? '#ef4444' : '#94a3b8') %}
-                    {% set statusBg    = app.status.value == 'ACCEPTED' ? '#ecfdf5' : (app.status.value == 'REJECTED' ? '#fef2f2' : '#f1f5f9') %}
-                    <tr style="background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                    {% set statusColor = app.status.value == 'ACCEPTED' ? '#10b981' : (app.status.value == 'REJECTED' ? '#ef4444' : '#64748b') %}
+                    {% set statusBg    = app.status.value == 'ACCEPTED' ? 'rgba(16, 185, 129, 0.1)' : (app.status.value == 'REJECTED' ? 'rgba(239, 68, 68, 0.1)' : '#f1f5f9') %}
+                    <tr style="background:white; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,0.06);">
                         <td style="padding:12px 14px; color:#94a3b8; font-size:12px;">#{{ app.id }}</td>
-                        {# ── Show Client for freelancer, Freelancer for client ── #}
-                        <td style="padding:12px 14px; font-weight:600; color:#1e293b;">
+                        <td style="padding:12px 14px; font-weight:700; color:#1e293b;">
                             {% if freelancer is not null %}
                                 {% set ci = clientByProject[app.projectId] ?? null %}
                                 {% if ci %}
@@ -231,57 +203,56 @@
                                 {{ app.freelancer.user.name ?? ('Freelancer #' ~ app.freelancer.idFreelancer) }}
                             {% endif %}
                         </td>
-                        <td style="padding:12px 14px; color:#64748b;">📁 #{{ app.projectId }}</td>
-                        <td style="padding:12px 14px; color:#64748b;">{{ app.proposedBudget }} TND</td>
+                        <td style="padding:12px 14px; color:#64748b; font-weight:500;">📁 #{{ app.projectId }}</td>
+                        <td style="padding:12px 14px; color:#64748b; font-weight:600;">{{ app.proposedBudget }} TND</td>
                         <td style="padding:12px 14px;">
-                            <span style="padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600;
-                                         background:{{ statusBg }}; color:{{ statusColor }};">
+                            <span style="padding:5px 12px; border-radius:20px; font-size:11px; font-weight:800;
+                                         background:{{ statusBg }}; color:{{ statusColor }}; border: 1px solid {{ statusColor }};">
                                 {{ app.status.getDisplayName }}
                             </span>
                         </td>
                         <td style="padding:12px 14px; color:#94a3b8; font-size:12px;">{{ app.appliedAt|date('d M Y') }}</td>
                         <td style="padding:12px 14px;">
-                            <div style="width:100%; max-width:60px; height:6px; background:#f1f5f9; border-radius:3px; overflow:hidden; margin-bottom:4px;">
-                                <div style="width:{{ app.compatibilityScore|default(0) }}%; height:100%; background:{{ app.compatibilityScore|default(0) > 70 ? '#10b981' : (app.compatibilityScore|default(0) > 40 ? '#f59e0b' : '#ef4444') }};"></div>
+                            {% set cScore = app.compatibilityScore|default(0) %}
+                            {% set cColor = cScore > 70 ? '#10b981' : (cScore > 40 ? '#f59e0b' : '#ef4444') %}
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="flex-grow: 1; min-width: 50px; height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden;">
+                                    <div style="width:{{ cScore }}%; height:100%; background: {{ cColor }};"></div>
+                                </div>
+                                <span style="font-size: 11px; font-weight: 800; color: {{ cColor }};">
+                                    {{ cScore }}%
+                                </span>
                             </div>
-                            <span style="font-size:11px; font-weight:700; color:{{ app.compatibilityScore|default(0) > 70 ? '#059669' : (app.compatibilityScore|default(0) > 40 ? '#d97706' : '#dc2626') }};">
-                                {{ app.compatibilityScore|default(0) }}%
-                            </span>
                         </td>
                         <td style="padding:12px 14px; text-align:right;">
                             <div style="display:flex; justify-content:flex-end; gap:6px; align-items:center;">
                                 <a href="{{ path('app_application_show', {'id': app.id}) }}"
-                                   style="font-size:12px; font-weight:600; text-decoration:none; padding:4px 10px; border-radius:6px; background:#f1f5f9; color:#475569; transition:all 0.2s;"
+                                   style="font-size:12px; font-weight:700; text-decoration:none; padding:6px 14px; border-radius:8px; background:#f1f5f9; color:#475569; transition:all 0.2s;"
                                    onmouseover="this.style.background='#e2e8f0'; this.style.color='#1e293b'"
                                    onmouseout="this.style.background='#f1f5f9'; this.style.color='#475569'">View</a>
-                            {% set evalUrl = path('app_evaluation_new') %}
-                            {% if freelancer is not null %}
-                                {% set ci = clientByProject[app.projectId] ?? null %}
-                                {% if ci %}
-                                    {% set evalUrl = path('app_evaluation_new', {'evaluatedId': ci.userID, 'projectId': app.projectId}) %}
+                                
+                                {% set evalUrl = path('app_evaluation_new') %}
+                                {% if freelancer is not null %}
+                                    {% set ci = clientByProject[app.projectId] ?? null %}
+                                    {% if ci %}
+                                        {% set evalUrl = path('app_evaluation_new', {'evaluatedId': ci.userID, 'projectId': app.projectId}) %}
+                                    {% endif %}
+                                {% else %}
+                                    {% set evalUrl = path('app_evaluation_new', {'evaluatedId': app.freelancer.user.idUser, 'projectId': app.projectId}) %}
                                 {% endif %}
-                            {% else %}
-                                {% set evalUrl = path('app_evaluation_new', {'evaluatedId': app.freelancer.user.idUser, 'projectId': app.projectId}) %}
-                            {% endif %}
-                            <a href="{{ evalUrl }}"
-                               style="font-size:12px; font-weight:600; text-decoration:none; padding:4px 10px; border-radius:6px; background:#fffbeb; color:#d97706; transition:all 0.2s;"
-                               onmouseover="this.style.background='#fef3c7'; this.style.color='#b45309'"
-                               onmouseout="this.style.background='#fffbeb'; this.style.color='#d97706'">✍ Evaluate</a>
-                            <form method="post" action="{{ path('app_application_delete', {'id': app.id}) }}"
-                                  style="display:inline; margin:0;"
-                                  onsubmit="return confirm('Delete this application?');">
-                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ app.id) }}">
-                                <button style="background:#f8fafc; border:none; color:#94a3b8; cursor:pointer;
-                                               font-weight:600; font-size:12px; padding:4px 10px; border-radius:6px; transition:all 0.2s;"
-                                        onmouseover="this.style.background='#e2e8f0'; this.style.color='#64748b'"
-                                        onmouseout="this.style.background='#f8fafc'; this.style.color='#94a3b8'">🗑</button>
-                            </form>
+                                <a href="{{ evalUrl }}"
+                                   style="font-size:12px; font-weight:700; text-decoration:none; padding:6px 14px; border-radius:8px; background: linear-gradient(135deg, #fbbf24, #d97706); color:white; transition:all 0.3s; box-shadow: 0 4px 10px rgba(217, 119, 6, 0.2);"
+                                   onmouseover="this.style.transform='translateY(-1px)';"
+                                   onmouseout="this.style.transform='translateY(0)';">✍ Evaluate</a>
                             </div>
                         </td>
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
+        </div>
+        <div style="margin-top:24px; display:flex; justify-content:center;">
+            {{ knp_pagination_render(applicationsTreated) }}
         </div>
     {% endif %}
 </div>

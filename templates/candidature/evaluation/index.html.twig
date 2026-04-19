@@ -5,16 +5,7 @@
 
 {% block content %}
 
-{# ─── Flash messages ────────────────────────────────────────────────── #}
-{% for label, messages in app.flashes %}
-    {% for msg in messages %}
-        <div style="padding:12px 18px; border-radius:8px; margin-bottom:14px; font-size:13px;
-                    background:{{ label == 'success' ? '#dcfce7' : '#fee2e2' }};
-                    color:{{ label == 'success' ? '#166534' : '#991b1b' }};">
-            {{ msg }}
-        </div>
-    {% endfor %}
-{% endfor %}
+{# ─── Flash messages (Styling is now in layout) ──────────────────── #}
 
 {# ─── Header ─────────────────────────────────────────────────────────── #}
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
@@ -38,7 +29,7 @@
                    cursor:pointer; border-bottom:3px solid #4f46e5; color:#4f46e5; margin-bottom:-2px;">
         📤 Given
         <span style="background:#ede9fe; color:#6d28d9; padding:2px 8px; border-radius:12px; font-size:11px; margin-left:6px;">
-            {{ evaluationsGiven|length }}
+            {{ evaluationsGiven.getTotalItemCount }}
         </span>
     </button>
     <button id="tab-received" onclick="switchTab('received')"
@@ -46,7 +37,7 @@
                    cursor:pointer; border-bottom:3px solid transparent; color:#64748b; margin-bottom:-2px;">
         📥 Received
         <span style="background:#dcfce7; color:#166534; padding:2px 8px; border-radius:12px; font-size:11px; margin-left:6px;">
-            {{ evaluationsReceived|length }}
+            {{ evaluationsReceived.getTotalItemCount }}
         </span>
     </button>
 </div>
@@ -63,28 +54,6 @@
             <p class="empty-subtext">Rate a freelancer or client after completing a project.</p>
         </div>
     {% else %}
-        {# ── Stats bar ─────────────────────────────────────────── #}
-        {% set totalGiven = 0 %}
-        {% for eval in evaluationsGiven %}{% set totalGiven = totalGiven + eval.rating %}{% endfor %}
-        {% set avgGiven = evaluationsGiven|length > 0 ? (totalGiven / evaluationsGiven|length)|round(1) : 0 %}
-
-        <div style="display:flex; gap:12px; margin-bottom:16px;">
-            <div style="background:#ede9fe; border-radius:10px; padding:10px 18px; display:flex; align-items:center; gap:10px;">
-                <span style="font-size:18px;">✍</span>
-                <div>
-                    <div style="font-size:17px; font-weight:700; color:#4f46e5;">{{ evaluationsGiven|length }}</div>
-                    <div style="font-size:11px; color:#6d28d9;">Reviews Given</div>
-                </div>
-            </div>
-            <div style="background:#fef9c3; border-radius:10px; padding:10px 18px; display:flex; align-items:center; gap:10px;">
-                <span style="font-size:18px;">⭐</span>
-                <div>
-                    <div style="font-size:17px; font-weight:700; color:#b45309;">{{ avgGiven }}</div>
-                    <div style="font-size:11px; color:#92400e;">Avg Given / 5</div>
-                </div>
-            </div>
-        </div>
-
         <div style="overflow-y:auto; max-height:480px;">
             <table class="table" style="width:100%; border-collapse:separate; border-spacing:0 8px;">
                 <thead style="position:sticky; top:0; background:#f8fafc; z-index:1;">
@@ -113,6 +82,11 @@
                             <span style="color:#94a3b8; font-size:11px;">({{ eval.rating }}/5)</span>
                         </td>
                         <td style="padding:12px 14px; color:#475569; font-size:13px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                            {% if eval.isFlagged %}
+                                <div style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 8px; background: linear-gradient(135deg, #ef4444, #991b1b); color: white; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); margin-right: 8px;">
+                                    <span>🚩</span> TOXIC ALERT
+                                </div>
+                            {% endif %}
                             {{ eval.comment|length > 50 ? eval.comment|slice(0, 50) ~ '…' : eval.comment }}
                         </td>
                         <td style="padding:12px 14px; color:#64748b; font-size:13px;">
@@ -122,14 +96,15 @@
                             {{ eval.createdAt|date('d M Y') }}
                         </td>
                         <td style="padding:12px 14px; text-align:center;">
-                            {% set sColor = eval.sentiment == 'pos' ? '#10b981' : (eval.sentiment == 'neg' ? '#ef4444' : '#64748b') %}
-                            {% set sBg    = eval.sentiment == 'pos' ? '#ecfdf5' : (eval.sentiment == 'neg' ? '#fef2f2' : '#f1f5f9') %}
-                            {% set sLabel = eval.sentiment == 'pos' ? 'Positive' : (eval.sentiment == 'neg' ? 'Negative' : 'Neutral') %}
-                            {% set sIcon  = eval.sentiment == 'pos' ? '😊' : (eval.sentiment == 'neg' ? '☹️' : '😐') %}
+                            {% set colors = {
+                                'pos': {'bg': 'rgba(16, 185, 129, 0.1)', 'text': '#059669', 'border': '#10b981', 'icon': '🎯', 'label': 'Positive'},
+                                'neg': {'bg': 'rgba(239, 68, 68, 0.1)', 'text': '#dc2626', 'border': '#ef4444', 'icon': '⚠️', 'label': 'Negative'},
+                                'neutral': {'bg': 'rgba(100, 116, 139, 0.1)', 'text': '#475569', 'border': '#64748b', 'icon': '⚖️', 'label': 'Neutral'}
+                            } %}
+                            {% set s = colors[eval.sentiment] ?? colors['neutral'] %}
                             
-                            <span style="padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;
-                                         background:{{ sBg }}; color:{{ sColor }}; display:inline-flex; align-items:center; gap:4px;">
-                                {{ sIcon }} {{ sLabel }}
+                            <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:20px; font-size:11px; font-weight:700; background:{{ s.bg }}; color:{{ s.text }}; border: 1px solid {{ s.border }};">
+                                <span>{{ s.icon }}</span> {{ s.label }}
                             </span>
                         </td>
                         <td style="padding:12px 14px; text-align:right;">
@@ -146,7 +121,7 @@
                                         <button style="background:#f8fafc; border:none; color:#94a3b8; cursor:pointer;
                                                        font-weight:600; font-size:12px; padding:4px 10px; border-radius:6px; transition:all 0.2s;"
                                                 onmouseover="this.style.background='#e2e8f0'; this.style.color='#64748b'"
-                                                onmouseout="this.style.background='#f8fafc'; this.style.color='#94a3b8'">🗑</button>
+                                                onmouseout="this.style.background='#f8fafc'; this.style.color reviewer'#94a3b8'">🗑</button>
                                     </form>
                                 {% endif %}
                             </div>
@@ -155,6 +130,9 @@
                 {% endfor %}
                 </tbody>
             </table>
+        </div>
+        <div style="margin-top:20px; display:flex; justify-content:center;">
+            {{ knp_pagination_render(evaluationsGiven) }}
         </div>
     {% endif %}
 </div>
@@ -171,28 +149,6 @@
             <p class="empty-subtext">Complete projects to start receiving feedback.</p>
         </div>
     {% else %}
-        {# ── Mini stats bar ─────────────────────────────────────────── #}
-        {% set totalRating = 0 %}
-        {% for eval in evaluationsReceived %}{% set totalRating = totalRating + eval.rating %}{% endfor %}
-        {% set avgRating = evaluationsReceived|length > 0 ? (totalRating / evaluationsReceived|length)|round(1) : 0 %}
-
-        <div style="display:flex; gap:12px; margin-bottom:16px;">
-            <div style="background:#fef9c3; border-radius:10px; padding:10px 18px; display:flex; align-items:center; gap:10px;">
-                <span style="font-size:18px;">⭐</span>
-                <div>
-                    <div style="font-size:17px; font-weight:700; color:#b45309;">{{ avgRating }}</div>
-                    <div style="font-size:11px; color:#92400e;">Avg / 5</div>
-                </div>
-            </div>
-            <div style="background:#ede9fe; border-radius:10px; padding:10px 18px; display:flex; align-items:center; gap:10px;">
-                <span style="font-size:18px;">📝</span>
-                <div>
-                    <div style="font-size:17px; font-weight:700; color:#4f46e5;">{{ evaluationsReceived|length }}</div>
-                    <div style="font-size:11px; color:#6d28d9;">Total</div>
-                </div>
-            </div>
-        </div>
-
         <div style="overflow-y:auto; max-height:420px;">
             <table class="table" style="width:100%; border-collapse:separate; border-spacing:0 8px;">
                 <thead style="position:sticky; top:0; background:#f8fafc; z-index:1;">
@@ -230,14 +186,15 @@
                             {{ eval.createdAt|date('d M Y') }}
                         </td>
                         <td style="padding:12px 14px; text-align:center;">
-                            {% set sColor = eval.sentiment == 'pos' ? '#10b981' : (eval.sentiment == 'neg' ? '#ef4444' : '#64748b') %}
-                            {% set sBg    = eval.sentiment == 'pos' ? '#ecfdf5' : (eval.sentiment == 'neg' ? '#fef2f2' : '#f1f5f9') %}
-                            {% set sLabel = eval.sentiment == 'pos' ? 'Positive' : (eval.sentiment == 'neg' ? 'Negative' : 'Neutral') %}
-                            {% set sIcon  = eval.sentiment == 'pos' ? '😊' : (eval.sentiment == 'neg' ? '☹️' : '😐') %}
+                            {% set colors = {
+                                'pos': {'bg': 'rgba(16, 185, 129, 0.1)', 'text': '#059669', 'border': '#10b981', 'icon': '🎯', 'label': 'Positive'},
+                                'neg': {'bg': 'rgba(239, 68, 68, 0.1)', 'text': '#dc2626', 'border': '#ef4444', 'icon': '⚠️', 'label': 'Negative'},
+                                'neutral': {'bg': 'rgba(100, 116, 139, 0.1)', 'text': '#475569', 'border': '#64748b', 'icon': '⚖️', 'label': 'Neutral'}
+                            } %}
+                            {% set s = colors[eval.sentiment] ?? colors['neutral'] %}
                             
-                            <span style="padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;
-                                         background:{{ sBg }}; color:{{ sColor }}; display:inline-flex; align-items:center; gap:4px;">
-                                {{ sIcon }} {{ sLabel }}
+                            <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:20px; font-size:11px; font-weight:700; background:{{ s.bg }}; color:{{ s.text }}; border: 1px solid {{ s.border }};">
+                                <span>{{ s.icon }}</span> {{ s.label }}
                             </span>
                         </td>
                         <td style="padding:12px 14px; text-align:right;">
@@ -250,6 +207,9 @@
                 {% endfor %}
                 </tbody>
             </table>
+        </div>
+        <div style="margin-top:20px; display:flex; justify-content:center;">
+            {{ knp_pagination_render(evaluationsReceived) }}
         </div>
     {% endif %}
 </div>

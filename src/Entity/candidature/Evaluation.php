@@ -55,6 +55,9 @@ class Evaluation
     #[ORM\Column(nullable: true)]
     private ?float $sentimentScore = null;
 
+    #[ORM\Column]
+    private bool $isFlagged = false;
+
     public function __construct()
     {
         $this->createdAt = new \DateTime();
@@ -190,6 +193,18 @@ class Evaluation
     public function setSentimentScore(?float $sentimentScore): static
     {
         $this->sentimentScore = $sentimentScore;
+
+        return $this;
+    }
+
+    public function isFlagged(): bool
+    {
+        return $this->isFlagged;
+    }
+
+    public function setIsFlagged(bool $isFlagged): static
+    {
+        $this->isFlagged = $isFlagged;
 
         return $this;
     }

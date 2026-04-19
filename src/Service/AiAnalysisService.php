@@ -54,11 +54,21 @@ class AiAnalysisService
             return [
                 'summary' => 'AI detected a generally ' . ($positiveScore > 0.6 ? 'professional and positive' : 'neutral') . ' tone.',
                 'score' => $positiveScore,
-                'feedback' => $this->generateFeedback($positiveScore)
+                'feedback' => $this->generateFeedback($positiveScore),
+                'recommendation' => $this->generateRecommendation($text, $positiveScore)
             ];
         } catch (\Exception $e) {
             return $this->mockAiAnalysis($text);
         }
+    }
+
+    private function generateRecommendation(string $text, float $score): string
+    {
+        $length = strlen($text);
+        if ($length < 100) return "Critically short. Add details about your specific expertise.";
+        if ($score < 0.4) return "Low professionalism score. Avoid slang and use more formal industry terms.";
+        if ($score > 0.8 && $length > 300) return "Excellent length and tone. Ready for submission.";
+        return "Standard cover letter. Consider highlighting your most relevant project for this specific role.";
     }
 
     private function generateFeedback(float $score): string
@@ -70,7 +80,8 @@ class AiAnalysisService
 
     private function mockAiAnalysis(string $text): array
     {
-        $score = min(1.0, strlen($text) / 500); // Higher score for longer text relative to a baseline
+        $baseScore = strlen($text) > 20 ? 0.2 : 0.05;
+        $score = min(1.0, $baseScore + (strlen($text) / 1000)); 
         return [
             'summary' => '[MOCK AI] Analysis complete. Text length: ' . strlen($text) . ' chars.',
             'score' => $score,

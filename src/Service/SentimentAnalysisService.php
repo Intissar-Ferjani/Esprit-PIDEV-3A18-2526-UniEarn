@@ -62,9 +62,9 @@ class SentimentAnalysisService
             if (str_contains($lowerText, $word)) $negCount++;
         }
 
-        if ($posCount > $negCount) return ['label' => 'pos', 'score' => 0.8];
-        if ($negCount > $posCount) return ['label' => 'neg', 'score' => 0.8];
+        if ($posCount > $negCount) return ['label' => 'pos', 'score' => 0.85, 'details' => 'Detected optimistic and constructive vocabulary.'];
+        if ($negCount > $posCount) return ['label' => 'neg', 'score' => 0.85, 'details' => 'Detected critical or dissatisfied terminology.'];
 
-        return ['label' => 'neutral', 'score' => 0.5];
+        return ['label' => 'neutral', 'score' => 0.5, 'details' => 'Balanced or factual tone detected.'];
     }
 }
