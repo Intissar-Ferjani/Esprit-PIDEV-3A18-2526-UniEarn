@@ -594,10 +594,13 @@
     {% include sidebar with {'active': active} %}
 
     <div class="dashboard-main">
-        <div class="top-bar" style="padding: 0 30px; height: 70px;">
+        <div class="top-bar" style="padding: 0 30px; height: 70px; display: flex; justify-content: space-between; align-items: center;">
             <a href="{{ path('freelancer_dashboard') }}" class="btn-secondary-action">Retour</a>
-            <div style="flex-grow: 1;"></div>
-            <img src="{{ asset('images/UniEarn_full_logo.png') }}" alt="UniEarn Logo" style="height: 55px; width: auto; object-fit: contain;">
+            
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <span class="top-bar-user" style="font-weight: 600; color: #1e293b; font-size: 15px;">👤 {{ user.name }}</span>
+                <img src="{{ asset('images/UniEarn_full_logo.png') }}" alt="UniEarn Logo" style="height: 55px; width: auto; object-fit: contain;">
+            </div>
         </div>
 
         <div class="dashboard-content-custom">

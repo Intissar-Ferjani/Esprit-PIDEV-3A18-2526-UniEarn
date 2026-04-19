@@ -39,6 +39,11 @@ class AdminActivityLogController extends AbstractController
         ]);
     }
 
+    /**
+     * Advanced Feature: PDF Export
+     * This logic intercepts the normal web view response, renders the Twig template into pure HTML,
+     * and uses the KnpSnappyBundle (wkhtmltopdf binary underneath) to render a downloadable PDF.
+     */
     #[Route('/activity/export', name: 'admin_activity_log_export', methods: ['GET'])]
     public function exportPdf(Request $request, ActivityLogRepository $logRepository, Pdf $snappy): Response
     {
@@ -52,13 +57,14 @@ class AdminActivityLogController extends AbstractController
         $filterUserId = $request->query->get('user_id');
         $filterAction = $request->query->get('action_type');
 
-        // Fetch up to 500 logs for the full report
+        // Fetch up to 500 logs for the full report to prevent memory exhaustion on massive databases.
         $logs = $logRepository->findRecentLogs(
             500, 
             $filterUserId ? (int)$filterUserId : null,
             $filterAction
         );
 
+        // Render the strictly structured pdf twig template into a string of HTML
         $html = $this->renderView('backoffice/activity/report_pdf.html.twig', [
             'logs' => $logs,
             'date' => new \DateTime(),
@@ -66,6 +72,7 @@ class AdminActivityLogController extends AbstractController
             'filterAction' => $filterAction
         ]);
 
+        // Pipeline the HTML string into the snappy PDF engine and return as a direct downloadable file stream.
         return new PdfResponse(
             $snappy->getOutputFromHtml($html),
             'activity_log_report_' . date('Y-m-d_His') . '.pdf'

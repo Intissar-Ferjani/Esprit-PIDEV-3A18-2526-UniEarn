@@ -389,7 +389,6 @@
                                 <th style="text-align: right;">Budget (TND)</th>
                                 <th style="text-align: center;">Statut</th>
                                 <th>Progression</th>
-                                <th style="text-align: center;">ID Client</th>
                                 <th style="text-align: center; width: 180px;">Actions</th>
                             </tr>
                         </thead>
@@ -424,7 +423,6 @@
                                         {% endif %}
                                     </div>
                                 </td>
-                                <td style="text-align: center;">{{ project.client ? (project.client.idUser ?? project.client.id) : 'N/A' }}</td>
                                 <td style="text-align: center;">
                                     <div class="action-btns">
                                         {# Assumes client_project_edit route takes project id #}
@@ -624,6 +622,9 @@
             formData.append('text', originalText);
             formData.append('language', 'auto'); // Let LanguageTool auto-detect French/English
 
+            // Advanced Feature: Language API via HTTP Post
+            // We dispatch an asynchronous request to the public LanguageTool API.
+            // Language is set to 'auto' so it works natively whether the client is typing in French or English.
             const response = await fetch('https://api.languagetool.org/v2/check', {
                 method: 'POST',
                 headers: {
@@ -637,6 +638,7 @@
                 throw new Error(`API returned status ${response.status}`);
             }
             
+            // The JSON response maps grammatical and spelling errors along with string index boundaries.
             const data = await response.json();
             
             if (data.matches && data.matches.length > 0) {

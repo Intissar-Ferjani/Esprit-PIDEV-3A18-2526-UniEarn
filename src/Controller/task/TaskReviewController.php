@@ -67,21 +67,29 @@ final class TaskReviewController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var UploadedFile|null $uploadedFile */
             $uploadedFile = $form->get('submissionFile')->getData();
+            
+            // Logic: File Upload handling
+            // If the freelancer provided an actual file instead of just a URL link:
             if ($uploadedFile instanceof UploadedFile) {
-                // file logic
+                // Determine upload directory and ensure it exists
                 $uploadDirectory = $this->getParameter('kernel.project_dir').'/public/uploads/task_submissions';
                 if (!is_dir($uploadDirectory)) {
                     mkdir($uploadDirectory, 0775, true);
                 }
 
+                // Generates a collision-proof safe filename using URL-friendly characters and uniqid().
                 $safeFilename = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
                 $safeFilename = preg_replace('/[^A-Za-z0-9_-]/', '-', $safeFilename) ?: 'submission';
                 $newFilename = sprintf('%s-%s.%s', $safeFilename, uniqid(), $uploadedFile->guessExtension() ?: $uploadedFile->getClientOriginalExtension() ?: 'bin');
 
                 $uploadedFile->move($uploadDirectory, $newFilename);
+                // Update the database entity with the new physical file path.
                 $task->setSubmissionFile($newFilename);
             }
 
+            // Logic: Change status to trigger the Review phase
+            // Moving state from IN_PROGRESS -> REVIEW blocks the freelancer from editing it
+            // and pushes it onto the Client's dashboard for verification.
             $task->setTaskStatus(TaskStatus::REVIEW);
             $task->setClientFeedback(null);
 

@@ -20,27 +20,40 @@ class ActivityLoggerSubscriber
         $this->requestStack = $requestStack;
     }
 
+    /**
+     * The onFlush event is fired right before Doctrine commits entities to the database.
+     * This makes it the perfect place to safely hook in, read the "UnitOfWork" (the changes pending),
+     * and log them into the ActivityLog table in the same transaction.
+     */
     public function onFlush(OnFlushEventArgs $args): void
     {
         $em = $args->getObjectManager();
-        $uow = $em->getUnitOfWork();
+        $uow = $em->getUnitOfWork(); // Gets all pending Inserts/Updates/Deletes
 
-        // Check Insertions
+        // 1. Check Insertions
+        // Loop over the entities scheduled to be created.
         foreach ($uow->getScheduledEntityInsertions() as $entity) {
+            // We only track specific entities (like Project and Task) to prevent recursive logging
             if ($this->isTrackable($entity) && !$entity instanceof ActivityLog) {
                 // Determine if we have changeset. Insertions usually have empty previous state.
                 $this->logActivity('CREATE', $entity, $em, $uow->getEntityChangeSet($entity));
             }
         }
 
-        // Check Updates
+        // 2. Check Updates
+        // Loop over entities scheduled to be updated.
         foreach ($uow->getScheduledEntityUpdates() as $entity) {
             if ($this->isTrackable($entity)) {
+                // getEntityChangeSet returns an array like: ['fieldName' => [oldValue, newValue]]
                 $changeSet = $uow->getEntityChangeSet($entity);
                 $filteredChanges = [];
+                
+                // We format the values (e.g. converting DateTimes to string) so JSON encodes cleanly.
                 foreach ($changeSet as $field => $values) {
                     $old = $this->formatValue($values[0] ?? null);
                     $new = $this->formatValue($values[1] ?? null);
+                    
+                    // Only log the field if it actually changed meaningfully
                     if ($old !== $new) {
                         $filteredChanges[$field] = [$old, $new];
                     }
@@ -54,7 +67,8 @@ class ActivityLoggerSubscriber
             }
         }
 
-        // Check Deletions
+        // 3. Check Deletions
+        // Loop over entities scheduled for deletion
         foreach ($uow->getScheduledEntityDeletions() as $entity) {
             if ($this->isTrackable($entity)) {
                 $this->logActivity('DELETE', $entity, $em);
