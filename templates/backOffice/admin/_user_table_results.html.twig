@@ -18,6 +18,7 @@
 <table class="users-table">
     <thead class="table-head">
         <tr>
+            <th>ID</th>
             <th>Name</th>
             <th>Email</th>
             <th>Role</th>
@@ -28,6 +29,7 @@
     <tbody class="table-body">
     {% for user in users %}
         <tr>
+            <td style="color:#64748b; font-size:12px;">#{{ user.idUser }}</td>
             <td style="font-weight:600;">{{ user.name }}</td>
             <td style="color:#64748b;">{{ user.email }}</td>
             <td>

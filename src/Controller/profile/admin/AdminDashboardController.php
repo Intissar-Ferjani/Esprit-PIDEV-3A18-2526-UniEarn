@@ -59,13 +59,14 @@ class AdminDashboardController extends AbstractController
     ): Response {
         if ($r = $this->requireAdmin($request)) return $r;
 
+        $userId = $request->query->get('userId') ? $request->query->getInt('userId') : null;
         $search = trim($request->query->get('search', ''));
         $role   = $request->query->get('role', 'All');
         $status = $request->query->get('status', 'All');
         $sortBy = $request->query->get('sortBy', 'name_asc');
         $limit  = $request->query->getInt('limit', 10);
 
-        $queryBuilder = $userRepo->getAdminSearchQueryBuilder($search, $role, $status, $sortBy);
+        $queryBuilder = $userRepo->getAdminSearchQueryBuilder($search, $userId, $role, $status, $sortBy);
 
         $pagination = $paginator->paginate(
             $queryBuilder,
@@ -80,6 +81,7 @@ class AdminDashboardController extends AbstractController
         return $this->render($template, [
             'pagination' => $pagination,
             'users'      => $pagination, // Map to users for compatibility
+            'userId'     => $userId,
             'search'     => $search,
             'role'       => $role,
             'status'     => $status,

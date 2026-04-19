@@ -18,11 +18,16 @@ class UserRepository extends ServiceEntityRepository
         return $this->findOneBy(['email' => strtolower(trim($email))]);
     }
 
-    public function getAdminSearchQueryBuilder(string $search, string $role, string $status, string $sort)
+    public function getAdminSearchQueryBuilder(string $search, ?int $userId, string $role, string $status, string $sort)
     {
         $qb = $this->createQueryBuilder('u')
             ->where('u.role != :admin')
             ->setParameter('admin', 'ADMIN');
+
+        if ($userId) {
+            $qb->andWhere('u.idUser = :userId')
+               ->setParameter('userId', $userId);
+        }
 
         if ($search) {
             $qb->andWhere('u.name LIKE :s OR u.email LIKE :s')

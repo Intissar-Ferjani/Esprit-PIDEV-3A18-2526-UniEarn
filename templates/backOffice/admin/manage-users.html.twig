@@ -126,8 +126,12 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="content-section" style="margin-bottom:20px;">
                 <form method="get" action="{{ path('admin_manage_users') }}" class="filter-bar">
                     <div>
+                        <label class="field-label">ID</label>
+                        <input type="number" name="userId" value="{{ userId ?? '' }}" style="width:80px; height:44px;" placeholder="ID">
+                    </div>
+                    <div>
                         <label class="field-label">Search</label>
-                        <input type="text" name="search" value="{{ search }}" style="width:600px;" placeholder="🔍 Name or email...">
+                        <input type="text" name="search" value="{{ search }}" style="width:510px;" placeholder="🔍 Name or email...">
                     </div>
                     <div>
                         <label class="field-label">Role</label>
