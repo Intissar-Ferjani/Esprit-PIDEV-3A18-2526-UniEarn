@@ -31,7 +31,6 @@ class Task
 
     #[ORM\Column(name: 'deadline', type: Types::DATETIME_MUTABLE)]
     #[Assert\NotBlank(message: 'Deadline is required.')]
-    #[Assert\GreaterThan('now', message: 'Deadline must be in the future.')]
     private ?\DateTimeInterface $deadline = null;
 
     #[ORM\Column(name: 'TaskStatus', type: 'string', length: 50, enumType: TaskStatus::class)]
@@ -206,8 +205,8 @@ class Task
     #[Assert\Callback]
     public function validateInput(ExecutionContextInterface $context): void
     {
-        if ($this->title !== null && $this->title !== '' && !preg_match("/^[\\p{L}\\s'-]+$/u", $this->title)) {
-            $context->buildViolation('Title must contain only letters, spaces, apostrophes, or hyphens.')
+        if ($this->title !== null && $this->title !== '' && !preg_match("/^[\\p{L}\\p{N}\\s.,;:!?()'\\/\\-]+$/u", $this->title)) {
+            $context->buildViolation('Title must contain only letters, numbers, spaces, and basic punctuation.')
                 ->atPath('title')
                 ->addViolation();
         }
@@ -218,8 +217,8 @@ class Task
                 ->addViolation();
         }
 
-        if ($this->role !== null && $this->role !== '' && !preg_match("/^[\\p{L}\\s'-]+$/u", $this->role)) {
-            $context->buildViolation('Role must contain only letters, spaces, apostrophes, or hyphens.')
+        if ($this->role !== null && $this->role !== '' && !preg_match("/^[\\p{L}\\p{N}\\s.,;:!?()'\\/\\-]+$/u", $this->role)) {
+            $context->buildViolation('Role must contain only letters, numbers, spaces, and basic punctuation.')
                 ->atPath('role')
                 ->addViolation();
         }

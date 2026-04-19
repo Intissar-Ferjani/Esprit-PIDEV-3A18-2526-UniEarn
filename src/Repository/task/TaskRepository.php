@@ -86,171 +86,123 @@ class TaskRepository extends ServiceEntityRepository
     }
 
     /**
+     * Computes both progress and forecast for all projects.
+     * Optimized to use already loaded tasks if provided to avoid redundant DB queries.
      * @param Project[] $projects
-     * @return array<int, array{percentage:int,total:int,done:int,inProgress:int}>
+     * @param Task[]|null $tasks
+     * @return array{progress: array, forecast: array}
      */
-    public function getProgressByProjects(array $projects): array
+    public function getProjectStats(array $projects, ?array $tasks = null): array
     {
-        $progressByProject = [];
+        $projectIds = [];
+        $progress = [];
+        $forecast = [];
 
         foreach ($projects as $project) {
-            $projectId = $project->getIdProject();
-            if ($projectId === null) {
-                continue;
-            }
-
-            $progressByProject[$projectId] = [
-                'percentage' => 0,
-                'total' => 0,
-                'done' => 0,
-                'inProgress' => 0,
-            ];
+            $pid = $project->getIdProject();
+            if ($pid === null) continue;
+            $projectIds[] = $pid;
+            $progress[$pid] = ['percentage' => 0, 'total' => 0, 'done' => 0, 'inProgress' => 0];
+            $forecast[$pid] = ['completed' => 0, 'remaining' => 0, 'total' => 0, 'daysLeft' => null, 'deadline' => null, 'prediction' => 'on_time'];
         }
 
-        if ($progressByProject === []) {
-            return [];
+        if (empty($projectIds)) {
+            return ['progress' => [], 'forecast' => []];
         }
 
-        $tasks = $this->createQueryBuilder('t')
-            ->select('t', 'p')
-            ->join('t.project', 'p')
-            ->andWhere('p.idProject IN (:projectIds)')
-            ->setParameter('projectIds', array_keys($progressByProject))
-            ->getQuery()
-            ->getResult();
-
-        foreach ($tasks as $task) {
-            $projectId = $task->getProject()?->getIdProject();
-            if ($projectId === null || !isset($progressByProject[$projectId])) {
-                continue;
-            }
-
-            $progressByProject[$projectId]['total']++;
-
-            if ($task->getTaskStatus() === TaskStatus::DONE) {
-                $progressByProject[$projectId]['done']++;
-                continue;
-            }
-
-            if ($task->getTaskStatus() === TaskStatus::IN_PROGRESS) {
-                $progressByProject[$projectId]['inProgress']++;
-            }
+        // Only query if tasks aren't already provided
+        if ($tasks === null) {
+            $tasks = $this->createQueryBuilder('t')
+                ->select('t', 'p')
+                ->join('t.project', 'p')
+                ->andWhere('p.idProject IN (:projectIds)')
+                ->setParameter('projectIds', $projectIds)
+                ->orderBy('t.deadline', 'ASC')
+                ->getQuery()
+                ->getResult();
         }
-
-        foreach ($progressByProject as $projectId => $progress) {
-            if ($progress['total'] === 0) {
-                continue;
-            }
-
-            $weightedDone = $progress['done'] + (0.5 * $progress['inProgress']);
-            $progressByProject[$projectId]['percentage'] = (int) round(($weightedDone / $progress['total']) * 100);
-        }
-
-        return $progressByProject;
-    }
-
-    /**
-     * @param Project[] $projects
-     * @return array<int, array{completed:int,remaining:int,total:int,daysLeft:int|null,deadline:\DateTimeInterface|null,prediction:string}>
-     */
-    public function getForecastByProjects(array $projects): array
-    {
-        $forecastByProject = [];
-
-        foreach ($projects as $project) {
-            $projectId = $project->getIdProject();
-            if ($projectId === null) {
-                continue;
-            }
-
-            $forecastByProject[$projectId] = [
-                'completed' => 0,
-                'remaining' => 0,
-                'total' => 0,
-                'daysLeft' => null,
-                'deadline' => null,
-                'prediction' => 'on_time',
-            ];
-        }
-
-        if ($forecastByProject === []) {
-            return [];
-        }
-
-        $tasks = $this->createQueryBuilder('t')
-            ->select('t', 'p')
-            ->join('t.project', 'p')
-            ->andWhere('p.idProject IN (:projectIds)')
-            ->setParameter('projectIds', array_keys($forecastByProject))
-            ->orderBy('t.deadline', 'ASC')
-            ->getQuery()
-            ->getResult();
 
         $now = new \DateTimeImmutable();
 
         foreach ($tasks as $task) {
-            $projectId = $task->getProject()?->getIdProject();
-            if ($projectId === null || !isset($forecastByProject[$projectId])) {
-                continue;
+            $pid = $task->getProject()?->getIdProject();
+            if ($pid === null || !isset($progress[$pid])) continue;
+
+            // Progress
+            $progress[$pid]['total']++;
+            if ($task->getTaskStatus() === TaskStatus::DONE) {
+                $progress[$pid]['done']++;
+            } elseif ($task->getTaskStatus() === TaskStatus::IN_PROGRESS) {
+                $progress[$pid]['inProgress']++;
             }
 
-            $forecastByProject[$projectId]['total']++;
-
+            // Forecast
+            $forecast[$pid]['total']++;
             if ($task->getTaskStatus() === TaskStatus::DONE) {
-                $forecastByProject[$projectId]['completed']++;
+                $forecast[$pid]['completed']++;
             } else {
-                $forecastByProject[$projectId]['remaining']++;
+                $forecast[$pid]['remaining']++;
             }
 
             $deadline = $task->getDeadline();
-            if (
-                $deadline !== null &&
-                (
-                    $forecastByProject[$projectId]['deadline'] === null ||
-                    $deadline > $forecastByProject[$projectId]['deadline']
-                )
-            ) {
-                $forecastByProject[$projectId]['deadline'] = $deadline;
+            if ($deadline !== null && ($forecast[$pid]['deadline'] === null || $deadline > $forecast[$pid]['deadline'])) {
+                $forecast[$pid]['deadline'] = $deadline;
             }
         }
 
-        foreach ($forecastByProject as $projectId => $forecast) {
-            $deadline = $forecast['deadline'];
+        // Calculate percentages
+        foreach ($progress as $pid => $p) {
+            if ($p['total'] > 0) {
+                $weightedDone = $p['done'] + (0.5 * $p['inProgress']);
+                $progress[$pid]['percentage'] = (int) round(($weightedDone / $p['total']) * 100);
+            }
+        }
 
-            if ($forecast['remaining'] === 0) {
-                $forecastByProject[$projectId]['prediction'] = 'on_time';
-                $forecastByProject[$projectId]['daysLeft'] = $deadline instanceof \DateTimeInterface
+        // Calculate predictions
+        foreach ($forecast as $pid => $f) {
+            $deadline = $f['deadline'];
+            if ($f['remaining'] === 0) {
+                $forecast[$pid]['daysLeft'] = $deadline instanceof \DateTimeInterface
                     ? (int) $now->diff(\DateTimeImmutable::createFromInterface($deadline))->format('%r%a')
                     : null;
                 continue;
             }
-
             if (!$deadline instanceof \DateTimeInterface) {
-                $forecastByProject[$projectId]['prediction'] = 'delayed';
+                $forecast[$pid]['prediction'] = 'delayed';
                 continue;
             }
-
             $daysLeft = (int) $now->diff(\DateTimeImmutable::createFromInterface($deadline))->format('%r%a');
-            $forecastByProject[$projectId]['daysLeft'] = $daysLeft;
-
+            $forecast[$pid]['daysLeft'] = $daysLeft;
             if ($daysLeft < 0) {
-                $forecastByProject[$projectId]['prediction'] = 'delayed';
+                $forecast[$pid]['prediction'] = 'delayed';
                 continue;
             }
-
             $safeDaysLeft = max(1, $daysLeft);
-            $remaining = $forecast['remaining'];
-            $completed = $forecast['completed'];
-
+            $remaining = $f['remaining'];
+            $completed = $f['completed'];
             if ($completed === 0) {
-                $forecastByProject[$projectId]['prediction'] = $remaining > $safeDaysLeft ? 'delayed' : 'on_time';
-                continue;
+                $forecast[$pid]['prediction'] = $remaining > $safeDaysLeft ? 'delayed' : 'on_time';
+            } else {
+                $forecast[$pid]['prediction'] = $remaining > ($completed + $safeDaysLeft) ? 'delayed' : 'on_time';
             }
-
-            $completionCapacity = $completed + $safeDaysLeft;
-            $forecastByProject[$projectId]['prediction'] = $remaining > $completionCapacity ? 'delayed' : 'on_time';
         }
 
-        return $forecastByProject;
+        return ['progress' => $progress, 'forecast' => $forecast];
+    }
+
+    /**
+     * @param Project[] $projects
+     */
+    public function getProgressByProjects(array $projects): array
+    {
+        return $this->getProjectStats($projects)['progress'];
+    }
+
+    /**
+     * @param Project[] $projects
+     */
+    public function getForecastByProjects(array $projects): array
+    {
+        return $this->getProjectStats($projects)['forecast'];
     }
 }

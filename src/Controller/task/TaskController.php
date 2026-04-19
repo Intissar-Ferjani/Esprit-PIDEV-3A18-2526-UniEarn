@@ -60,22 +60,24 @@ final class TaskController extends AbstractController
         $tasks = count($projects) ? $taskRepository->findBy(['project' => $projects], ['idTask' => 'DESC']) : [];
         $search = trim((string) $request->query->get('search', ''));
         if ($search !== '') {
-            $tasks = array_values(array_filter($tasks, static fn (Task $item): bool => str_contains(strtolower($item->getTitle() ?? ''), strtolower($search))));
+            $tasks = array_values(array_filter($tasks, static fn(Task $item): bool => str_contains(strtolower($item->getTitle() ?? ''), strtolower($search))));
         }
 
         $projectFilter = trim((string) $request->query->get('project', ''));
         $selectedProjectId = $projectFilter !== '' ? (int) $projectFilter : null;
         if ($selectedProjectId !== null) {
-            $tasks = array_values(array_filter($tasks, static fn (Task $item): bool => $item->getProject()?->getIdProject() === $selectedProjectId));
+            $tasks = array_values(array_filter($tasks, static fn(Task $item): bool => $item->getProject()?->getIdProject() === $selectedProjectId));
         }
 
         $boardView = $request->query->get('view') === 'project' ? 'project' : 'status';
 
+        $stats = $taskRepository->getProjectStats($projects, $tasks);
+
         return $this->render('frontOffice/freelancer/Tasks/task.html.twig', [
             'tasks' => $tasks,
             'form_projects' => $projects,
-            'project_progress' => $taskRepository->getProgressByProjects($projects),
-            'project_forecast' => $taskRepository->getForecastByProjects($projects),
+            'project_progress' => $stats['progress'],
+            'project_forecast' => $stats['forecast'],
             'selected_project_id' => $selectedProjectId,
             'board_view' => $boardView,
             'form' => $form,
@@ -109,12 +111,12 @@ final class TaskController extends AbstractController
         }
 
         $project = $projectRepository->find($projectId);
-        
+
         $assignedProjects = $projectRepository->findByFreelancer($freelancer->getIdFreelancer());
         $acceptedProjectIds = $applicationRepository->findAcceptedProjectIdsForFreelancer($freelancer->getIdFreelancer());
         $acceptedProjects = $projectRepository->findByIds($acceptedProjectIds);
-        $allowedProjectIds = array_map(static fn ($p) => $p->getIdProject(), array_merge($assignedProjects, $acceptedProjects));
-        
+        $allowedProjectIds = array_map(static fn($p) => $p->getIdProject(), array_merge($assignedProjects, $acceptedProjects));
+
         if (!$project || !in_array($project->getIdProject(), $allowedProjectIds, true)) {
             $this->addFlash('error', 'Invalid project selected.');
             return $this->redirectToRoute('freelancer_task_index');
@@ -127,28 +129,31 @@ final class TaskController extends AbstractController
         } else {
             $count = 0;
             foreach ($suggestions as $s) {
-                if (!isset($s['title'], $s['description'], $s['priority'], $s['deadlineDaysFromNow'])) continue;
+                if (!isset($s['title'], $s['description'], $s['priority'], $s['deadlineDaysFromNow']))
+                    continue;
 
                 $task = new Task();
                 $task->setTitle(mb_substr($s['title'], 0, 255));
                 $task->setDescription(mb_substr($s['description'], 0, 255));
                 $task->setPriority(in_array($s['priority'], ['High', 'Medium', 'Low']) ? $s['priority'] : 'Medium');
-                
+
                 $days = (int) $s['deadlineDaysFromNow'];
                 $deadline = new \DateTime();
-                if ($days > 0) $deadline->modify("+{$days} days");
-                else $deadline->modify("+1 day");
+                if ($days > 0)
+                    $deadline->modify("+{$days} days");
+                else
+                    $deadline->modify("+1 day");
                 $task->setDeadline($deadline);
-                
+
                 $task->setTaskStatus(\App\Enum\TaskStatus::TODO);
                 $task->setRole('Freelancer Assigned Task');
                 $task->setProject($project);
                 $task->setDateAssign(new \DateTime());
-                
+
                 $entityManager->persist($task);
                 $count++;
             }
-            
+
             if ($count > 0) {
                 $entityManager->flush();
                 $this->addFlash('success', "AI successfully created $count new tasks for you!");
@@ -195,7 +200,7 @@ final class TaskController extends AbstractController
         }
         $projects = array_values($projectMap);
         $task = $taskRepository->find($id);
-        $allowedProjectIds = array_map(static fn ($p) => $p->getIdProject(), $projects);
+        $allowedProjectIds = array_map(static fn($p) => $p->getIdProject(), $projects);
         if (!$task || !in_array($task->getProject()?->getIdProject(), $allowedProjectIds, true)) {
             throw $this->createNotFoundException('Task not found.');
         }
@@ -213,22 +218,24 @@ final class TaskController extends AbstractController
         $tasks = count($projects) ? $taskRepository->findBy(['project' => $projects], ['idTask' => 'DESC']) : [];
         $search = trim((string) $request->query->get('search', ''));
         if ($search !== '') {
-            $tasks = array_values(array_filter($tasks, static fn (Task $item): bool => str_contains(strtolower($item->getTitle() ?? ''), strtolower($search))));
+            $tasks = array_values(array_filter($tasks, static fn(Task $item): bool => str_contains(strtolower($item->getTitle() ?? ''), strtolower($search))));
         }
 
         $projectFilter = trim((string) $request->query->get('project', ''));
         $selectedProjectId = $projectFilter !== '' ? (int) $projectFilter : null;
         if ($selectedProjectId !== null) {
-            $tasks = array_values(array_filter($tasks, static fn (Task $item): bool => $item->getProject()?->getIdProject() === $selectedProjectId));
+            $tasks = array_values(array_filter($tasks, static fn(Task $item): bool => $item->getProject()?->getIdProject() === $selectedProjectId));
         }
 
         $boardView = $request->query->get('view') === 'project' ? 'project' : 'status';
 
+        $stats = $taskRepository->getProjectStats($projects, $tasks);
+
         return $this->render('frontOffice/freelancer/Tasks/task.html.twig', [
             'tasks' => $tasks,
             'form_projects' => $projects,
-            'project_progress' => $taskRepository->getProgressByProjects($projects),
-            'project_forecast' => $taskRepository->getForecastByProjects($projects),
+            'project_progress' => $stats['progress'],
+            'project_forecast' => $stats['forecast'],
             'selected_project_id' => $selectedProjectId,
             'board_view' => $boardView,
             'form' => $form,
@@ -264,25 +271,18 @@ final class TaskController extends AbstractController
             $projectMap[$project->getIdProject()] = $project;
         }
         $projects = array_values($projectMap);
-        $allowedProjectIds = array_map(static fn ($p) => $p->getIdProject(), $projects);
+        $allowedProjectIds = array_map(static fn($p) => $p->getIdProject(), $projects);
         $task = $taskRepository->find($id);
         if (!$task || !in_array($task->getProject()?->getIdProject(), $allowedProjectIds, true)) {
             throw $this->createNotFoundException('Task not found.');
         }
 
-        if ($this->isCsrfTokenValid('delete'.$task->getIdTask(), (string) $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $task->getIdTask(), (string) $request->request->get('_token'))) {
             $entityManager->remove($task);
             $entityManager->flush();
             $this->addFlash('success', 'Task deleted successfully.');
         }
 
         return $this->redirectToRoute('freelancer_task_index', [], Response::HTTP_SEE_OTHER);
-    }
-
-    #[Route('/export/pdf', name: 'freelancer_task_export_pdf', methods: ['GET'])]
-    public function exportPdf(): Response
-    {
-        $this->addFlash('info', 'PDF export will be added soon.');
-        return $this->redirectToRoute('freelancer_task_index');
     }
 }

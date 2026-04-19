@@ -9,12 +9,18 @@
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <style>
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        * { box-sizing: border-box; }
         .form-section, .table-section {
             background-color: #fff;
             padding: 25px;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             margin-bottom: 24px;
+            animation: fadeInUp 0.35s ease both;
         }
         .form-row {
             display: flex;
@@ -100,6 +106,12 @@
             background-color: #f8f9fa;
             font-weight: 600;
             color: #475569;
+        }
+        .table-custom tbody tr {
+            transition: background-color 0.15s ease;
+        }
+        .table-custom tbody tr:hover {
+            background-color: #f1f5f9;
         }
         .action-btns {
             display: flex;
@@ -191,6 +203,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             margin-bottom: 24px;
+            animation: fadeInUp 0.4s ease both;
         }
         .review-card {
             border: 1px solid #e2e8f0;
@@ -198,6 +211,11 @@
             padding: 18px;
             margin-bottom: 14px;
             background: #f8fafc;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .review-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
         }
         .review-meta {
             display: flex;

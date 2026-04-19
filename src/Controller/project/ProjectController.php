@@ -56,10 +56,15 @@ final class ProjectController extends AbstractController
             return $this->redirectToRoute('client_project_index', [], Response::HTTP_SEE_OTHER);
         }
 
+        $allTasks = count($projects) ? $taskRepository->findBy(['project' => $projects]) : [];
+        $progress = $taskRepository->getProjectStats($projects, $allTasks)['progress'];
+        $reviewTasks = array_values(array_filter($allTasks, static fn($t) => $t->getTaskStatus() === TaskStatus::REVIEW));
+        usort($reviewTasks, static fn($a, $b) => $b->getIdTask() <=> $a->getIdTask());
+
         return $this->render('frontOffice/client/project/projet.html.twig', [
             'projects' => $projects,
-            'project_progress' => $taskRepository->getProgressByProjects($projects),
-            'review_tasks' => count($projects) ? $taskRepository->findBy(['project' => $projects, 'taskStatus' => TaskStatus::REVIEW], ['idTask' => 'DESC']) : [],
+            'project_progress' => $progress,
+            'review_tasks' => $reviewTasks,
             'project' => $project,
             'form' => $form,
             'is_edit' => false,
@@ -108,10 +113,15 @@ final class ProjectController extends AbstractController
             $projects = array_values(array_filter($projects, static fn (Project $item): bool => str_contains(strtolower($item->getTitle() ?? ''), strtolower($search))));
         }
 
+        $allTasks = count($projects) ? $taskRepository->findBy(['project' => $projects]) : [];
+        $progress = $taskRepository->getProjectStats($projects, $allTasks)['progress'];
+        $reviewTasks = array_values(array_filter($allTasks, static fn($t) => $t->getTaskStatus() === TaskStatus::REVIEW));
+        usort($reviewTasks, static fn($a, $b) => $b->getIdTask() <=> $a->getIdTask());
+
         return $this->render('frontOffice/client/project/projet.html.twig', [
             'projects' => $projects,
-            'project_progress' => $taskRepository->getProgressByProjects($projects),
-            'review_tasks' => count($projects) ? $taskRepository->findBy(['project' => $projects, 'taskStatus' => TaskStatus::REVIEW], ['idTask' => 'DESC']) : [],
+            'project_progress' => $progress,
+            'review_tasks' => $reviewTasks,
             'project' => $project,
             'form' => $form,
             'is_edit' => true,
