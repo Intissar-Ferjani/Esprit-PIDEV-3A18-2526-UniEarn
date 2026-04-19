@@ -714,7 +714,8 @@ textarea.custom-field { height: auto; resize: vertical; }
     border-radius: 16px;
     box-shadow: 0 4px 24px rgba(0,0,0,.07);
     overflow: hidden;
-    max-width: 720px;
+    max-width: 750px;
+    margin: 0 auto;
 }
 
 .form-card-header {

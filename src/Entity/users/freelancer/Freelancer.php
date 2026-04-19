@@ -57,6 +57,12 @@ class Freelancer
     #[ORM\Column(name: 'idTask', type: 'integer', nullable: true)]
     private ?int $idTask = null;
 
+    #[ORM\Column(name: 'iban', type: 'string', length: 255, nullable: true)]
+    private ?string $iban = null;
+
+    #[ORM\Column(name: 'swiftCode', type: 'string', length: 50, nullable: true)]
+    private ?string $swiftCode = null;
+
     // ── Relationship to User ────────────────────────────────────────────
 
     #[ORM\ManyToOne(targetEntity: User::class)]
@@ -112,6 +118,12 @@ class Freelancer
 
     public function getUser(): ?User { return $this->user; }
     public function setUser(User $user): static { $this->user = $user; return $this; }
+
+    public function getIban(): ?string { return $this->iban; }
+    public function setIban(?string $iban): static { $this->iban = $iban; return $this; }
+
+    public function getSwiftCode(): ?string { return $this->swiftCode; }
+    public function setSwiftCode(?string $swiftCode): static { $this->swiftCode = $swiftCode; return $this; }
 
     // ── Delegate User fields ────────────────────────────────────────────
 

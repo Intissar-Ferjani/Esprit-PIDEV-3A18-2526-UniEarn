@@ -62,7 +62,9 @@
             "symfony/flex": true,
             "symfony/runtime": true
         },
-        "sort-packages": true
+        "sort-packages": true,
+        "disable-tls": false,
+        "secure-http": true
     },
     "autoload": {
         "psr-4": {

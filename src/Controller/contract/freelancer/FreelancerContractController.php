@@ -9,6 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Knp\Component\Pager\PaginatorInterface;
 
 #[Route('/freelancer/contracts')]
 class FreelancerContractController extends AbstractController
@@ -24,7 +25,7 @@ class FreelancerContractController extends AbstractController
     // ── LIST FREELANCER CONTRACTS ───────────────────────────────────────
 
     #[Route('/', name: 'freelancer_contract_index', methods: ['GET'])]
-    public function index(Request $request, ContractRepository $repo, FreelancerRepository $freelancerRepo): Response
+    public function index(Request $request, ContractRepository $repo, FreelancerRepository $freelancerRepo, PaginatorInterface $paginator): Response
     {
         if ($r = $this->requireFreelancer($request)) return $r;
 
@@ -38,8 +39,15 @@ class FreelancerContractController extends AbstractController
             $status = null;
         }
 
+        $contractsQuery = $repo->findByFreelancerId($freelancer->getIdFreelancer(), $status);
+        $pagination = $paginator->paginate(
+            $contractsQuery,
+            $request->query->getInt('page', 1), /* page number */
+            5 /* limit per page */
+        );
+
         return $this->render('frontOffice/freelancer/contract/list-contracts.html.twig', [
-            'contracts'     => $repo->findByFreelancerId($freelancer->getIdFreelancer(), $status),
+            'contracts'     => $pagination,
             'currentStatus' => $status,
         ]);
     }
@@ -122,5 +130,71 @@ class FreelancerContractController extends AbstractController
         return $this->render('frontOffice/contract/pdf-contract.html.twig', [
             'contract' => $contract,
         ]);
+    }
+
+    // ── AI SUMMARY ──────────────────────────────────────────────────────
+
+    #[Route('/{id}/ai-summary', name: 'freelancer_contract_ai_summary', methods: ['POST'])]
+    public function aiSummary(int $id, Request $request, ContractRepository $repo, FreelancerRepository $freelancerRepo, \Symfony\Contracts\HttpClient\HttpClientInterface $client): \Symfony\Component\HttpFoundation\JsonResponse
+    {
+        if ($r = $this->requireFreelancer($request)) return new \Symfony\Component\HttpFoundation\JsonResponse(['error' => 'Unauthorized'], 401);
+
+        $userId = $request->getSession()->get('user_id');
+        $freelancer = $freelancerRepo->findByUserId($userId);
+        $contract = $repo->find($id);
+
+        if (!$contract || $contract->getFreelancer()->getIdFreelancer() !== $freelancer->getIdFreelancer()) {
+            return new \Symfony\Component\HttpFoundation\JsonResponse(['error' => 'Contract not found.'], 404);
+        }
+        
+        $apiKey = $_ENV['GEMINI_API_KEY'] ?? $_ENV['OPENAI_API_KEY'] ?? '';
+
+        if (!$apiKey) {
+            // Simulation pour la démonstration (quand pas de clé API)
+            sleep(2);
+            return new \Symfony\Component\HttpFoundation\JsonResponse([
+                'summary' => "<ul><li style='margin-bottom:8px'><strong>💰 Rémunération :</strong> Le montant total est fixé à $" . $contract->getAmount() . ".</li><li style='margin-bottom:8px'><strong>📅 Engagement :</strong> Le travail s'étend du " . $contract->getStartDate()->format('d/m/Y') . " au " . $contract->getEndDate()->format('d/m/Y') . ".</li><li style='margin-bottom:8px'><strong>ℹ️ Recommandation IA :</strong> Lisez attentivement toutes les clauses avant signature. <br><em style='font-size:11px;color:#a855f7;'>(Mode simulation : ajoutez GEMINI_API_KEY dans votre fichier .env pour activer la vraie analyse !)</em></li></ul>",
+            ]);
+        }
+
+        try {
+            $isGoogle = str_starts_with($apiKey, 'AIza'); // Google API Keys start with AIza
+            
+            if ($isGoogle) {
+                // Gemini API
+                $response = $client->request('POST', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $apiKey, [
+                    'json' => [
+                        'contents' => [
+                            ['role' => 'user', 'parts' => [['text' => "Agissez comme un avocat expert. Résumez ce contrat de freelance en français en 3 puces courtes et claires. Mettez en évidence l'argent, les délais, et les points critiques : \n\n" . $contract->getContent()]]]
+                        ]
+                    ]
+                ]);
+                $data = $response->toArray();
+                $aiText = $data['candidates'][0]['content']['parts'][0]['text'] ?? "Impossible de générer le résumé.";
+            } else {
+                // OpenAI API fallback
+                $response = $client->request('POST', 'https://api.openai.com/v1/chat/completions', [
+                    'headers' => ['Authorization' => 'Bearer ' . $apiKey],
+                    'json' => [
+                        'model' => 'gpt-4o-mini',
+                        'messages' => [
+                            ['role' => 'system', 'content' => "Tu es un assistant IA qui aide les freelances à lire les contrats."],
+                            ['role' => 'user', 'content' => "Résume ce contrat en 3 puces, focalise-toi sur l'argent et le temps : " . $contract->getContent()]
+                        ]
+                    ]
+                ]);
+                $data = $response->toArray();
+                $aiText = $data['choices'][0]['message']['content'] ?? "Impossible de générer le résumé.";
+            }
+
+            // Simple markdown-to-html for basic bolding
+            $aiHtml = nl2br(preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', htmlspecialchars($aiText)));
+            // Simple string replace for common markdown bullets
+            $aiHtml = str_replace('* ', '• ', $aiHtml);
+
+            return new \Symfony\Component\HttpFoundation\JsonResponse(['summary' => $aiHtml]);
+        } catch (\Exception $e) {
+            return new \Symfony\Component\HttpFoundation\JsonResponse(['error' => 'Erreur IA: ' . $e->getMessage()], 500);
+        }
     }
 }
