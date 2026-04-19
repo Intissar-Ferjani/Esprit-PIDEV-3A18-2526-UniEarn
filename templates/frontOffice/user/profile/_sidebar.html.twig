@@ -82,8 +82,16 @@
                class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
                 📄 <span>My Contracts</span>
             </a>
-            <a href="#" class="nav-item {{ active == 'messages' ? 'active' : '' }}">
-                💬 <span>Messages</span>
+            <a href="{{ path('freelancer_messages') }}"
+               class="nav-item {{ active == 'messages' ? 'active' : '' }}"
+               style="position:relative;">
+                ✉️ <span>Messages</span>
+                <span id="sidebarMsgBadge" style="
+                    position:absolute; top:8px; right:12px;
+                    background:#ef4444; color:#fff; border-radius:50%;
+                    width:17px; height:17px; font-size:10px; font-weight:700;
+                    display:none; align-items:center; justify-content:center;
+                "></span>
             </a>
             <a href="#" class="nav-item {{ active == 'payments' ? 'active' : '' }}">
                 💳 <span>Payments</span>
@@ -118,8 +126,16 @@
                class="nav-item {{ active == 'forum' ? 'active' : '' }}">
                 💬 <span>Community Forum</span>
             </a>
-            <a href="#" class="nav-item {{ active == 'messages' ? 'active' : '' }}">
-                💬 <span>Messages</span>
+            <a href="{{ path('freelancer_messages') }}"
+               class="nav-item {{ active == 'messages' ? 'active' : '' }}"
+               style="position:relative;">
+                ✉️ <span>Messages</span>
+                <span id="sidebarMsgBadge" style="
+                    position:absolute; top:8px; right:12px;
+                    background:#ef4444; color:#fff; border-radius:50%;
+                    width:17px; height:17px; font-size:10px; font-weight:700;
+                    display:none; align-items:center; justify-content:center;
+                "></span>
             </a>
             <a href="#" class="nav-item {{ active == 'payments' ? 'active' : '' }}">
                 💳 <span>Payments</span>
@@ -135,3 +151,30 @@
         </a>
     </div>
 </aside>
+
+{# Include Premium AI Chatbot #}
+{% include 'frontOffice/components/_chatbot.html.twig' %}
+<script src="{{ asset('js/chatbot.js') }}"></script>
+
+{# ── Notification badge refresher script ── #}
+<script>
+(function() {
+    async function refreshSidebarBadge() {
+        try {
+            const res  = await fetch('/freelancer/notifications');
+            const data = await res.json();
+            const badge = document.getElementById('sidebarMsgBadge');
+            if (!badge) return;
+            const count = (data.notifications || []).filter(n => n.type === 'MESSAGE').length;
+            if (count > 0) {
+                badge.textContent = count > 9 ? '9+' : count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        } catch {}
+    }
+    refreshSidebarBadge();
+    setInterval(refreshSidebarBadge, 15000);
+})();
+</script>

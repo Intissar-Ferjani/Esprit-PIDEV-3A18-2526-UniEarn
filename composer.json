@@ -12,7 +12,7 @@
         "doctrine/dbal": "^3.8",
         "doctrine/doctrine-bundle": "^2.18",
         "doctrine/doctrine-migrations-bundle": "^3.4",
-        "doctrine/orm": "^2.19",
+        "doctrine/orm": "^3.6",
         "dompdf/dompdf": "^3.1",
         "knplabs/knp-paginator-bundle": "^6.10",
         "knpuniversity/oauth2-client-bundle": "*",

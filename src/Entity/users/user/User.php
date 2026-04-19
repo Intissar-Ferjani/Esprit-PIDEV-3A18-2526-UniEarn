@@ -52,6 +52,9 @@ class User
     #[ORM\Column(name: 'resetTokenExpiresAt', type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $resetTokenExpiresAt = null;
 
+    #[ORM\Column(name: 'last_active_at', type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $lastActiveAt = null;
+
     // ── Getters & Setters ───────────────────────────────────────────────
 
     public function getIdUser(): ?int { return $this->idUser; }
@@ -79,4 +82,13 @@ class User
 
     public function getResetTokenExpiresAt(): ?\DateTimeImmutable { return $this->resetTokenExpiresAt; }
     public function setResetTokenExpiresAt(?\DateTimeImmutable $expiresAt): static { $this->resetTokenExpiresAt = $expiresAt; return $this; }
+
+    public function getLastActiveAt(): ?\DateTimeInterface { return $this->lastActiveAt; }
+    public function setLastActiveAt(?\DateTimeInterface $dt): static { $this->lastActiveAt = $dt; return $this; }
+
+    public function isOnline(): bool
+    {
+        if (!$this->lastActiveAt) return false;
+        return (new \DateTime())->getTimestamp() - $this->lastActiveAt->getTimestamp() < 300;
+    }
 }

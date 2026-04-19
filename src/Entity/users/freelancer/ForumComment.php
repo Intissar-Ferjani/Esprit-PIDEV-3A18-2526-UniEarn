@@ -26,6 +26,9 @@ class ForumComment
     #[Assert\Length(min: 2, max: 1000, minMessage: 'Your comment is too short.')]
     private string $commentText = '';
 
+    #[ORM\Column(name: 'gif_url', type: 'string', length: 500, nullable: true)]
+    private ?string $gifUrl = null;
+
     #[ORM\Column(name: 'created_at', type: 'datetime')]
     private ?\DateTimeInterface $createdAt = null;
 
@@ -47,6 +50,9 @@ class ForumComment
 
     public function getCommentText(): string { return $this->commentText; }
     public function setCommentText(string $text): static { $this->commentText = $text; return $this; }
+
+    public function getGifUrl(): ?string { return $this->gifUrl; }
+    public function setGifUrl(?string $url): static { $this->gifUrl = $url; return $this; }
 
     public function getCreatedAt(): ?\DateTimeInterface { return $this->createdAt; }
     public function setCreatedAt(?\DateTimeInterface $dt): static { $this->createdAt = $dt; return $this; }
