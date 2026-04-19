@@ -1,0 +1,974 @@
+{# templates/frontOffice/freelancer/Tasks/task.html.twig #}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniEarn - Mes Taches</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <style>
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        * { box-sizing: border-box; }
+        body {
+            background: #f4f7fb;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: #0f172a;
+        }
+        .dashboard-content-custom {
+            padding: 28px 34px 34px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .toolbar-panel,
+        .form-panel,
+        .summary-panel {
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
+            border: 1px solid #e2e8f0;
+            animation: fadeInUp 0.35s ease both;
+        }
+        .toolbar-panel {
+            padding: 24px;
+        }
+        .toolbar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 18px;
+            flex-wrap: wrap;
+            margin-bottom: 22px;
+        }
+        .page-title {
+            margin: 0;
+            font-size: 34px;
+            line-height: 1.1;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .page-subtitle {
+            margin: 8px 0 0;
+            font-size: 16px;
+            color: #475569;
+        }
+        .toolbar-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .btn-primary,
+        .btn-secondary-action,
+        .btn-info,
+        .btn-filter,
+        .btn-reset {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 48px;
+            padding: 0 18px;
+            border-radius: 14px;
+            border: 1px solid transparent;
+            font-size: 15px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+        }
+        .btn-primary:hover,
+        .btn-secondary-action:hover,
+        .btn-info:hover,
+        .btn-filter:hover,
+        .btn-reset:hover {
+            transform: translateY(-1px);
+        }
+        .btn-primary {
+            background: #16a34a;
+            color: #ffffff;
+            box-shadow: 0 10px 20px rgba(22, 163, 74, 0.2);
+        }
+        .btn-primary:hover {
+            background: #15803d;
+        }
+        .btn-secondary-action {
+            background: #e2e8f0;
+            color: #0f172a;
+            border-color: #cbd5e1;
+        }
+        .btn-secondary-action:hover {
+            background: #cbd5e1;
+        }
+        .btn-info {
+            background: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+        }
+        .btn-info:hover {
+            background: #1d4ed8;
+        }
+        .btn-filter {
+            background: #0f172a;
+            color: #ffffff;
+        }
+        .btn-filter:hover {
+            background: #020617;
+        }
+        .btn-reset {
+            background: #ffffff;
+            color: #475569;
+            border-color: #cbd5e1;
+        }
+        .btn-reset:hover {
+            background: #f8fafc;
+        }
+        .filters-row {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filters-row form {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            align-items: center;
+            width: 100%;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 220px;
+            flex: 1 1 220px;
+        }
+        .control-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .control-input {
+            width: 100%;
+            min-height: 52px;
+            padding: 0 16px;
+            border-radius: 14px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #0f172a;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .control-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+        }
+        .view-switch {
+            display: inline-flex;
+            padding: 6px;
+            border-radius: 16px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            gap: 6px;
+        }
+        .view-pill {
+            padding: 12px 18px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #1e3a8a;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .view-pill.active {
+            background: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+        }
+        .summary-panel {
+            padding: 24px;
+        }
+        .section-title {
+            margin: 0 0 18px;
+            font-size: 22px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .project-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+        }
+        .project-summary-card {
+            border: 1px solid #dbeafe;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            border-radius: 16px;
+            padding: 18px;
+        }
+        .project-summary-title {
+            margin: 0 0 10px;
+            font-size: 18px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .project-summary-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 14px;
+            color: #475569;
+            margin-bottom: 10px;
+        }
+        .progress-track {
+            width: 100%;
+            height: 12px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: #dbeafe;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        }
+        .project-summary-caption {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #64748b;
+        }
+        .forecast-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+        .forecast-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+            padding: 0 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 800;
+        }
+        .forecast-on-time {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .forecast-delayed {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .forecast-meta {
+            font-size: 13px;
+            font-weight: 700;
+            color: #475569;
+        }
+        .form-panel {
+            padding: 24px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+        .form-grid.form-grid-3 {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .form-full {
+            grid-column: 1 / -1;
+        }
+        .board-container {
+            display: flex;
+            gap: 22px;
+            overflow-x: auto;
+            align-items: flex-start;
+            padding-bottom: 10px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        .board-column {
+            width: 360px;
+            min-width: 360px;
+            background: #eaf1fb;
+            border: 1px solid #dbeafe;
+            border-radius: 20px;
+            padding: 18px;
+            box-sizing: border-box;
+            animation: fadeInUp 0.4s ease both;
+        }
+        .column-header {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .column-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+        .column-title {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .column-count {
+            min-width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            background: #ffffff;
+            border: 1px solid #bfdbfe;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 800;
+            color: #1d4ed8;
+        }
+        .column-subtitle {
+            font-size: 14px;
+            color: #475569;
+        }
+        .column-content {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .task-card {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 18px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            animation: fadeInUp 0.3s ease both;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+        }
+        .task-card:hover {
+            background: #f8fafc;
+            transform: translateY(-2px);
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+        }
+        .task-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #ffffff;
+        }
+        .tag-urgent {
+            background: #dc2626;
+        }
+        .tag-normal {
+            background: #2563eb;
+        }
+        .tag-soft {
+            background: #64748b;
+        }
+        .tag-review-alert {
+            background: #dc2626;
+        }
+        .tag-review-neutral {
+            background: #fef08a;
+            color: #854d0e;
+        }
+        .task-title {
+            font-size: 20px;
+            line-height: 1.3;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 10px;
+        }
+        .task-project {
+            font-size: 14px;
+            font-weight: 700;
+            color: #2563eb;
+            margin-bottom: 8px;
+        }
+        .task-description {
+            font-size: 15px;
+            line-height: 1.5;
+            color: #475569;
+            margin-bottom: 14px;
+        }
+        .review-note {
+            margin-bottom: 14px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: #fef2f2;
+            color: #991b1b;
+            font-size: 14px;
+            line-height: 1.5;
+            border: 1px solid #fecaca;
+        }
+        .task-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            font-size: 14px;
+            color: #334155;
+        }
+        .task-meta {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            font-weight: 700;
+        }
+        .btn-action-delete {
+            min-height: 40px;
+            padding: 0 14px;
+            border-radius: 12px;
+            border: none;
+            background: #ef4444;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .btn-action-delete:hover {
+            background: #dc2626;
+        }
+        .btn-action-review {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            padding: 0 14px;
+            border-radius: 12px;
+            background: #1d4ed8;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 800;
+            text-decoration: none;
+        }
+        .btn-action-review:hover {
+            background: #1e40af;
+        }
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 2000;
+        }
+        .modal-backdrop.is-open {
+            display: flex;
+        }
+        .modal-card {
+            width: min(560px, 100%);
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+        }
+        .modal-title {
+            margin: 0 0 8px;
+            font-size: 24px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .modal-subtitle {
+            margin: 0 0 18px;
+            color: #475569;
+            font-size: 14px;
+        }
+        .modal-grid {
+            display: grid;
+            gap: 14px;
+        }
+        .modal-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+        }
+        .modal-input {
+            width: 100%;
+            min-height: 46px;
+            padding: 10px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .modal-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+        }
+        .modal-help {
+            margin-top: 4px;
+            font-size: 12px;
+            color: #64748b;
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+        .btn-modal-cancel {
+            min-height: 44px;
+            padding: 0 16px;
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .btn-modal-submit {
+            min-height: 44px;
+            padding: 0 16px;
+            border-radius: 12px;
+            border: none;
+            background: #2563eb;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .empty-board {
+            background: #ffffff;
+            border-radius: 18px;
+            border: 1px dashed #cbd5e1;
+            padding: 28px;
+            text-align: center;
+            font-size: 16px;
+            color: #64748b;
+        }
+        @media (max-width: 960px) {
+            .form-grid,
+            .form-grid.form-grid-3 {
+                grid-template-columns: 1fr;
+            }
+            .board-column {
+                width: 320px;
+                min-width: 320px;
+            }
+            .page-title {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body class="dashboard-body">
+
+<div class="dashboard-layout">
+    {% set sidebar = sidebarInclude ?? 'frontOffice/user/profile/_sidebar.html.twig' %}
+    {% set active = 'tasks' %}
+    {% include sidebar with {'active': active} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar" style="padding: 0 30px; height: 70px; display: flex; justify-content: space-between; align-items: center;">
+            <a href="{{ path('freelancer_dashboard') }}" class="btn-secondary-action">Retour</a>
+            
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <span class="top-bar-user" style="font-weight: 600; color: #1e293b; font-size: 15px;">👤 {{ app.session.get('user_name') }}</span>
+                <img src="{{ asset('images/UniEarn_full_logo.png') }}" alt="UniEarn Logo" style="height: 55px; width: auto; object-fit: contain;">
+            </div>
+        </div>
+
+        <div class="dashboard-content-custom">
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div style="padding: 12px 18px; border-radius: 12px; margin-bottom: 14px; font-size: 14px; font-weight: 600; animation: fadeInUp 0.3s ease both;
+                        {% if label == 'success' %}background: #dcfce7; color: #166534; border: 1px solid #bbf7d0;
+                        {% elseif label == 'error' %}background: #fef2f2; color: #991b1b; border: 1px solid #fecaca;
+                        {% else %}background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe;{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endfor %}
+
+            <div class="toolbar-panel">
+                <div class="toolbar-header">
+                    <div>
+                        <h1 class="page-title">Task Board</h1>
+                        <p class="page-subtitle">Suivez vos taches par statut ou par projet avec la progression de chaque projet.</p>
+                    </div>
+
+                    <div class="toolbar-actions">
+                        <button type="button" class="btn-info" onclick="handleAISuggestions()">AI Suggestions</button>
+                    </div>
+                </div>
+
+                <div class="filters-row">
+                    <form method="get" action="{{ path('freelancer_task_index') }}">
+                        <div class="control-group" style="flex: 1.4 1 320px;">
+                            <label class="control-label" for="searchField">Search</label>
+                            <input
+                                type="text"
+                                name="search"
+                                id="searchField"
+                                class="control-input"
+                                placeholder="Search a task by title"
+                                value="{{ app.request.query.get('search') }}"
+                            >
+                        </div>
+
+                        <div class="control-group" style="flex: 0 1 auto; min-width: 0;">
+                            <label class="control-label">Board view</label>
+                            <div class="view-switch">
+                                <a
+                                    href="{{ path('freelancer_task_index', {
+                                        'search': app.request.query.get('search'),
+                                        'project': app.request.query.get('project'),
+                                        'view': 'status'
+                                    }) }}"
+                                    class="view-pill {{ board_view == 'status' ? 'active' : '' }}"
+                                >
+                                    By Status
+                                </a>
+                                <a
+                                    href="{{ path('freelancer_task_index', {
+                                        'search': app.request.query.get('search'),
+                                        'project': app.request.query.get('project'),
+                                        'view': 'project'
+                                    }) }}"
+                                    class="view-pill {{ board_view == 'project' ? 'active' : '' }}"
+                                >
+                                    By Project
+                                </a>
+                            </div>
+                        </div>
+                        <input type="hidden" name="view" value="{{ board_view }}">
+                    </form>
+                </div>
+            </div>
+
+            <div class="summary-panel">
+                <h2 class="section-title">Project Progress</h2>
+                <div class="project-summary-grid">
+                    {% for project in form_projects|default([]) %}
+                        {% set progress = project_progress[project.idProject] ?? {'percentage': 0, 'total': 0, 'done': 0, 'inProgress': 0} %}
+                        {% set forecast = project_forecast[project.idProject] ?? {'completed': 0, 'remaining': 0, 'total': 0, 'daysLeft': null, 'deadline': null, 'prediction': 'on_time'} %}
+                        <div class="project-summary-card">
+                            <div class="project-summary-title">{{ project.title }}</div>
+                            <div class="project-summary-meta">
+                                <span>{{ progress.percentage }}% complete</span>
+                                <span>{{ progress.done }}/{{ progress.total }} done</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" style="width: {{ progress.percentage }}%;"></div>
+                            </div>
+                            <div class="project-summary-caption">
+                                {% if progress.total == 0 %}
+                                    No tasks created yet.
+                                {% else %}
+                                    {{ progress.inProgress }} in progress counted as half of a completed task.
+                                {% endif %}
+                            </div>
+                            <div class="forecast-row">
+                                <span class="forecast-badge {{ forecast.prediction == 'delayed' ? 'forecast-delayed' : 'forecast-on-time' }}">
+                                    {{ forecast.prediction == 'delayed' ? 'Delayed' : 'On time' }}
+                                </span>
+                                <span class="forecast-meta">
+                                    {{ forecast.remaining }} remaining
+                                </span>
+                            </div>
+                            <div class="project-summary-caption">
+                                {% if forecast.deadline %}
+                                    Deadline: {{ forecast.deadline|date('d/m/Y') }}
+                                    {% if forecast.daysLeft is not null %}
+                                        | {{ forecast.daysLeft }} day{{ forecast.daysLeft|abs == 1 ? '' : 's' }} left
+                                    {% endif %}
+                                {% else %}
+                                    No task deadline available.
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="empty-board">No project is linked to this freelancer yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% if form is defined %}
+                <div class="form-panel">
+                    <h2 class="section-title">{{ is_edit|default(false) ? 'Update Task' : 'Create a New Task' }}</h2>
+                    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+                    <div style="color:#dc2626; font-size:13px; margin-bottom:14px;">{{ form_errors(form) }}</div>
+
+                    <div class="form-grid">
+                        <div>{{ form_row(form.title) }}</div>
+                        <div>{{ form_row(form.project) }}</div>
+                    </div>
+
+                    <div class="form-grid form-grid-3">
+                        <div>{{ form_row(form.deadline) }}</div>
+                        <div>{{ form_row(form.taskStatus) }}</div>
+                        <div>{{ form_row(form.priority) }}</div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-full">{{ form_row(form.role) }}</div>
+                        <div class="form-full">{{ form_row(form.description) }}</div>
+                    </div>
+
+                    <button type="submit" class="btn-primary">{{ is_edit|default(false) ? 'Update Task' : 'Create Task' }}</button>
+                    <a href="{{ path('freelancer_task_index') }}" class="btn-reset">Reset</a>
+
+                    {{ form_end(form) }}
+                </div>
+            {% endif %}
+
+            {% set statuses = [
+                {'value': 'TODO', 'label': 'To Do'},
+                {'value': 'InProgress', 'label': 'In Progress'},
+                {'value': 'Review', 'label': 'Review'},
+                {'value': 'Done', 'label': 'Done'}
+            ] %}
+
+            {% if tasks is empty %}
+                <div class="empty-board">No tasks match the current filters.</div>
+            {% else %}
+                <div class="board-container">
+                    {% if board_view == 'project' %}
+                        {% for project in form_projects|default([]) %}
+                            {% set projectTasks = tasks|filter(task => task.project and task.project.idProject == project.idProject) %}
+                            {% if selected_project_id is null or selected_project_id == project.idProject %}
+                                <div class="board-column">
+                                    {% set progress = project_progress[project.idProject] ?? {'percentage': 0, 'total': 0, 'done': 0, 'inProgress': 0} %}
+                                    <div class="column-header">
+                                        <div class="column-title-row">
+                                            <h3 class="column-title">{{ project.title }}</h3>
+                                            <span class="column-count">{{ projectTasks|length }}</span>
+                                        </div>
+                                        <div class="column-subtitle">{{ progress.percentage }}% complete</div>
+                                        <div class="progress-track">
+                                            <div class="progress-fill" style="width: {{ progress.percentage }}%;"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="column-content">
+                                        {% for task in projectTasks %}
+                                            <div class="task-card" onclick="window.location.href='{{ path('freelancer_task_edit', {'id': task.idTask}) }}'">
+                                                <div class="task-tags">
+                                                    <span class="tag {{ task.priority == 'High' ? 'tag-urgent' : 'tag-normal' }}">{{ task.priority|default('Medium') }}</span>
+                                                    <span class="tag {{ task.taskStatus and task.taskStatus.value == 'Review' and task.clientFeedback ? 'tag-review-alert' : (task.taskStatus and task.taskStatus.value == 'Review' ? 'tag-review-neutral' : 'tag-soft') }}">
+                                                        {{ task.taskStatus ? task.taskStatus.getDisplayName() : 'N/A' }}
+                                                    </span>
+                                                </div>
+                                                <div class="task-title">{{ task.title }}</div>
+                                                <div class="task-description">{{ task.description|length > 110 ? task.description|slice(0, 110) ~ '...' : task.description }}</div>
+                                                {% if task.clientFeedback %}
+                                                    <div class="review-note">
+                                                        <strong>Client feedback:</strong> {{ task.clientFeedback }}
+                                                    </div>
+                                                {% endif %}
+                                                <div class="task-footer">
+                                                    <div class="task-meta">
+                                                        <span>Deadline: {{ task.deadline ? task.deadline|date('d/m/Y') : 'N/A' }}</span>
+                                                        <span>Role: {{ task.role }}</span>
+                                                    </div>
+                                                    <form method="post" action="{{ path('freelancer_task_delete', {'id': task.idTask}) }}" onsubmit="event.stopPropagation(); return confirm('Delete this task?');" style="margin:0;">
+                                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ task.idTask) }}">
+                                                        <button type="submit" class="btn-action-delete">Delete</button>
+                                                    </form>
+                                                    {% if task.taskStatus and task.taskStatus.value in ['InProgress', 'Review'] %}
+                                                        <button
+                                                            type="button"
+                                                            class="btn-action-review"
+                                                            onclick="event.stopPropagation(); openReviewModal('{{ path('freelancer_task_submit_review', {'id': task.idTask}) }}', {{ task.title|json_encode|escape('html_attr') }});"
+                                                        >
+                                                            Submit Review
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <div class="empty-board">No tasks for this project.</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        {% for status in statuses %}
+                            {% set statusTasks = tasks|filter(task => task.taskStatus and task.taskStatus.value == status.value) %}
+                            <div class="board-column">
+                                <div class="column-header">
+                                    <div class="column-title-row">
+                                        <h3 class="column-title">{{ status.label }}</h3>
+                                        <span class="column-count">{{ statusTasks|length }}</span>
+                                    </div>
+                                    <div class="column-subtitle">Tasks grouped by status</div>
+                                </div>
+
+                                <div class="column-content">
+                                    {% for task in statusTasks %}
+                                        <div class="task-card" onclick="window.location.href='{{ path('freelancer_task_edit', {'id': task.idTask}) }}'">
+                                            <div class="task-tags">
+                                                <span class="tag {{ task.priority == 'High' ? 'tag-urgent' : 'tag-normal' }}">{{ task.priority|default('Medium') }}</span>
+                                                <span class="tag tag-soft">{{ task.project ? task.project.title : 'No project' }}</span>
+                                                {% if task.taskStatus and task.taskStatus.value == 'Review' %}
+                                                    <span class="tag {{ task.clientFeedback ? 'tag-review-alert' : 'tag-review-neutral' }}">
+                                                        {{ task.clientFeedback ? 'Needs changes' : 'In review' }}
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="task-title">{{ task.title }}</div>
+                                            <div class="task-project">{{ task.project ? task.project.title : 'No project assigned' }}</div>
+                                            <div class="task-description">{{ task.description|length > 110 ? task.description|slice(0, 110) ~ '...' : task.description }}</div>
+                                            {% if task.clientFeedback %}
+                                                <div class="review-note">
+                                                    <strong>Client feedback:</strong> {{ task.clientFeedback }}
+                                                </div>
+                                            {% endif %}
+                                            <div class="task-footer">
+                                                <div class="task-meta">
+                                                    <span>Deadline: {{ task.deadline ? task.deadline|date('d/m/Y') : 'N/A' }}</span>
+                                                    <span>Role: {{ task.role }}</span>
+                                                </div>
+                                                <form method="post" action="{{ path('freelancer_task_delete', {'id': task.idTask}) }}" onsubmit="event.stopPropagation(); return confirm('Delete this task?');" style="margin:0;">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ task.idTask) }}">
+                                                    <button type="submit" class="btn-action-delete">Delete</button>
+                                                </form>
+                                                {% if task.taskStatus and task.taskStatus.value in ['InProgress', 'Review'] %}
+                                                    <button
+                                                        type="button"
+                                                        class="btn-action-review"
+                                                        onclick="event.stopPropagation(); openReviewModal('{{ path('freelancer_task_submit_review', {'id': task.idTask}) }}', {{ task.title|json_encode|escape('html_attr') }});"
+                                                    >
+                                                        Submit Review
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="empty-board">No tasks in this status.</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div id="reviewModal" class="modal-backdrop" onclick="closeReviewModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+        <h2 class="modal-title">Submit Task For Review</h2>
+        <p class="modal-subtitle" id="reviewModalTaskName">Choose a proof link, a file, or both.</p>
+
+        <form id="reviewModalForm" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="task_submission[_token]" value="{{ csrf_token('task_submission') }}">
+            <div class="modal-grid">
+                <div>
+                    <label class="modal-label" for="reviewSubmissionLink">Submission link</label>
+                    <input id="reviewSubmissionLink" name="task_submission[submissionLink]" type="url" class="modal-input" placeholder="https://example.com/your-work">
+                </div>
+                <div>
+                    <label class="modal-label" for="reviewSubmissionFile">Submission file</label>
+                    <input id="reviewSubmissionFile" name="task_submission[submissionFile]" type="file" class="modal-input">
+                    <div class="modal-help">At least one field is required.</div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-modal-cancel" onclick="closeReviewModal()">Cancel</button>
+                <button type="submit" class="btn-modal-submit">Submit Review</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function handleAISuggestions() {
+        document.getElementById('aiModal').classList.add('is-open');
+    }
+
+    function closeAIModal(event) {
+        if (!event || event.target.id === 'aiModal') {
+            document.getElementById('aiModal').classList.remove('is-open');
+        }
+    }
+
+    function openReviewModal(action, taskTitle) {
+        const modal = document.getElementById('reviewModal');
+        const form = document.getElementById('reviewModalForm');
+        const title = document.getElementById('reviewModalTaskName');
+
+        form.action = action;
+        form.reset();
+        title.textContent = 'Task: ' + taskTitle;
+        modal.classList.add('is-open');
+    }
+
+    function closeReviewModal(event) {
+        if (!event || event.target.id === 'reviewModal') {
+            document.getElementById('reviewModal').classList.remove('is-open');
+        }
+    }
+
+    document.getElementById('projectSelector').addEventListener('change', function() {
+        this.form.submit();
+    });
+</script>
+
+<div id="aiModal" class="modal-backdrop" onclick="closeAIModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+        <h2 class="modal-title">Generate AI Suggestions</h2>
+        <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">
+            The AI will analyze the selected project description and automatically generate 3 to 5 logical sub-tasks with estimated deadlines and priorities.
+        </p>
+        <form method="post" action="{{ path('freelancer_task_ai_suggest') }}" onsubmit="document.getElementById('aiLoadingSpinner').style.display = 'block'; document.getElementById('aiSubmitBtn').disabled = true;">
+            <label class="modal-label" for="aiProjectSelector">Select Project</label>
+            <select id="aiProjectSelector" name="projectId" class="modal-input" required>
+                <option value="" disabled selected>Select a project...</option>
+                {% for project in form_projects|default([]) %}
+                    <option value="{{ project.idProject }}">{{ project.title }}</option>
+                {% endfor %}
+            </select>
+            
+            <div id="aiLoadingSpinner" style="display: none; margin-top: 15px; color: #1d4ed8; font-weight: bold; font-size: 14px;">
+                Connecting to AI... Please wait, this may take a few seconds.
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-modal-cancel" onclick="closeAIModal()">Cancel</button>
+                <button type="submit" id="aiSubmitBtn" class="btn-modal-submit" style="background: #10b981;">Generate Tasks</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

@@ -84,6 +84,11 @@ class ApplicationController extends AbstractController
 
         $application = new Application();
         $application->setFreelancer($freelancer);
+
+        $projectId = (int) $request->query->get('projectId', 0);
+        if ($projectId > 0) {
+            $application->setProjectId($projectId);
+        }
         
         $form = $this->createForm(ApplicationType::class, $application);
         $form->handleRequest($request);

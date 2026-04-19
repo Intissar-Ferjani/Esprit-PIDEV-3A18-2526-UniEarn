@@ -5,6 +5,8 @@ namespace App\Controller\profile\admin;
 use App\Repository\users\user\UserRepository;
 use App\Repository\users\client\ClientRepository;
 use App\Repository\users\freelancer\FreelancerRepository;
+use App\Repository\project\ProjectRepository;
+use App\Repository\task\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -188,5 +190,64 @@ class AdminDashboardController extends AbstractController
 
         $this->addFlash('success', 'User deleted successfully.');
         return $this->redirectToRoute('admin_manage_users');
+    }
+
+    // ── MANAGE PROJECTS + TASKS (READ-ONLY) ───────────────────────────
+    #[Route('/projects', name: 'admin_manage_projects', methods: ['GET'])]
+    public function manageProjects(
+        Request $request,
+        ProjectRepository $projectRepository,
+        TaskRepository $taskRepository
+    ): Response {
+        if ($r = $this->requireAdmin($request)) return $r;
+
+        $search = trim((string) $request->query->get('search', ''));
+        $status = (string) $request->query->get('status', 'All');
+        $hasTasks = (string) $request->query->get('hasTasks', 'All');
+        $sort = (string) $request->query->get('sort', 'newest');
+
+        $projects = $projectRepository->findAll();
+        $tasksByProject = [];
+        foreach ($projects as $project) {
+            $tasksByProject[$project->getIdProject()] = $taskRepository->findBy(['project' => $project], ['idTask' => 'DESC']);
+        }
+
+        if ($search !== '') {
+            $projects = array_filter($projects, static function ($project) use ($search): bool {
+                $needle = strtolower($search);
+                return str_contains(strtolower($project->getTitle() ?? ''), $needle)
+                    || str_contains(strtolower($project->getDescription() ?? ''), $needle);
+            });
+        }
+
+        if ($status !== 'All') {
+            $projects = array_filter($projects, static fn ($project): bool =>
+                ($project->getStatus()?->value ?? '') === $status
+            );
+        }
+
+        if ($hasTasks === 'WithTasks') {
+            $projects = array_filter($projects, fn ($project): bool => count($tasksByProject[$project->getIdProject()] ?? []) > 0);
+        } elseif ($hasTasks === 'WithoutTasks') {
+            $projects = array_filter($projects, fn ($project): bool => count($tasksByProject[$project->getIdProject()] ?? []) === 0);
+        }
+
+        $projects = array_values($projects);
+        usort($projects, match ($sort) {
+            'title_asc' => fn ($a, $b) => strcmp((string) $a->getTitle(), (string) $b->getTitle()),
+            'title_desc' => fn ($a, $b) => strcmp((string) $b->getTitle(), (string) $a->getTitle()),
+            'budget_desc' => fn ($a, $b) => ($b->getBudget() ?? 0) <=> ($a->getBudget() ?? 0),
+            default => fn ($a, $b) => ($b->getIdProject() ?? 0) <=> ($a->getIdProject() ?? 0),
+        });
+
+        return $this->render('backOffice/project/manage-projects.html.twig', [
+            'projects' => $projects,
+            'tasksByProject' => $tasksByProject,
+            'search' => $search,
+            'status' => $status,
+            'hasTasks' => $hasTasks,
+            'sort' => $sort,
+            'adminName' => $request->getSession()->get('user_name'),
+        ]);
     }
 }
