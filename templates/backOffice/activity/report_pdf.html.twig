@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn Activity Report</title>
+    <style>
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 11pt;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #1d4ed8;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #1d4ed8;
+            margin: 0;
+            font-size: 24pt;
+        }
+        .header p {
+            margin: 5px 0;
+            color: #64748b;
+        }
+        .report-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 10pt;
+        }
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .log-table th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: bold;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+            font-size: 9pt;
+        }
+        .log-table td {
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            vertical-align: top;
+            font-size: 9pt;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 8pt;
+            font-weight: bold;
+            color: #fff;
+        }
+        .badge-CREATE { background-color: #10b981; }
+        .badge-UPDATE { background-color: #3b82f6; }
+        .badge-DELETE { background-color: #ef4444; }
+        
+        .changes {
+            font-family: monospace;
+            font-size: 8pt;
+            background: #f1f5f9;
+            padding: 5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 8pt;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>UniEarn</h1>
+        <p>System Activity Log Report</p>
+    </div>
+
+    <div class="report-info">
+        <div>
+            <strong>Generated on:</strong> {{ date|date('Y-m-d H:i:s') }}<br>
+            <strong>Filters applied:</strong> 
+            User: {{ filterUserId ?: 'All' }} | 
+            Action: {{ filterAction ?: 'All' }}
+        </div>
+    </div>
+
+    <table class="log-table">
+        <thead>
+            <tr>
+                <th width="15%">Time</th>
+                <th width="10%">User ID</th>
+                <th width="10%">Action</th>
+                <th width="15%">Entity</th>
+                <th width="50%">Detailed Changes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+                <tr>
+                    <td>{{ log.createdAt|date('Y-m-d H:i:s') }}</td>
+                    <td>#{{ log.userId ?: 'N/A' }}</td>
+                    <td>
+                        <span class="badge badge-{{ log.actionType|upper }}">
+                            {{ log.actionType|upper }}
+                        </span>
+                    </td>
+                    <td><b>{{ log.entityName }}</b> (#{{ log.entityId }})</td>
+                    <td>
+                        {% if log.changes %}
+                            <div class="changes">{{ log.changes|json_encode(constant('JSON_PRETTY_PRINT')) }}</div>
+                        {% else %}
+                            <span style="color: #94a3b8;">No changes.</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 20px;">No activities found for the selected criteria.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        © {{ 'now'|date('Y') }} UniEarn Platform - Confidential Administrative Report
+    </div>
+</body>
+</html>

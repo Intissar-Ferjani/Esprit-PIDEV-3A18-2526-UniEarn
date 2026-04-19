@@ -48,6 +48,33 @@
             max-height: 100px;
             overflow-y: auto;
         }
+        .btn-filter {
+            background: #1d4ed8;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-filter:hover {
+            background: #1e40af;
+            transform: translateY(-1px);
+        }
+        .btn-reset {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-reset:hover {
+            background: #e2e8f0;
+        }
     </style>
 </head>
 <body class="dashboard-body">
@@ -65,11 +92,33 @@
 
         <div class="dashboard-content">
             <div class="content-section">
-                <div class="section-header">
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
                     <div class="section-title-wrap">
                         <span class="section-icon">📈</span>
                         <h3 class="section-title">Recent Activities</h3>
                     </div>
+                    <form action="{{ path('admin_activity_log') }}" method="get" style="display: flex; gap: 8px; align-items: center;">
+                        <select name="action_type" style="padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; outline: none; background: #fff;">
+                            <option value="">All Actions</option>
+                            <option value="INSERT" {{ app.request.query.get('action_type') == 'INSERT' ? 'selected' : '' }}>INSERT</option>
+                            <option value="UPDATE" {{ app.request.query.get('action_type') == 'UPDATE' ? 'selected' : '' }}>UPDATE</option>
+                            <option value="DELETE" {{ app.request.query.get('action_type') == 'DELETE' ? 'selected' : '' }}>DELETE</option>
+                        </select>
+                        <div style="position: relative;">
+                            <input type="number" name="user_id" value="{{ app.request.query.get('user_id') }}" placeholder="User ID..." 
+                                   style="padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; width: 120px; outline: none; transition: border-color 0.2s;"
+                                   onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                        </div>
+                        <button type="submit" class="btn-filter">Filter</button>
+                        {% if app.request.query.get('user_id') or app.request.query.get('action_type') %}
+                            <a href="{{ path('admin_activity_log') }}" class="btn-reset">Reset</a>
+                        {% endif %}
+                        
+                        <a href="{{ path('admin_activity_log_export', app.request.query.all) }}" class="btn-filter" style="background: #10b981; text-decoration: none; display: flex; align-items: center; gap: 5px;">
+                            <span>📄</span> Export PDF
+                        </a>
+                    </form>
+
                 </div>
                 <hr class="section-divider">
                 
