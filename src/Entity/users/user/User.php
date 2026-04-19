@@ -37,6 +37,9 @@ class User
     #[ORM\Column(name: 'activated', type: 'boolean')]
     private bool $activated = true;
 
+    #[ORM\Column(name: 'last_active_at', type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $lastActiveAt = null;
+
     // ── Getters & Setters ───────────────────────────────────────────────
 
     public function getIdUser(): ?int { return $this->idUser; }
@@ -58,4 +61,13 @@ class User
 
     public function isActivated(): bool { return $this->activated; }
     public function setActivated(bool $activated): static { $this->activated = $activated; return $this; }
+
+    public function getLastActiveAt(): ?\DateTimeInterface { return $this->lastActiveAt; }
+    public function setLastActiveAt(?\DateTimeInterface $dt): static { $this->lastActiveAt = $dt; return $this; }
+
+    public function isOnline(): bool
+    {
+        if (!$this->lastActiveAt) return false;
+        return (new \DateTime())->getTimestamp() - $this->lastActiveAt->getTimestamp() < 300;
+    }
 }

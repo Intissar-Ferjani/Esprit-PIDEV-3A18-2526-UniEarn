@@ -21,14 +21,24 @@ class ForumPostRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function findByCategory(string $category): array
+    /** Returns a QueryBuilder for KnpPaginator (all categories) */
+    public function queryAllOrdered(): \Doctrine\ORM\QueryBuilder
+    {
+        return $this->createQueryBuilder('p')->orderBy('p.createdAt', 'DESC');
+    }
+
+    /** Returns a QueryBuilder for KnpPaginator (filtered by category) */
+    public function queryByCategory(string $category): \Doctrine\ORM\QueryBuilder
     {
         return $this->createQueryBuilder('p')
             ->where('p.category = :cat')
             ->setParameter('cat', $category)
-            ->orderBy('p.createdAt', 'DESC')
-            ->getQuery()
-            ->getResult();
+            ->orderBy('p.createdAt', 'DESC');
+    }
+
+    public function findByCategory(string $category): array
+    {
+        return $this->queryByCategory($category)->getQuery()->getResult();
     }
 
     /**
