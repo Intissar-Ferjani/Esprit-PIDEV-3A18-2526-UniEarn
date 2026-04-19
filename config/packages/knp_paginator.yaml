@@ -2,11 +2,11 @@ knp_paginator:
     page_range: 5
     default_options:
         page_name: page
-        sort_field_name: sort
-        sort_direction_name: direction
+        sort_field_name: p_sort
+        sort_direction_name: p_direction
         distinct: true
-        filter_field_name: filterField
-        filter_value_name: filterValue
+        filter_field_name: p_filter
+        filter_value_name: p_filter_value
     template:
         pagination: 'candidature/pagination.html.twig'
         sortable: '@KnpPaginator/Pagination/font_awesome_sortable_link.html.twig'

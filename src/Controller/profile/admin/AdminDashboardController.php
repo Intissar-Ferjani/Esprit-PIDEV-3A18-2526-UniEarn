@@ -5,6 +5,8 @@ namespace App\Controller\profile\admin;
 use App\Repository\users\user\UserRepository;
 use App\Repository\users\client\ClientRepository;
 use App\Repository\users\freelancer\FreelancerRepository;
+use App\Repository\project\ProjectRepository;
+use App\Repository\task\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -54,53 +56,39 @@ class AdminDashboardController extends AbstractController
         Request              $request,
         UserRepository       $userRepo,
         ClientRepository     $clientRepo,
-        FreelancerRepository $freelancerRepo
+        FreelancerRepository $freelancerRepo,
+        \Knp\Component\Pager\PaginatorInterface $paginator
     ): Response {
         if ($r = $this->requireAdmin($request)) return $r;
 
+        $userId = $request->query->get('userId') ? $request->query->getInt('userId') : null;
         $search = trim($request->query->get('search', ''));
         $role   = $request->query->get('role', 'All');
         $status = $request->query->get('status', 'All');
-        $sort   = $request->query->get('sort', 'name_asc');
+        $sortBy = $request->query->get('sortBy', 'name_asc');
+        $limit  = $request->query->getInt('limit', 10);
 
-        $users = $userRepo->findAllUsers();
+        $queryBuilder = $userRepo->getAdminSearchQueryBuilder($search, $userId, $role, $status, $sortBy);
 
-        // Search
-        if ($search) {
-            $users = array_filter($users, fn($u) =>
-                str_contains(strtolower($u->getName()), strtolower($search)) ||
-                str_contains(strtolower($u->getEmail()), strtolower($search))
-            );
-        }
+        $pagination = $paginator->paginate(
+            $queryBuilder,
+            $request->query->getInt('page', 1),
+            $limit
+        );
 
-        // Role filter
-        if ($role !== 'All') {
-            $users = array_filter($users, fn($u) => $u->getRole() === strtoupper($role));
-        }
+        $template = $request->query->get('ajax')
+            ? 'backOffice/admin/_user_table_results.html.twig'
+            : 'backOffice/admin/manage-users.html.twig';
 
-        // Status filter
-        if ($status === 'Active') {
-            $users = array_filter($users, fn($u) => $u->isActivated());
-        } elseif ($status === 'Deactivated') {
-            $users = array_filter($users, fn($u) => !$u->isActivated());
-        }
-
-        // Sort
-        $users = array_values($users);
-        usort($users, match ($sort) {
-            'name_desc'  => fn($a, $b) => strcmp($b->getName(), $a->getName()),
-            'email_asc'  => fn($a, $b) => strcmp($a->getEmail(), $b->getEmail()),
-            'role'       => fn($a, $b) => strcmp($a->getRole(), $b->getRole()),
-            'status'     => fn($a, $b) => $b->isActivated() <=> $a->isActivated(),
-            default      => fn($a, $b) => strcmp($a->getName(), $b->getName()),
-        });
-
-        return $this->render('backOffice/user/manage-users.html.twig', [
-            'users'      => $users,
+        return $this->render($template, [
+            'pagination' => $pagination,
+            'users'      => $pagination, // Map to users for compatibility
+            'userId'     => $userId,
             'search'     => $search,
             'role'       => $role,
             'status'     => $status,
-            'sort'       => $sort,
+            'sortBy'     => $sortBy,
+            'limit'      => $limit,
             'adminName'  => $request->getSession()->get('user_name'),
         ]);
     }
@@ -202,5 +190,64 @@ class AdminDashboardController extends AbstractController
 
         $this->addFlash('success', 'User deleted successfully.');
         return $this->redirectToRoute('admin_manage_users');
+    }
+
+    // ── MANAGE PROJECTS + TASKS (READ-ONLY) ───────────────────────────
+    #[Route('/projects', name: 'admin_manage_projects', methods: ['GET'])]
+    public function manageProjects(
+        Request $request,
+        ProjectRepository $projectRepository,
+        TaskRepository $taskRepository
+    ): Response {
+        if ($r = $this->requireAdmin($request)) return $r;
+
+        $search = trim((string) $request->query->get('search', ''));
+        $status = (string) $request->query->get('status', 'All');
+        $hasTasks = (string) $request->query->get('hasTasks', 'All');
+        $sort = (string) $request->query->get('sort', 'newest');
+
+        $projects = $projectRepository->findAll();
+        $tasksByProject = [];
+        foreach ($projects as $project) {
+            $tasksByProject[$project->getIdProject()] = $taskRepository->findBy(['project' => $project], ['idTask' => 'DESC']);
+        }
+
+        if ($search !== '') {
+            $projects = array_filter($projects, static function ($project) use ($search): bool {
+                $needle = strtolower($search);
+                return str_contains(strtolower($project->getTitle() ?? ''), $needle)
+                    || str_contains(strtolower($project->getDescription() ?? ''), $needle);
+            });
+        }
+
+        if ($status !== 'All') {
+            $projects = array_filter($projects, static fn ($project): bool =>
+                ($project->getStatus()?->value ?? '') === $status
+            );
+        }
+
+        if ($hasTasks === 'WithTasks') {
+            $projects = array_filter($projects, fn ($project): bool => count($tasksByProject[$project->getIdProject()] ?? []) > 0);
+        } elseif ($hasTasks === 'WithoutTasks') {
+            $projects = array_filter($projects, fn ($project): bool => count($tasksByProject[$project->getIdProject()] ?? []) === 0);
+        }
+
+        $projects = array_values($projects);
+        usort($projects, match ($sort) {
+            'title_asc' => fn ($a, $b) => strcmp((string) $a->getTitle(), (string) $b->getTitle()),
+            'title_desc' => fn ($a, $b) => strcmp((string) $b->getTitle(), (string) $a->getTitle()),
+            'budget_desc' => fn ($a, $b) => ($b->getBudget() ?? 0) <=> ($a->getBudget() ?? 0),
+            default => fn ($a, $b) => ($b->getIdProject() ?? 0) <=> ($a->getIdProject() ?? 0),
+        });
+
+        return $this->render('backOffice/project/manage-projects.html.twig', [
+            'projects' => $projects,
+            'tasksByProject' => $tasksByProject,
+            'search' => $search,
+            'status' => $status,
+            'hasTasks' => $hasTasks,
+            'sort' => $sort,
+            'adminName' => $request->getSession()->get('user_name'),
+        ]);
     }
 }

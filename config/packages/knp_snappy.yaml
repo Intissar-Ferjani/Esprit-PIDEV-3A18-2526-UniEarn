@@ -1,0 +1,12 @@
+knp_snappy:
+    pdf:
+        enabled:    true
+        # Path to wkhtmltopdf binary
+        # On Windows, it's usually "C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+        # On Linux, it's usually "/usr/local/bin/wkhtmltopdf"
+        binary:     '"%kernel.project_dir%\vendor\wemersonjanuario\wkhtmltopdf-windows\bin\64bit\wkhtmltopdf.exe"'
+        options:    []
+    image:
+        enabled:    true
+        binary:     '"%kernel.project_dir%\vendor\wemersonjanuario\wkhtmltopdf-windows\bin\64bit\wkhtmltoimage.exe"'
+        options:    []

@@ -46,6 +46,12 @@ class User
     #[ORM\Column(name: 'activated', type: 'boolean')]
     private bool $activated = true;
 
+    #[ORM\Column(name: 'resetToken', type: 'string', length: 6, nullable: true)]
+    private ?string $resetToken = null;
+
+    #[ORM\Column(name: 'resetTokenExpiresAt', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $resetTokenExpiresAt = null;
+
     // ── Getters & Setters ───────────────────────────────────────────────
 
     public function getIdUser(): ?int { return $this->idUser; }
@@ -67,4 +73,10 @@ class User
 
     public function isActivated(): bool { return $this->activated; }
     public function setActivated(bool $activated): static { $this->activated = $activated; return $this; }
+
+    public function getResetToken(): ?string { return $this->resetToken; }
+    public function setResetToken(?string $resetToken): static { $this->resetToken = $resetToken; return $this; }
+
+    public function getResetTokenExpiresAt(): ?\DateTimeImmutable { return $this->resetTokenExpiresAt; }
+    public function setResetTokenExpiresAt(?\DateTimeImmutable $expiresAt): static { $this->resetTokenExpiresAt = $expiresAt; return $this; }
 }

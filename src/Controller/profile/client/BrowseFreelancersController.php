@@ -16,7 +16,8 @@ class BrowseFreelancersController extends AbstractController
     public function browse(
         Request              $request,
         FreelancerRepository $freelancerRepo,
-        ClientRepository     $clientRepo
+        ClientRepository     $clientRepo,
+        \Knp\Component\Pager\PaginatorInterface $paginator
     ): Response {
         $userId = $request->getSession()->get('user_id');
         if (!$userId) return $this->redirectToRoute('user_login');
@@ -28,55 +29,33 @@ class BrowseFreelancersController extends AbstractController
         $search       = trim($request->query->get('search', ''));
         $verification = $request->query->get('verification', 'All');
         $minRating    = $request->query->get('rating', 'Any');
-        $sort         = $request->query->get('sort', 'rating_high');
+        $sortBy       = $request->query->get('sortBy', 'rating_high');
+        $limit        = $request->query->getInt('limit', 5);
 
-        // Load all freelancers
-        $freelancers = $freelancerRepo->findAllWithUser();
+        // Use Repository to get QueryBuilder
+        $queryBuilder = $freelancerRepo->getSearchQueryBuilder($search, $verification, $minRating, $sortBy);
 
-        // Search — name, bio, skills
-        if ($search) {
-            $s = strtolower($search);
-            $freelancers = array_filter($freelancers, function($f) use ($s) {
-                if (str_contains(strtolower($f->getName() ?? ''), $s)) return true;
-                if (str_contains(strtolower($f->getBio()  ?? ''), $s)) return true;
-                foreach ($f->getSkillsArray() as $skill) {
-                    if (str_contains(strtolower($skill), $s)) return true;
-                }
-                return false;
-            });
-        }
+        // Paginate
+        $pagination = $paginator->paginate(
+            $queryBuilder,
+            $request->query->getInt('page', 1),
+            $limit
+        );
 
-        // Verification filter
-        if ($verification !== 'All') {
-            $target = strtolower($verification); // 'verified' or 'unverified'
-            $freelancers = array_filter($freelancers, fn($f) => $f->getVerificationStatus() === $target);
-        }
+        $template = $request->query->get('ajax') 
+            ? 'frontOffice/client/profile/_freelancer_results.html.twig'
+            : 'frontOffice/client/profile/browse-freelancers.html.twig';
 
-        // Rating filter
-        if ($minRating !== 'Any') {
-            $min = (float) str_replace('+', '', $minRating);
-            $freelancers = array_filter($freelancers, fn($f) => $f->getRating() >= $min);
-        }
-
-        // Sort
-        $freelancers = array_values($freelancers);
-        usort($freelancers, match ($sort) {
-            'rating_low'  => fn($a, $b) => $a->getRating()       <=> $b->getRating(),
-            'price_low'   => fn($a, $b) => $a->getPricePerHour() <=> $b->getPricePerHour(),
-            'price_high'  => fn($a, $b) => $b->getPricePerHour() <=> $a->getPricePerHour(),
-            'name_asc'    => fn($a, $b) => strcmp($a->getName(), $b->getName()),
-            default       => fn($a, $b) => $b->getRating()       <=> $a->getRating(), 
-        });
-
-        return $this->render('frontOffice/client/profile/browse-freelancers.html.twig', [
-            'freelancers'  => $freelancers,
+        return $this->render($template, [
+            'pagination'   => $pagination,
             'client'       => $client,
             'user'         => $client->getUser(),
             'search'       => $search,
             'verification' => $verification,
             'minRating'    => $minRating,
-            'sort'         => $sort,
-            'count'        => count($freelancers),
+            'sortBy'       => $sortBy,
+            'limit'        => $limit,
+            'count'        => $pagination->getTotalItemCount(),
         ]);
     }
 }

@@ -81,7 +81,21 @@ class ClientProfileController extends AbstractController
             $confirmPassword = $form->get('confirmPassword')->getData();
 
             if ($newPassword) {
-                if ($user->getPassword() !== $currentPassword) {
+                $dbPassword = $user->getPassword();
+                $isMatch = false;
+
+                // 1. Try hashed comparison
+                if (str_starts_with($dbPassword, '$2')) {
+                    if (password_verify($currentPassword, $dbPassword)) {
+                        $isMatch = true;
+                    }
+                } 
+                // 2. Fallback to plain text comparison
+                if (!$isMatch && $dbPassword === $currentPassword) {
+                    $isMatch = true;
+                }
+
+                if (!$isMatch) {
                     $this->addFlash('error', 'Current password is incorrect.');
                     return $this->render('frontOffice/client/profile/edit-profile.html.twig', [
                         'form'   => $form->createView(),
@@ -97,7 +111,7 @@ class ClientProfileController extends AbstractController
                         'user'   => $user,
                     ]);
                 }
-                $user->setPassword($newPassword);
+                $user->setPassword(password_hash($newPassword, PASSWORD_BCRYPT));
             }
 
             $user->setName($name);

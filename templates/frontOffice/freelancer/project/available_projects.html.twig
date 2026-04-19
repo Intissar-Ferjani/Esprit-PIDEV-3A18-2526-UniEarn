@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Projects</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <style>
+        .content-wrap { padding: 24px; }
+        .toolbar { display:flex; gap:12px; align-items:center; margin-bottom:20px; }
+        .search { flex:1; padding:10px; border:1px solid #d1d5db; border-radius:8px; }
+        .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px; }
+        .card { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:14px; }
+        .title { font-weight:700; margin-bottom:8px; }
+        .desc { color:#475569; font-size:13px; min-height:60px; }
+        .meta { margin-top:8px; font-size:13px; color:#0f172a; }
+        .actions { margin-top:12px; }
+        .btn { display:inline-block; padding:8px 12px; border-radius:8px; text-decoration:none; }
+        .btn-apply { background:#2563eb; color:#fff; }
+        .btn-disabled { background:#94a3b8; color:#fff; cursor:not-allowed; }
+    </style>
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+    {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': 'projects'} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">📋 Available Projects</span>
+        </div>
+
+        <div class="content-wrap">
+            <form class="toolbar" method="get" action="{{ path('freelancer_available_projects') }}">
+                <input class="search" type="text" name="search" placeholder="Search projects..." value="{{ app.request.query.get('search') }}">
+            </form>
+
+            <div class="grid">
+                {% for project in projects %}
+                    <div class="card">
+                        <div class="title">{{ project.title }}</div>
+                        <div class="desc">{{ project.description|length > 120 ? project.description|slice(0, 120) ~ '...' : project.description }}</div>
+                        <div class="meta">Budget: {{ project.budget|number_format(2, '.', ',') }}</div>
+                        <div class="meta">Status: {{ project.status ? project.status.getDisplayName() : 'N/A' }}</div>
+                        <div class="actions">
+                            {% if project.idProject in applied_project_ids %}
+                                <span class="btn btn-disabled">Already Applied</span>
+                            {% else %}
+                                <a class="btn btn-apply" href="{{ path('app_application_new', {'projectId': project.idProject}) }}">Apply</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <p>No projects found.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

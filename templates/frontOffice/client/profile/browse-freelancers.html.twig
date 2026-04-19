@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UniEarn – Browse Freelancers</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <style>
@@ -144,21 +145,80 @@
     </style>
 </head>
 <script>
-(function () {
+document.addEventListener('DOMContentLoaded', function() {
     const form    = document.querySelector('.filter-bar');
     const search  = form.querySelector('input[name="search"]');
     const selects = form.querySelectorAll('select');
+    const results = document.getElementById('freelancer-results');
     let timer;
 
-    function submit() { form.submit(); }
+    async function updateResults() {
+        const formData = new FormData(form);
+        const params   = new URLSearchParams(formData);
+        
+        // Update browser URL without reloading
+        const cleanParams = new URLSearchParams(formData);
+        window.history.replaceState({}, '', `${window.location.pathname}?${cleanParams.toString()}`);
+
+        // Fetch partial view
+        params.append('ajax', '1');
+        
+        // Show loading state
+        results.style.opacity = '0.5';
+        
+        try {
+            const response = await fetch(`${form.action}?${params.toString()}`);
+            const html     = await response.text();
+            results.innerHTML = html;
+        } catch (err) {
+            console.error('AJAX Filter error:', err);
+        } finally {
+            results.style.opacity = '1';
+        }
+    }
+
+    // Make updateResults globally available for the pagination include
+    window.updateResults = updateResults;
 
     search.addEventListener('input', () => {
         clearTimeout(timer);
-        timer = setTimeout(submit, 400);
+        timer = setTimeout(updateResults, 400); // 400ms debounce
     });
 
-    selects.forEach(s => s.addEventListener('change', submit));
-})();
+    selects.forEach(s => {
+        s.addEventListener('change', updateResults);
+    });
+
+    // Intercept pagination clicks for AJAX
+    results.addEventListener('click', function(e) {
+        const link = e.target.closest('.pagination-ajax-link');
+        if (link) {
+            e.preventDefault();
+            const url = new URL(link.href);
+            const page = url.searchParams.get('page');
+            
+            // Re-fetch using current form state but new page
+            const formData = new FormData(form);
+            const params   = new URLSearchParams(formData);
+            params.set('page', page);
+            
+            // Sync URL
+            const cleanParams = new URL(link.href).search;
+            window.history.replaceState({}, '', `${window.location.pathname}${cleanParams}`);
+            
+            // Load
+            params.append('ajax', '1');
+            results.style.opacity = '0.5';
+            fetch(`${form.action}?${params.toString()}`)
+                .then(r => r.text())
+                .then(html => {
+                    results.innerHTML = html;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                })
+                .finally(() => results.style.opacity = '1');
+        }
+    });
+});
 </script>
 <body class="dashboard-body">
 <div class="dashboard-layout">
@@ -211,12 +271,12 @@
 
                 <div class="filter-group">
                     <label>Sort by</label>
-                    <select name="sort">
-                        <option value="rating_high" {{ sort == 'rating_high' ? 'selected' : '' }}>Rating (High)</option>
-                        <option value="rating_low"  {{ sort == 'rating_low'  ? 'selected' : '' }}>Rating (Low)</option>
-                        <option value="price_low"   {{ sort == 'price_low'   ? 'selected' : '' }}>Price (Low)</option>
-                        <option value="price_high"  {{ sort == 'price_high'  ? 'selected' : '' }}>Price (High)</option>
-                        <option value="name_asc"    {{ sort == 'name_asc'    ? 'selected' : '' }}>Name (A-Z)</option>
+                    <select name="sortBy">
+                        <option value="rating_high" {{ sortBy == 'rating_high' ? 'selected' : '' }}>Rating (High)</option>
+                        <option value="rating_low"  {{ sortBy == 'rating_low'  ? 'selected' : '' }}>Rating (Low)</option>
+                        <option value="price_low"   {{ sortBy == 'price_low'   ? 'selected' : '' }}>Price (Low)</option>
+                        <option value="price_high"  {{ sortBy == 'price_high'  ? 'selected' : '' }}>Price (High)</option>
+                        <option value="name_asc"    {{ sortBy == 'name_asc'    ? 'selected' : '' }}>Name (A-Z)</option>
                     </select>
                 </div>
 
@@ -230,65 +290,10 @@
                 </div>
             </form>
 
-            {# ── Results count ── #}
-            <p style="color:#64748b;font-size:13px;margin-bottom:16px;">
-                {{ count }} freelancer{{ count != 1 ? 's' : '' }} found
-            </p>
-
-            {# ── Freelancer cards ── #}
-            {% if freelancers is empty %}
-                <div class="empty-state">
-                    <span class="empty-icon">🔍</span>
-                    <p class="empty-text">No freelancers found</p>
-                    <p class="empty-subtext">Try adjusting your search or filters</p>
-                </div>
-            {% else %}
-                {% for f in freelancers %}
-                <div class="freelancer-card">
-
-                    {# Avatar #}
-                    {% if f.profilePicturePath %}
-                        <img src="{{ asset(f.profilePicturePath) }}" class="f-avatar" alt="{{ f.name }}">
-                    {% else %}
-                        <img src="{{ asset('images/default-avatar.jpg') }}" class="f-avatar" alt="{{ f.name }}">
-                    {% endif %}
-
-                    {# Info #}
-                    <div class="f-info">
-                        <div class="f-name-row">
-                            <span class="f-name">{{ f.name }}</span>
-                            {% if f.verificationStatus == 'verified' %}
-                                <span class="verified-badge">✓ Verified</span>
-                            {% else %}
-                                <span class="unverified-badge">⏳ Unverified</span>
-                            {% endif %}
-                        </div>
-                        <div class="f-email">📧 {{ f.email }}</div>
-                        <div class="f-stats">
-                            <span class="f-stat f-stat-rating">⭐ {{ f.rating }}</span>
-                            <span class="f-stat f-stat-price">💰 {{ f.pricePerHour }} TND/hr</span>
-                        </div>
-                        {% set skills = f.skillsArray %}
-                        {% if skills is not empty %}
-                        <div class="f-skills">
-                            {% for skill in skills|slice(0, 3) %}
-                                <span class="f-skill">{{ skill }}</span>
-                            {% endfor %}
-                            {% if skills|length > 3 %}
-                                <span class="f-skill-more">+{{ skills|length - 3 }} more</span>
-                            {% endif %}
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    {# Remove the old modal button, replace with this #}
-                    <a href="{{ path('client_view_freelancer', {id: f.idFreelancer}) }}"
-                    class="btn-view-profile">
-                        View Profile
-                    </a>
-                </div>
-                {% endfor %}
-            {% endif %}
+            {# ── Results Wrapper for AJAX ── #}
+            <div id="freelancer-results" style="transition: opacity 0.2s ease;">
+                {% include 'frontOffice/client/profile/_freelancer_results.html.twig' %}
+            </div>
 
         </div>
     </div>
@@ -348,7 +353,7 @@ function openProfile(btn) {
     document.getElementById('modalEmail').textContent  = email;
     document.getElementById('modalRating').textContent = rating.toFixed(1);
     document.getElementById('modalPrice').textContent  = price.toFixed(2) + ' TND';
-    document.getElementById('modalStatus').textContent = status === 'verified' ? '✅ Verified' : '⏳ Unverified';
+    document.getElementById('modalStatus').textContent = status === 'verified' ? ' Verified' : '⏳ Unverified';
 
     const bioSection = document.getElementById('modalBioSection');
     const bioEl      = document.getElementById('modalBio');

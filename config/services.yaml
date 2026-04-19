@@ -7,6 +7,10 @@ parameters:
     profile_pictures_directory: '%kernel.project_dir%/public/uploads/profiles'
     cv_directory: '%kernel.project_dir%/public/uploads/cv'
     student_cards_directory: '%kernel.project_dir%/public/uploads/student_cards'    
+    tesseract_executable_path: 'D:\Program Files\Tesseract-OCR\tesseract.exe'
+    ghostscript_executable_path: 'D:\Program Files\gs\gs10.07.0\bin\gswin64c.exe'
+    tessdata_path: '%kernel.project_dir%/tessdata'
+    openrouter_api_key: '%env(OPENROUTER_API_KEY)%'
 
 services:
     # default configuration for services in *this* file
@@ -22,6 +26,10 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    App\Service\users\user\AvatarService:
+        arguments:
+            $profilesDirectory: '%profile_pictures_directory%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

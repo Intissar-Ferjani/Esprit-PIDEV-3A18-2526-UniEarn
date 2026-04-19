@@ -1,0 +1,260 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Terms & Conditions - UniEarn{% block title_suffix %}{% endblock %}{% endblock %}
+
+{% block body %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+        --section-bg: #f8fafc;
+        --accent-blue: #3b82f6;
+    }
+    .terms-layout {
+        background: #f1f5f9;
+        min-height: 100vh;
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+    .terms-hero {
+        background: var(--primary-gradient);
+        padding: 80px 20px;
+        text-align: center;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    .terms-hero::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: url('https://www.transparenttextures.com/patterns/cubes.png');
+        opacity: 0.1;
+    }
+    .hero-icon {
+        background: rgba(255, 255, 255, 0.15);
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        font-size: 32px;
+        backdrop-filter: blur(5px);
+    }
+    .terms-container {
+        max-width: 900px;
+        margin: -60px auto 60px;
+        padding: 0 20px;
+        position: relative;
+        z-index: 10;
+    }
+    .terms-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+    }
+    .terms-section {
+        margin-bottom: 40px;
+        padding-bottom: 40px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .terms-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 16px;
+    }
+    .section-num {
+        width: 36px;
+        height: 36px;
+        background: #eff6ff;
+        color: #2563eb;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+    .section-num.orange { color: #f59e0b; background: #fffbeb; }
+    .section-num.green { color: #10b981; background: #ecfdf5; }
+    .section-num.red { color: #ef4444; background: #fef2f2; }
+
+    .section-header h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+    }
+    .section-content {
+        color: #475569;
+        line-height: 1.8;
+        font-size: 15px;
+        padding-left: 56px;
+    }
+    .terms-footer {
+        text-align: center;
+        padding: 40px 0;
+    }
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        color: #64748b;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    .btn-back:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #1e293b;
+        transform: translateY(-1px);
+    }
+</style>
+
+<div class="terms-layout">
+    <div class="terms-hero">
+        <div class="hero-icon">📋</div>
+        <h1 style="font-size: 36px; font-weight: 800; margin-bottom: 12px;">Terms & Conditions</h1>
+        <p style="opacity: 0.9; font-size: 16px;">Please read these terms carefully before using UniEarn.</p>
+        <div style="margin-top: 20px; font-size: 13px; opacity: 0.7;">Last updated: March 2026</div>
+    </div>
+
+    <div class="terms-container">
+        <div class="terms-card">
+            
+            <!-- Section 1 -->
+            <div class="terms-section">
+                <div class="section-header">
+                    <div class="section-num">1</div>
+                    <h2>Acceptance of Terms</h2>
+                </div>
+                <div class="section-content">
+                    By registering for or using the UniEarn platform, you agree to be bound by these Terms and Conditions. If you do not agree with any part of these terms, you may not use our services. UniEarn reserves the right to update these terms at any time, and continued use of the platform constitutes your acceptance of the revised terms.
+                </div>
+            </div>
+
+            <!-- Section 2 -->
+            <div class="terms-section">
+                <div class="section-header">
+                    <div class="section-num">2</div>
+                    <h2>Platform Description</h2>
+                </div>
+                <div class="section-content">
+                    UniEarn is a student freelancing platform designed to connect university students offering professional services with clients seeking skilled talent. We provide tools for project posting, bidding, contract management, and secure payments. UniEarn acts as an intermediary and is not a party to any contract formed between clients and freelancers.
+                </div>
+            </div>
+
+            <!-- Section 3 -->
+            <div class="terms-section">
+                <div class="section-header">
+                    <div class="section-num">3</div>
+                    <h2>Eligibility</h2>
+                </div>
+                <div class="section-content">
+                    You must be at least 18 years old to use UniEarn. Freelancer accounts are intended for currently enrolled university students. By creating a freelancer account, you confirm that you are an active student at a recognised institution. Client accounts may be created by individuals or businesses seeking to hire student talent. All users must provide accurate and truthful registration information.
+                </div>
+            </div>
+
+            <!-- Section 4 -->
+            <div class="terms-section">
+                <div class="section-header">
+                    <div class="section-num">4</div>
+                    <h2>Account Responsibilities</h2>
+                </div>
+                <div class="section-content">
+                    You are responsible for maintaining the confidentiality of your login credentials and for all activity that occurs under your account. You agree not to share your credentials with third parties, impersonate another user, or create multiple accounts for deceptive purposes. You must notify UniEarn immediately if you suspect any unauthorized use of your account.
+                </div>
+            </div>
+
+            <!-- Section 5 -->
+            <div class="terms-section">
+                <div class="section-header">
+                    <div class="section-num">5</div>
+                    <h2>Payments & Fees</h2>
+                </div>
+                <div class="section-content">
+                    UniEarn charges a service fee on completed transactions. The current fee structure is communicated within the platform and may be updated with prior notice. All payments are processed securely through our payment system in Tunisian Dinar (TND). Payments are only released to freelancers upon satisfactory completion of work as agreed in the contract. Disputes regarding payments must be raised within 14 days of project completion.
+                </div>
+            </div>
+
+            <!-- Section 6 -->
+            <div class="terms-section">
+                <div class="section-header">
+                    <div class="section-num orange">6</div>
+                    <h2>Prohibited Conduct</h2>
+                </div>
+                <div class="section-content">
+                    Users must not engage in fraudulent activity, post misleading project descriptions, submit plagiarised work, harass or discriminate against other users, attempt to circumvent the platform's payment system, or use UniEarn for any illegal purpose. Violations may result in immediate account suspension or permanent ban without prior notice.
+                </div>
+            </div>
+
+            <!-- Section 7 -->
+            <div class="terms-section">
+                <div class="section-header">
+                    <div class="section-num">7</div>
+                    <h2>Intellectual Property</h2>
+                </div>
+                <div class="section-content">
+                    Unless agreed otherwise in a contract, all work produced by a freelancer for a client project becomes the client's intellectual property upon full payment. Freelancers retain the right to showcase completed work in their portfolio unless explicitly restricted by the client. The UniEarn platform, logo, and branding are the sole property of UniEarn and may not be reproduced without permission.
+                </div>
+            </div>
+
+            <!-- Section 8 -->
+            <div class="terms-section">
+                <div class="section-header">
+                    <div class="section-num green">8</div>
+                    <h2>Privacy & Data</h2>
+                </div>
+                <div class="section-content">
+                    UniEarn collects and processes personal data in accordance with applicable data protection laws. We collect only the information necessary to operate the platform — including your name, email, and professional details. Your data is never sold to third parties. You may request deletion of your account and associated data at any time by contacting our support team.
+                </div>
+            </div>
+
+            <!-- Section 9 -->
+            <div class="terms-section">
+                <div class="section-header">
+                    <div class="section-num red">9</div>
+                    <h2>Termination</h2>
+                </div>
+                <div class="section-content">
+                    UniEarn reserves the right to suspend or terminate any account that violates these terms, engages in fraudulent activity, or poses a risk to other users or the platform's integrity. Users may deactivate their own accounts at any time from their profile settings. Upon termination, pending payments due to freelancers for completed work will still be processed.
+                </div>
+            </div>
+
+            <!-- Section 10 -->
+            <div class="terms-section">
+                <div class="section-header">
+                    <div class="section-num">10</div>
+                    <h2>Contact Us</h2>
+                </div>
+                <div class="section-content">
+                    If you have questions about these Terms and Conditions, please contact our support team at support@uniearn.tn or through the Help section within the app. We aim to respond to all queries within 2 business days.
+                </div>
+            </div>
+
+        </div>
+
+        <div class="terms-footer">
+            <a href="javascript:window.close();" class="btn-back">
+                <span>←</span> Close Window
+            </a>
+            <div style="margin-top: 24px; color: #94a3b8; font-size: 14px;">
+                © 2026 UniEarn. All rights reserved.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

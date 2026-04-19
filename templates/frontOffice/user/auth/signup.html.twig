@@ -6,6 +6,35 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ asset('css/signup.css') }}">
+<style>
+    .social-login-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+        padding: 12px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        color: #1e293b;
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        margin-bottom: 24px;
+    }
+    .social-login-btn:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+    .social-login-btn img {
+        width: 20px;
+        height: 20px;
+    }
+</style>
 {% endblock %}
 
 {% block body %}
@@ -89,9 +118,14 @@
                     {{ form_widget(form.profilePictureFile, {
                         'attr': {
                             'class': 'avatar-file-input',
-                            'accept': 'image/*'
+                            'accept': 'image/*',
+                            'onchange': 'handleProfilePicChange(event)'
                         }
                     }) }}
+                    <div id="ai-status" class="ai-status-badge" style="display:none;">
+                        <div class="ai-pulse"></div>
+                        <span id="ai-status-text">Scanning photo...</span>
+                    </div>
                 </div>
             </div>
             <div class="field-errors">{{ form_errors(form.profilePictureFile) }}</div>
@@ -126,25 +160,58 @@
 
             <div class="form-row">
                 <div class="field">
-                    {{ form_label(form.plainPassword.first) }}
-                    {{ form_widget(form.plainPassword.first, {
-                        'attr': {
-                            'class': 'field-input' ~ (form.plainPassword.first.vars.errors|length > 0 ? ' has-error' : ''),
-                            'placeholder': 'Min 8 characters',
-                            'id': 'passwordField'
-                        }
-                    }) }}
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                        <label class="field-label" style="font-weight: 700; font-size: 13px; color: #1a202c; margin: 0;">Password</label>
+                        <button type="button" 
+                                onclick="generatePassword()" 
+                                style="background-color: #4CAF50; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600; transition: background 0.2s;">
+                            <i class="fas fa-dice"></i> Generate
+                        </button>
+                    </div>
+                    <div style="display: flex; gap: 4px; align-items: stretch;">
+                        {{ form_widget(form.plainPassword.first, {
+                            'id': 'passwordField',
+                            'attr': {
+                                'class': 'field-input' ~ (form.plainPassword.first.vars.errors|length > 0 ? ' has-error' : ''),
+                                'placeholder': 'Create a password',
+                                'style': 'flex: 1;'
+                            }
+                        }) }}
+                        <button type="button" 
+                                onclick="togglePassword('passwordField', this)" 
+                                style="background-color: #f0f0f0; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; color: #4a5568; min-width: 44px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div id="password-strength-container" style="display:none; margin-top:10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-size:11px; font-weight:700; color:#64748b;">
+                            <span>Password Strength</span>
+                            <span id="password-strength-text" style="color:#ef4444;">Weak</span>
+                        </div>
+                        <div style="height:6px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
+                            <div id="password-strength-bar" style="width:0%; height:100%; background:#ef4444; transition:all 0.3s ease;"></div>
+                        </div>
+                    </div>
                     <div class="field-errors">{{ form_errors(form.plainPassword.first) }}</div>
                 </div>
 
                 <div class="field">
-                    {{ form_label(form.plainPassword.second) }}
-                    {{ form_widget(form.plainPassword.second, {
-                        'attr': {
-                            'class': 'field-input' ~ (form.plainPassword.second.vars.errors|length > 0 ? ' has-error' : ''),
-                            'placeholder': 'Re-enter password'
-                        }
-                    }) }}
+                    <label class="field-label" style="font-weight: 700; font-size: 13px; color: #1a202c; margin-bottom: 6px; display: block;">Confirm Password</label>
+                    <div style="display: flex; gap: 4px; align-items: stretch;">
+                        {{ form_widget(form.plainPassword.second, {
+                            'id': 'confirmPasswordField',
+                            'attr': {
+                                'class': 'field-input' ~ (form.plainPassword.second.vars.errors|length > 0 ? ' has-error' : ''),
+                                'placeholder': 'Re-enter your password',
+                                'style': 'flex: 1;'
+                            }
+                        }) }}
+                        <button type="button" 
+                                onclick="togglePassword('confirmPasswordField', this)" 
+                                style="background-color: #f0f0f0; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; color: #4a5568; min-width: 44px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                     <div class="field-errors">{{ form_errors(form.plainPassword.second) }}</div>
                 </div>
             </div>
@@ -175,12 +242,31 @@
                         </div>
                     {% endfor %}
                 </div>
-                <div class="field-errors">{{ form_errors(form.role) }}</div>
+            <div class="field" style="margin-bottom: 24px;">
+                <div style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
+                    {{ form_widget(form.agreeTerms, { 'attr': { 'style': 'margin-top: 4px; border-radius: 4px; width: 18px; height: 18px;' } }) }}
+                    <label for="{{ form.agreeTerms.vars.id }}" style="font-size: 14px; color: #64748b; line-height: 1.5; cursor: pointer;">
+                        I agree to the <a href="{{ path('user_terms') }}" target="_blank" style="color: #2563eb; font-weight: 600; text-decoration: none;">Terms & Conditions</a> and understand my data will be processed securely.
+                    </label>
+                </div>
+                <div class="field-errors" style="color: #ef4444; font-size: 12px; margin-top: 4px;">{{ form_errors(form.agreeTerms) }}</div>
             </div>
 
-            <button type="submit" class="btn-submit">Create Account<span style="margin-left: 5px;"> →</span></button>
-
+            <button type="submit" class="btn-submit" style="display:block;margin:0 auto;">
+                Create Account <span style="margin-left: 5px;">→</span>
+            </button>
             {{ form_end(form) }}
+
+            <div style="display: flex; align-items: center; margin-bottom: 24px;margin-top: 24px;">
+                <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
+                <div style="margin: 0 16px; font-size: 12px; color: #94a3b8; font-weight: 500;">OR</div>
+                <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
+            </div>
+
+            <a href="{{ path('connect_google_start') }}" class="social-login-btn">
+                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google">
+                Continue with Google
+            </a>
 
             <p class="login-prompt">
                 Already have an account?
@@ -194,16 +280,156 @@
 
 {% block javascripts %}
 <script>
-document.querySelector('input[name="registration_form[profilePictureFile]"]')
-    ?.addEventListener('change', function(e) {
+// UI Enhancements & Listeners
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Password Generation Logic
+    window.generatePassword = function() {
+        const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+        let password = "";
+        
+        // Ensure at least one uppercase and one number for regex
+        password += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(Math.random() * 26)];
+        password += "0123456789"[Math.floor(Math.random() * 10)];
+        
+        for (let i = 0; i < 10; i++) {
+            password += charset[Math.floor(Math.random() * charset.length)];
+        }
+        
+        // Shuffle
+        password = password.split('').sort(() => 0.5 - Math.random()).join('');
+        
+        const p1 = document.getElementById('passwordField');
+        const p2 = document.getElementById('confirmPasswordField');
+        
+        p1.value = password;
+        p2.value = password;
+        
+        // Trigger strength meter update
+        p1.dispatchEvent(new Event('input'));
+    };
+
+    // Toggle Password Visibility
+    window.togglePassword = function(fieldId, btn) {
+        const input = document.getElementById(fieldId);
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    };
+    // ── AI FACE DETECTION LOGIC ──────────────────────────────────────────
+    const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights/';
+    let modelsLoaded = false;
+
+    async function loadAIModels() {
+        if (modelsLoaded) return;
+        try {
+            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+            modelsLoaded = true;
+            console.log("AI Models Loaded ✅");
+        } catch (e) {
+            console.error("Failed to load AI models:", e);
+        }
+    }
+
+    window.handleProfilePicChange = async function(e) {
         const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = evt => {
-                document.getElementById('avatarPreview').src = evt.target.result;
-            };
-            reader.readAsDataURL(file);
+        const statusBadge = document.getElementById('ai-status');
+        const statusText  = document.getElementById('ai-status-text');
+        const submitBtn   = document.querySelector('.btn-submit');
+        const preview     = document.getElementById('avatarPreview');
+
+        if (!file) return;
+
+        // 1. Show preview instantly
+        const reader = new FileReader();
+        reader.onload = evt => { preview.src = evt.target.result; };
+        reader.readAsDataURL(file);
+
+        // 2. Start AI Detection
+        statusBadge.style.display = 'inline-flex';
+        statusBadge.className = 'ai-status-badge ai-loading';
+        statusText.textContent = 'AI is warming up...';
+        submitBtn.disabled = true;
+
+        await loadAIModels();
+
+        statusText.textContent = 'Scanning face...';
+
+        // Wait a bit for the image to be ready for the AI
+        setTimeout(async () => {
+            const detections = await faceapi.detectSingleFace(preview, new faceapi.TinyFaceDetectorOptions());
+
+            if (detections) {
+                statusBadge.className = 'ai-status-badge ai-success';
+                statusText.textContent = 'Face detected! ';
+                submitBtn.disabled = false;
+            } else {
+                statusBadge.className = 'ai-status-badge ai-error';
+                statusText.textContent = 'No face detected ❌';
+                submitBtn.disabled = true;
+                // Optional: Just a warning?
+                // submitBtn.disabled = false; 
+            }
+        }, 500);
+    };
+
+    // ── Password Strength Calculator ─────────────────────────────────────
+    const passwordField = document.getElementById('passwordField');
+    const strengthContainer = document.getElementById('password-strength-container');
+    const strengthText = document.getElementById('password-strength-text');
+    const strengthBar = document.getElementById('password-strength-bar');
+
+    if (!passwordField) return;
+
+    passwordField.addEventListener('input', function() {
+        const password = this.value;
+        
+        if (password.length === 0) {
+            strengthContainer.style.display = 'none';
+            return;
+        }
+        
+        strengthContainer.style.display = 'block';
+        
+        // Calculate strength (0 to 4)
+        let strength = 0;
+        
+        if (password.length >= 8) strength += 1;
+        if (password.match(/[A-Z]/) && password.match(/[a-z]/)) strength += 1;
+        if (password.match(/[0-9]/)) strength += 1;
+        if (password.match(/[^A-Za-z0-9]/)) strength += 1;
+
+        // Visual feedback
+        switch(strength) {
+            case 0:
+            case 1:
+                strengthBar.style.width = '33%';
+                strengthBar.style.background = '#ef4444'; // Red
+                strengthText.textContent = 'Weak';
+                strengthText.style.color = '#ef4444';
+                break;
+            case 2:
+            case 3:
+                strengthBar.style.width = '66%';
+                strengthBar.style.background = '#f59e0b'; // Orange
+                strengthText.textContent = 'Medium';
+                strengthText.style.color = '#f59e0b';
+                break;
+            case 4:
+                strengthBar.style.width = '100%';
+                strengthBar.style.background = '#10b981'; // Green
+                strengthText.textContent = 'Strong';
+                strengthText.style.color = '#10b981';
+                break;
         }
     });
+});
 </script>
 {% endblock %}

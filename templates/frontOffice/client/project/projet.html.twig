@@ -1,0 +1,681 @@
+{# templates/frontOffice/client/project/index.html.twig #}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniEarn – Gestion des Projets</title>
+    <!-- Use existing dashboard CSS -->
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <style>
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        * { box-sizing: border-box; }
+        .form-section, .table-section {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+            animation: fadeInUp 0.35s ease both;
+        }
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 16px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+        }
+        .form-label {
+            font-size: 13px;
+            font-weight: bold;
+            color: #1e293b;
+        }
+        .form-control {
+            background-color: #f8f9fa;
+            border: 1px solid #e1e8ed;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 13px;
+            width: 100%;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #1976d2;
+        }
+        .text-danger {
+            font-size: 11px;
+            color: #e74c3c;
+            margin-top: 4px;
+        }
+        .btn-primary {
+            background-color: #1976d2;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-primary:hover {
+            background-color: #1565c0;
+        }
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: #1e293b;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-secondary:hover {
+            background-color: #cbd5e1;
+        }
+        .table-custom {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .table-custom th, .table-custom td {
+            text-align: left;
+            padding: 14px 16px;
+            border-bottom: 1px solid #e1e8ed;
+            font-size: 13px;
+        }
+        .table-custom th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #475569;
+        }
+        .table-custom tbody tr {
+            transition: background-color 0.15s ease;
+        }
+        .table-custom tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+        .action-btns {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .btn-action-edit {
+            background-color: #f59e0b;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .btn-action-edit:hover {
+            background-color: #d97706;
+        }
+        .btn-action-delete {
+            background-color: #ef4444;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-action-delete:hover {
+            background-color: #dc2626;
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            display: inline-block;
+            text-align: center;
+        }
+        .status-open {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .status-progress {
+            background-color: #fef08a;
+            color: #854d0e;
+        }
+        .status-closed {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+        .progress-cell {
+            min-width: 220px;
+        }
+        .progress-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 12px;
+            color: #475569;
+        }
+        .progress-track {
+            width: 100%;
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+            transition: width 0.3s ease;
+        }
+        .progress-empty .progress-fill {
+            background: linear-gradient(90deg, #cbd5e1 0%, #94a3b8 100%);
+        }
+        .progress-caption {
+            margin-top: 6px;
+            font-size: 11px;
+            color: #64748b;
+        }
+        .review-section {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+            animation: fadeInUp 0.4s ease both;
+        }
+        .review-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 14px;
+            background: #f8fafc;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .review-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+        .review-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            color: #475569;
+            font-size: 13px;
+        }
+        .review-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .review-proof {
+            font-size: 13px;
+            color: #475569;
+            margin-bottom: 12px;
+        }
+        .review-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-action-accept {
+            background: #16a34a;
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .btn-action-accept:hover {
+            background: #15803d;
+        }
+        .btn-action-deny {
+            background: #dc2626;
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-action-deny:hover {
+            background: #b91c1c;
+        }
+    </style>
+</head>
+<body class="dashboard-body">
+
+<div class="dashboard-layout">
+
+    {# Sidebar #}
+    {% set sidebar = sidebarInclude ?? 'frontOffice/user/profile/_sidebar.html.twig' %}
+    {% set active  = 'projects' %}
+    {% include sidebar with {'active': active} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">📋 Gestion des Projets</span>
+            <div class="top-bar-right">
+                <span class="top-bar-user">👤 {{ app.session.get('user_name') }}</span>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            <!-- ─────────────────────────────────── FORM CARD -->
+            <div class="form-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="font-size: 17px; margin: 0; font-weight: bold; color: #1e293b;">ℹ Informations du Projet</h3>
+                    <a href="{{ path('client_project_index') }}" class="btn-secondary">✖ Effacer</a>
+                </div>
+                <hr style="border: 0; border-top: 1px solid #e1e8ed; margin-bottom: 20px;">
+
+                {# If you are using standard Symfony Form, ensure you pass 'form' variable to this twig #}
+                {% if form is defined %}
+                    {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate'}}) }}
+                    <div class="text-danger" style="margin-bottom:10px;">{{ form_errors(form) }}</div>
+                    
+                    <!-- Row 1 : Titre | Budget -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            {{ form_label(form.title, 'Titre du projet *', {'label_attr': {'class': 'form-label'}}) }}
+                            {{ form_widget(form.title, {'attr': {'class': 'form-control', 'placeholder': 'Entrez le titre du projet…'}}) }}
+                            <div class="text-danger">{{ form_errors(form.title) }}</div>
+                        </div>
+                        <div class="form-group" style="flex: 0 0 200px;">
+                            {{ form_label(form.budget, 'Budget (TND) *', {'label_attr': {'class': 'form-label'}}) }}
+                            {{ form_widget(form.budget, {'attr': {'class': 'form-control', 'placeholder': '0.00'}}) }}
+                            <div class="text-danger">{{ form_errors(form.budget) }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2 : Statut (visiblity usually handled based on context or form fields availability) -->
+                    {% if form.status is defined %}
+                    <div class="form-row" id="statusContainer">
+                        <div class="form-group">
+                            {{ form_label(form.status, 'Statut *', {'label_attr': {'class': 'form-label'}}) }}
+                            {{ form_widget(form.status, {'attr': {'class': 'form-control', 'prompt': 'Sélectionnez le statut'}}) }}
+                            <div class="text-danger">{{ form_errors(form.status) }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Row 3 : Description -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2px;">
+                                {{ form_label(form.description, 'Description *', {'label_attr': {'class': 'form-label', 'style': 'margin-bottom:0;'}}) }}
+                                <button type="button" id="btnCleanDesc" onclick="cleanDescription()" style="font-size: 11px; padding: 4px 10px; background: #e0e7ff; color: #4338ca; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s;">✨ Auto-Clean Grammar</button>
+                            </div>
+                            <div id="desc-wrapper">
+                                {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': 4, 'placeholder': 'Décrivez le projet en détail…', 'id': 'projectDescriptionInput'}}) }}
+                            </div>
+                            <div class="text-danger">{{ form_errors(form.description) }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+                        <button type="submit" class="btn-primary">
+                            {{ is_edit ?? false ? '💾 Enregistrer' : '➕ Ajouter' }}
+                        </button>
+                    </div>
+                    
+                    {{ form_end(form) }}
+                {% else %}
+                    <!-- Fallback message if form is not provided by the controller -->
+                    <p style="color: #95a5a6; font-size: 13px;">Le formulaire de projet n'est pas configuré.</p>
+                {% endif %}
+            </div>
+
+            <!-- ─────────────────────────── SEARCH + TABLE CARD -->
+            <div class="table-section">
+                <!-- Table header row -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <h3 style="font-size: 17px; margin: 0; font-weight: bold; color: #1e293b;">Liste des Projets</h3>
+                        <span style="font-size: 13px; color: #64748b;" class="tag">Total : {{ projects|length }} projets</span>
+                        <a href="{{ path('client_project_index') }}" class="btn-secondary">↻ Rafraîchir</a>
+                    </div>
+                    <form method="get" action="{{ path('client_project_index') }}">
+                        <input type="text" name="search" class="form-control" placeholder="🔍 Rechercher un projet…" value="{{ app.request.query.get('search') }}" style="width: 280px;">
+                    </form>
+                </div>
+                <hr style="border: 0; border-top: 1px solid #e1e8ed; margin-bottom: 20px;">
+
+                <!-- TableView -->
+                <div style="overflow-x: auto;">
+                    <table class="table-custom">
+                        <thead>
+                            <tr>
+                                <th style="text-align: center; width: 60px;">ID</th>
+                                <th>Titre</th>
+                                <th>Description</th>
+                                <th style="text-align: right;">Budget (TND)</th>
+                                <th style="text-align: center;">Statut</th>
+                                <th>Progression</th>
+                                <th style="text-align: center; width: 180px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in projects %}
+                            <tr>
+                                {% set progress = project_progress[project.idProject ?? project.id] ?? {'percentage': 0, 'total': 0, 'done': 0, 'inProgress': 0} %}
+                                <td style="text-align: center;">{{ project.idProject ?? project.id }}</td>
+                                <td style="font-weight: 500;">{{ project.title }}</td>
+                                <td>{{ project.description|length > 50 ? project.description|slice(0, 50) ~ '...' : project.description }}</td>
+                                <td style="text-align: right; font-weight: 600;">{{ project.budget|number_format(2, '.', '') }}</td>
+                                <td style="text-align: center;">
+                                    {% set status_value = project.status ? project.status.value : '' %}
+                                    {% set status_class = (status_value == 'TODO') ? 'status-open' : ((status_value == 'InProgress') ? 'status-progress' : 'status-closed') %}
+                                    <span class="status-badge {{ status_class }}">
+                                        {{ project.status ? project.status.getDisplayName() : 'N/A' }}
+                                    </span>
+                                </td>
+                                <td class="progress-cell">
+                                    <div class="progress-meta">
+                                        <strong>{{ progress.percentage }}%</strong>
+                                        <span>{{ progress.done }}/{{ progress.total }} done</span>
+                                    </div>
+                                    <div class="progress-track {{ progress.total == 0 ? 'progress-empty' : '' }}">
+                                        <div class="progress-fill" style="width: {{ progress.percentage }}%;"></div>
+                                    </div>
+                                    <div class="progress-caption">
+                                        {% if progress.total == 0 %}
+                                            No tasks yet
+                                        {% else %}
+                                            {{ progress.inProgress }} in progress counted as half
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td style="text-align: center;">
+                                    <div class="action-btns">
+                                        {# Assumes client_project_edit route takes project id #}
+                                        <a href="{{ path('client_project_edit', {'id': project.idProject ?? project.id}) }}" class="btn-action-edit">Modifier</a>
+                                        
+                                        <form method="post" action="{{ path('client_project_delete', {'id': project.idProject ?? project.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce projet ?');" style="display:inline-block; margin:0;">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ (project.idProject ?? project.id)) }}">
+                                            <button type="submit" class="btn-action-delete">Supprimer</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="8" style="text-align: center; color: #95a5a6; padding: 30px;">
+                                    Aucun projet disponible.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <div class="review-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="font-size: 17px; margin: 0; font-weight: bold; color: #1e293b;">Tasks Waiting For Review</h3>
+                    <span style="font-size: 13px; color: #64748b;">{{ review_tasks|length }} task(s)</span>
+                </div>
+                <hr style="border: 0; border-top: 1px solid #e1e8ed; margin-bottom: 20px;">
+
+                {% for task in review_tasks %}
+                    <div class="review-card">
+                        <div class="review-meta">
+                            <span>Project: {{ task.project ? task.project.title : 'N/A' }}</span>
+                            <span>Deadline: {{ task.deadline ? task.deadline|date('d/m/Y') : 'N/A' }}</span>
+                            <span>Status: {{ task.taskStatus ? task.taskStatus.getDisplayName() : 'N/A' }}</span>
+                        </div>
+                        <div class="review-title">{{ task.title }}</div>
+                        <div class="review-proof">
+                            {% if task.submissionLink %}
+                                Link:
+                                <a href="{{ task.submissionLink }}" target="_blank" rel="noopener noreferrer">{{ task.submissionLink }}</a>
+                            {% else %}
+                                Link: none
+                            {% endif %}
+                            <br>
+                            {% if task.submissionFile %}
+                                File:
+                                <a href="{{ asset('uploads/task_submissions/' ~ task.submissionFile) }}" target="_blank" rel="noopener noreferrer">{{ task.submissionFile }}</a>
+                            {% else %}
+                                File: none
+                            {% endif %}
+                        </div>
+                        <div class="review-actions">
+                            <form method="post" action="{{ path('client_task_accept_review', {'id': task.idTask}) }}" style="display:inline-block; margin:0;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('accept-review' ~ task.idTask) }}">
+                                <button type="submit" class="btn-action-accept">Accept</button>
+                            </form>
+                            <button type="button" class="btn-action-deny" style="border: none; cursor: pointer;" onclick="openDenyModal('{{ path('client_task_deny_review', {'id': task.idTask}) }}')">Deny</button>
+                        </div>
+                    </div>
+                {% else %}
+                    <p style="color: #95a5a6; font-size: 13px; margin: 0;">No tasks are waiting for client review.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 2000;
+}
+.modal-backdrop.is-open {
+    display: flex;
+}
+.modal-card {
+    width: min(560px, 100%);
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+}
+.modal-title {
+    margin: 0 0 8px;
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f172a;
+}
+.modal-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #334155;
+    margin-top: 15px;
+}
+.modal-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    font-size: 14px;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 18px;
+}
+.btn-modal-cancel {
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.btn-modal-submit {
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: none;
+    background: #dc2626;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+</style>
+
+<div id="denyModal" class="modal-backdrop" onclick="closeDenyModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+        <h2 class="modal-title">Deny Review</h2>
+        <form id="denyModalForm" method="post">
+            <input type="hidden" name="task_denial[_token]" value="{{ csrf_token('task_denial') }}">
+            <label class="modal-label" for="clientFeedback">Feedback for freelancer</label>
+            <textarea id="clientFeedback" name="task_denial[clientFeedback]" class="modal-input" rows="6" placeholder="Explain what should be fixed before the task can be accepted." required></textarea>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn-modal-cancel" onclick="closeDenyModal()">Cancel</button>
+                <button type="submit" class="btn-modal-submit">Confirm Denial</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openDenyModal(action) {
+        const modal = document.getElementById('denyModal');
+        const form = document.getElementById('denyModalForm');
+        form.action = action;
+        form.reset();
+        modal.classList.add('is-open');
+    }
+
+    function closeDenyModal(event) {
+        if (!event || event.target.id === 'denyModal') {
+            document.getElementById('denyModal').classList.remove('is-open');
+        }
+    }
+
+    async function cleanDescription() {
+        // Find the textarea definitively using the wrapper we established.
+        const wrapper = document.getElementById('desc-wrapper');
+        const descField = wrapper ? wrapper.querySelector('textarea, input') : null;
+        
+        if (!descField) {
+            alert('❌ Erreur: Impossible de trouver la zone de texte de la description.');
+            return;
+        }
+        
+        if (!descField.value.trim()) {
+            alert('ℹ️ La description est vide. Veuillez écrire quelque chose en premier.');
+            return;
+        }
+
+        const originalText = descField.value;
+        const btn = document.getElementById('btnCleanDesc');
+        btn.innerHTML = '⏳ Analyse...';
+        btn.disabled = true;
+
+        try {
+            const formData = new URLSearchParams();
+            formData.append('text', originalText);
+            formData.append('language', 'auto'); // Let LanguageTool auto-detect French/English
+
+            // Advanced Feature: Language API via HTTP Post
+            // We dispatch an asynchronous request to the public LanguageTool API.
+            // Language is set to 'auto' so it works natively whether the client is typing in French or English.
+            const response = await fetch('https://api.languagetool.org/v2/check', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json'
+                },
+                body: formData.toString()
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API returned status ${response.status}`);
+            }
+            
+            // The JSON response maps grammatical and spelling errors along with string index boundaries.
+            const data = await response.json();
+            
+            if (data.matches && data.matches.length > 0) {
+                let newText = originalText;
+                
+                // Sort matches by offset descending (back to front) to prevent shifting
+                const matches = data.matches.sort((a, b) => b.offset - a.offset);
+                
+                let count = 0;
+                matches.forEach(match => {
+                    if (match.replacements && match.replacements.length > 0) {
+                        const replacement = match.replacements[0].value;
+                        const start = match.offset;
+                        const end = match.offset + match.length;
+                        newText = newText.substring(0, start) + replacement + newText.substring(end);
+                        count++;
+                    }
+                });
+                
+                descField.value = newText;
+                if (count > 0) {
+                    alert(`✨ Auto-cleaned ${count} grammar/spelling errors!`);
+                } else {
+                    alert('✅ Text is clean (No actionable replacements found).');
+                }
+            } else {
+                alert('✅ Text is already clean! No errors found.');
+            }
+        } catch (e) {
+            console.error('LanguageTool error:', e);
+            alert('❌ Impossible de se connecter à l\'API LanguageTool pour le moment.');
+        } finally {
+            btn.innerHTML = '✨ Auto-Clean Grammar';
+            btn.disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>

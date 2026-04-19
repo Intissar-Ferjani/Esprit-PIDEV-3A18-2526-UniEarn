@@ -76,6 +76,14 @@ class RegistrationFormType extends AbstractType
                 'constraints' => [
                     new File(['maxSize' => '2M']),
                 ],
+            ])
+            ->add('agreeTerms', \Symfony\Component\Form\Extension\Core\Type\CheckboxType::class, [
+                'mapped'      => false,
+                'constraints' => [
+                    new \Symfony\Component\Validator\Constraints\IsTrue([
+                        'message' => 'You must agree to our terms and conditions.',
+                    ]),
+                ],
             ]);
     }
 

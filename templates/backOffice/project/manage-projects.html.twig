@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn - Manage Projects</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <style>
+        .projects-table { width:100%; border-collapse:collapse; }
+        .table-head th { background:#f8f9fa; border-bottom:2px solid #e2e8f0; padding:12px 16px; text-align:left; font-size:13px; font-weight:700; color:#2c3e50; }
+        .table-body tr { border-bottom:1px solid #e2e8f0; }
+        .table-body tr:hover { background:#f8fbff; }
+        .table-body td { padding:12px 16px; font-size:13px; color:#374151; vertical-align:top; }
+        .filter-bar { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+        .filter-bar input, .filter-bar select { padding:8px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; background:#f8fafc; }
+        .status-badge { padding:3px 10px; border-radius:16px; font-size:11px; font-weight:700; color:#fff; }
+        .status-todo { background:#64748b; }
+        .status-progress { background:#f59e0b; }
+        .status-done { background:#22c55e; }
+        .task-item { margin-bottom:6px; padding:8px; border:1px solid #e5e7eb; border-radius:6px; background:#fff; }
+        .task-title { font-weight:600; }
+        .task-meta { font-size:11px; color:#64748b; }
+    </style>
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+    {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': 'projects_admin'} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">🗂 Manage Projects</span>
+            <div class="top-bar-right">
+                <span class="top-bar-user">👤 {{ app.session.get('user_name') }}</span>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            <div class="content-section" style="margin-bottom:20px;">
+                <form method="get" action="{{ path('admin_manage_projects') }}" class="filter-bar">
+                    <div>
+                        <label class="field-label">Search</label>
+                        <input type="text" name="search" value="{{ search }}" style="width:400px;" placeholder="Search title or description...">
+                    </div>
+                    <div>
+                        <label class="field-label">Status</label>
+                        <select name="status">
+                            {% for opt in ['All', 'TODO', 'InProgress', 'Done', 'Review'] %}
+                                <option value="{{ opt }}" {{ status == opt ? 'selected' : '' }}>{{ opt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label">Tasks</label>
+                        <select name="hasTasks">
+                            {% for opt in ['All', 'WithTasks', 'WithoutTasks'] %}
+                                <option value="{{ opt }}" {{ hasTasks == opt ? 'selected' : '' }}>{{ opt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label">Sort by</label>
+                        <select name="sort">
+                            <option value="newest" {{ sort == 'newest' ? 'selected' : '' }}>Newest</option>
+                            <option value="title_asc" {{ sort == 'title_asc' ? 'selected' : '' }}>Title (A-Z)</option>
+                            <option value="title_desc" {{ sort == 'title_desc' ? 'selected' : '' }}>Title (Z-A)</option>
+                            <option value="budget_desc" {{ sort == 'budget_desc' ? 'selected' : '' }}>Budget (High-Low)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-edit" style="height:38px;">Apply</button>
+                    <a href="{{ path('admin_manage_projects') }}" class="back-button" style="height:38px;padding:0 10px;text-decoration:none;display:inline-flex;align-items:center;">Clear</a>
+                </form>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <span class="section-icon">📁</span>
+                        <h3 class="section-title">Projects & Tasks</h3>
+                    </div>
+                    <span style="color:#64748b;font-size:13px;">{{ projects|length }} project{{ projects|length != 1 ? 's' : '' }}</span>
+                </div>
+                <hr class="section-divider">
+
+                {% if projects is empty %}
+                    <div class="empty-state">
+                        <span class="empty-icon">🔍</span>
+                        <p class="empty-text">No projects found</p>
+                        <p class="empty-subtext">Try adjusting your search or filters</p>
+                    </div>
+                {% else %}
+                <div style="overflow-x:auto;">
+                    <table class="projects-table">
+                        <thead class="table-head">
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Budget</th>
+                            <th>Status</th>
+                            <th>Tasks</th>
+                        </tr>
+                        </thead>
+                        <tbody class="table-body">
+                        {% for project in projects %}
+                            {% set statusValue = project.status ? project.status.value : '' %}
+                            <tr>
+                                <td>#{{ project.idProject }}</td>
+                                <td>
+                                    <div style="font-weight:700;">{{ project.title }}</div>
+                                    <div style="font-size:12px;color:#64748b;">{{ project.description|length > 110 ? project.description|slice(0, 110) ~ '...' : project.description }}</div>
+                                </td>
+                                <td>{{ project.budget|number_format(2, '.', ',') }}</td>
+                                <td style="width:100px;">
+                                    <span class="status-badge {{ statusValue == 'TODO' ? 'status-todo' : (statusValue == 'InProgress' ? 'status-progress' : 'status-done') }}">
+                                        {{ project.status ? project.status.getDisplayName() : 'N/A' }}
+                                    </span>
+                                </td>
+                                <td style="min-width:280px;">
+                                    {% set list = tasksByProject[project.idProject]|default([]) %}
+                                    {% if list is empty %}
+                                        <span style="font-size:12px;color:#64748b;">No tasks</span>
+                                    {% else %}
+                                        {% for task in list %}
+                                            <div class="task-item">
+                                                <div class="task-title">{{ task.title }}</div>
+                                                <div class="task-meta">
+                                                    {{ task.taskStatus ? task.taskStatus.getDisplayName() : 'N/A' }} -
+                                                    Priority: {{ task.priority }} -
+                                                    Deadline: {{ task.deadline ? task.deadline|date('Y-m-d H:i') : 'N/A' }}
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

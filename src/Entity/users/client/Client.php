@@ -53,6 +53,7 @@ class Client
     ],
     message: 'Please select a valid industry.'
     )]
+    #[ORM\Column(name: 'industry', type: 'string', length: 255, nullable: true)]
     private ?string $industry = null;
 
     // ── Relationship to User (mirrors Java's Client extends User + userID FK) ──
