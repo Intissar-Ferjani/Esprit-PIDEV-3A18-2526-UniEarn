@@ -5,6 +5,10 @@
     <title>UniEarn – Contract Details</title>
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <style>
+        @keyframes aispin { 100% { transform: rotate(360deg); } }
+        .ai-spin { animation: aispin 1.5s linear infinite; display: inline-block; }
+    </style>
 </head>
 <body class="dashboard-body">
 <div class="dashboard-layout">
@@ -34,9 +38,11 @@
                         <h3 class="section-title">{{ contract.title }}</h3>
                     </div>
                     {% if contract.status == 'signed' %}
-                        <span style="background:#dcfce7;color:#166534;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;">✅ Signed</span>
+                        <span style="background:#dcfce7;color:#166534;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;">✍️ Signé (En attente de paiement)</span>
+                    {% elseif contract.status == 'funded' %}
+                        <span style="background:#3b82f6;color:white;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;">🔒 Fonds Sécurisés (En cours)</span>
                     {% elseif contract.status == 'pending' %}
-                        <span style="background:#fef3c7;color:#92400e;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;">⏳ Pending</span>
+                        <span style="background:#fef3c7;color:#92400e;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;">⏳ En attente de signatures</span>
                     {% else %}
                         <span style="background:#e2e8f0;color:#475569;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;">{{ contract.status }}</span>
                     {% endif %}
@@ -64,8 +70,22 @@
                     </div>
 
                     <div>
-                        <span class="field-label">Contract Content</span>
-                        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-top:4px;white-space:pre-wrap;font-size:13px;color:#374151;line-height:1.6;">{{ contract.content }}</div>
+                        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px;">
+                            <span class="field-label">Contract Content</span>
+                            <button type="button" id="aiSummaryBtn" style="background: linear-gradient(135deg, #3b82f6, #0ea5e9); color: white; border: none; padding: 6px 14px; font-size: 11px; font-weight:600; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: transform 0.2s;">
+                                ✨ Résumer avec l'IA
+                            </button>
+                        </div>
+                        
+                        {# AI Summary Block #}
+                        <div id="aiSummaryContainer" style="display:none; background: linear-gradient(to right, #f0fdfa, #ecfeff); border: 1px solid #bae6fd; border-radius: 8px; padding: 16px; margin-bottom: 12px; color: #0369a1; font-size: 13px;">
+                            <div id="aiSummaryLoader" style="display:flex; align-items:center; gap:10px; font-weight:600;">
+                                <span style="font-size:18px;" class="ai-spin">✨</span> <i>L'IA d'UniEarn analyse le contrat pour vous...</i>
+                            </div>
+                            <div id="aiSummaryContent" style="display:none; line-height: 1.6;"></div>
+                        </div>
+
+                        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;white-space:pre-wrap;font-size:13px;color:#374151;line-height:1.6;">{{ contract.content }}</div>
                     </div>
 
                     {# ── Signatures ── #}
@@ -150,12 +170,27 @@
                     </script>
                     {% endif %}
 
+                    {# ── Stripe Payment / Escrow ── #}
+                    {% if contract.status == 'signed' %}
+                        <div style="background: linear-gradient(135deg, #eff6ff, #dbeafe); border: 1px solid #bfdbfe; border-radius: 8px; padding: 24px; margin-top: 12px; text-align: center;">
+                            <h3 style="margin:0 0 8px; color: #1e3a8a; font-size: 16px;">💳 Sécuriser les fonds (Escrow)</h3>
+                            <p style="margin:0 0 16px; color: #3b82f6; font-size: 13px;">Le contrat est signé par les deux parties. Pour que le freelance commence à travailler, vous devez déposer les <strong>${{ contract.amount }}</strong> en séquestre.</p>
+                            
+                            <form method="post" action="{{ path('client_contract_pay', {id: contract.idContract}) }}">
+                                <button type="submit" class="btn-edit" style="padding:12px 30px; font-size:14px; background:#2563EB; border:none; color:white; font-weight:bold; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); cursor:pointer; border-radius:20px;">
+                                    🔒 Payer via Stripe
+                                </button>
+                            </form>
+                            <p style="margin:12px 0 0; color: #60a5fa; font-size: 11px;">Paiement protégé. Remboursable en cas d'annulation ou de litige selon nos CGV.</p>
+                        </div>
+                    {% endif %}
+
                     {# ── Export PDF ── #}
-                    {% if contract.isSigned %}
+                    {% if contract.status in ['signed', 'funded', 'completed'] %}
                     <a href="{{ path('client_contract_pdf', {id: contract.idContract}) }}" class="btn-edit"
                        style="padding:10px 28px;font-size:14px;background:#7c3aed;width:100%;text-align:center;display:block;text-decoration:none;margin-top:8px;"
                        target="_blank">
-                        📄 Export as PDF
+                        📄 Export PDF
                     </a>
                     {% endif %}
 
@@ -168,5 +203,48 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const aiBtn = document.getElementById('aiSummaryBtn');
+    if(aiBtn) {
+        aiBtn.addEventListener('click', function() {
+            const btn = this;
+            const container = document.getElementById('aiSummaryContainer');
+            const loader = document.getElementById('aiSummaryLoader');
+            const content = document.getElementById('aiSummaryContent');
+            
+            btn.style.transform = 'scale(0.95)';
+            setTimeout(() => { btn.style.display = 'none'; }, 200);
+            
+            container.style.display = 'block';
+            loader.style.display = 'flex';
+            content.style.display = 'none';
+
+            fetch('{{ path('client_contract_ai_summary', {id: contract.idContract}) }}', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                loader.style.display = 'none';
+                content.style.display = 'block';
+                if (data.error) {
+                    content.innerHTML = '<span style="color:#e11d48">❌ Erreur: ' + data.error + '</span>';
+                } else {
+                    content.innerHTML = '<div style="font-weight:700;margin-bottom:8px;font-size:14px;">✨ Résumé Express IA :</div>' + data.summary;
+                }
+            })
+            .catch(error => {
+                loader.style.display = 'none';
+                content.style.display = 'block';
+                content.innerHTML = '<span style="color:#e11d48">❌ Erreur lors de la communication avec l\'IA.</span>';
+            });
+        });
+    }
+});
+</script>
 </body>
 </html>

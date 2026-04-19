@@ -47,6 +47,10 @@
                class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
                 📋 <span>All Contracts</span>
             </a>
+            <a href="{{ path('admin_escrow_index') }}"
+               class="nav-item {{ active == 'escrow' ? 'active' : '' }}">
+                💰 <span>Escrow Manager</span>
+            </a>
             <a href="#" class="nav-item {{ active == 'reports' ? 'active' : '' }}">
                 📊 <span>Reports</span>
             </a>
@@ -73,8 +77,8 @@
             <a href="#" class="nav-item {{ active == 'messages' ? 'active' : '' }}">
                 💬 <span>Messages</span>
             </a>
-            <a href="#" class="nav-item {{ active == 'payments' ? 'active' : '' }}">
-                💳 <span>Payments</span>
+            <a href="{{ path('client_contract_index', {status: 'signed'}) }}" class="nav-item {{ active == 'payments' ? 'active' : '' }}">
+                💳 <span>Payments (Pending)</span>
             </a>
         {% endif %}
 
@@ -109,8 +113,11 @@
             <a href="#" class="nav-item {{ active == 'messages' ? 'active' : '' }}">
                 💬 <span>Messages</span>
             </a>
-            <a href="#" class="nav-item {{ active == 'payments' ? 'active' : '' }}">
-                💳 <span>Payments</span>
+            <a href="{{ path('freelancer_contract_index', {status: 'funded'}) }}" class="nav-item {{ active == 'payments' ? 'active' : '' }}">
+                💳 <span>Payments (Funded)</span>
+            </a>
+            <a href="{{ path('freelancer_billing_settings') }}" class="nav-item {{ active == 'billing' ? 'active' : '' }}">
+                🏦 <span>Bank Details</span>
             </a>
         {% endif %}
 
