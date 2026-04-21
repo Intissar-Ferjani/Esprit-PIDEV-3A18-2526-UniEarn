@@ -199,9 +199,10 @@ class ApplicationController extends AbstractController
 
         $converted = [];
         if ($application->getProposedBudget() > 0) {
+            $rates = $currencyService->convertFromTnd($application->getProposedBudget());
             $converted = [
-                'USD' => $currencyService->convertToUSD($application->getProposedBudget()),
-                'EUR' => $currencyService->convertToEUR($application->getProposedBudget())
+                'USD' => $rates['USD'] ?? null,
+                'EUR' => $rates['EUR'] ?? null
             ];
         }
 
