@@ -112,9 +112,9 @@ class ApplicationRepository extends ServiceEntityRepository
             $conn = $this->getEntityManager()->getConnection();
             $sql = '
                 SELECT p.idProject, u.idUser, u.name, c.company
-                FROM project p
-                JOIN client c   ON c.idClient = p.ClientID
-                JOIN user   u   ON u.idUser   = c.userID
+                FROM `project` p
+                JOIN `client` c   ON c.idClient = p.ClientID
+                JOIN `user`   u   ON u.idUser   = c.userID
                 WHERE p.idProject IN (:ids)
             ';
             $rows = $conn->executeQuery($sql, ['ids' => $projectIds], ['ids' => Connection::PARAM_INT_ARRAY])
@@ -142,7 +142,7 @@ class ApplicationRepository extends ServiceEntityRepository
     {
         try {
             $conn = $this->getEntityManager()->getConnection();
-            $sql = 'SELECT budget FROM project WHERE idProject = :id';
+            $sql = 'SELECT budget FROM `project` WHERE idProject = :id';
             $result = $conn->executeQuery($sql, ['id' => $projectId])->fetchOne();
             return $result ? (float)$result : null;
         } catch (\Throwable $e) {

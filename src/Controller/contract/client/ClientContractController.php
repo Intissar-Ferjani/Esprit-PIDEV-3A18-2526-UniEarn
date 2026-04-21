@@ -106,7 +106,7 @@ class ClientContractController extends AbstractController
 
     // ── VIEW CONTRACT ───────────────────────────────────────────────────
 
-    #[Route('/{id}', name: 'client_contract_show', methods: ['GET'])]
+    #[Route('/{id}', name: 'client_contract_show', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function show(int $id, Request $request, ContractRepository $repo, ClientRepository $clientRepo): Response
     {
         if ($r = $this->requireClient($request)) return $r;
@@ -126,7 +126,7 @@ class ClientContractController extends AbstractController
 
     // ── SIGN CONTRACT (CLIENT) ──────────────────────────────────────────
 
-    #[Route('/{id}/sign', name: 'client_contract_sign', methods: ['POST'])]
+    #[Route('/{id}/sign', name: 'client_contract_sign', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function sign(int $id, Request $request, ContractRepository $repo, ClientRepository $clientRepo, EntityManagerInterface $em): Response
     {
         if ($r = $this->requireClient($request)) return $r;
@@ -161,7 +161,7 @@ class ClientContractController extends AbstractController
 
     // ── EXPORT PDF ──────────────────────────────────────────────────────
 
-    #[Route('/{id}/pdf', name: 'client_contract_pdf', methods: ['GET'])]
+    #[Route('/{id}/pdf', name: 'client_contract_pdf', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function pdf(int $id, Request $request, ContractRepository $repo, ClientRepository $clientRepo): Response
     {
         if ($r = $this->requireClient($request)) return $r;
@@ -186,7 +186,7 @@ class ClientContractController extends AbstractController
 
     // ── AI SUMMARY ──────────────────────────────────────────────────────
 
-    #[Route('/{id}/ai-summary', name: 'client_contract_ai_summary', methods: ['POST'])]
+    #[Route('/{id}/ai-summary', name: 'client_contract_ai_summary', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function aiSummary(int $id, Request $request, ContractRepository $repo, ClientRepository $clientRepo, \Symfony\Contracts\HttpClient\HttpClientInterface $clientHttp): \Symfony\Component\HttpFoundation\JsonResponse
     {
         if ($r = $this->requireClient($request)) return new \Symfony\Component\HttpFoundation\JsonResponse(['error' => 'Unauthorized'], 401);
@@ -214,7 +214,12 @@ class ClientContractController extends AbstractController
             
             if ($isGoogle) {
                 // Gemini API
-                $response = $clientHttp->request('POST', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $apiKey, [
+                $baseUrl = $_ENV['GEMINI_BASE_URL'] ?? $_SERVER['GEMINI_BASE_URL'] ?? 'https://generativelanguage.googleapis.com/v1beta';
+                $model = $_ENV['GEMINI_MODEL'] ?? $_SERVER['GEMINI_MODEL'] ?? 'gemini-flash-latest';
+                
+                $url = rtrim($baseUrl, '/') . '/models/' . rawurlencode($model) . ':generateContent?key=' . urlencode($apiKey);
+
+                $response = $clientHttp->request('POST', $url, [
                     'json' => [
                         'contents' => [
                             ['role' => 'user', 'parts' => [['text' => "Agissez comme un avocat expert conseil d'un client. Résumez ce contrat en français en 3 puces courtes et claires. Mettez en évidence le budget, les délais, et les points de vigilance : \n\n" . $contract->getContent()]]]

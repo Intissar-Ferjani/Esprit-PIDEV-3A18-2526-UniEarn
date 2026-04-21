@@ -115,7 +115,7 @@
                                     <div style="font-size:12px;color:#64748b;">{{ project.description|length > 110 ? project.description|slice(0, 110) ~ '...' : project.description }}</div>
                                 </td>
                                 <td>{{ project.budget|number_format(2, '.', ',') }}</td>
-                                <td style="width:100px;">
+                                <td style="width:150px;">
                                     <span class="status-badge {{ statusValue == 'TODO' ? 'status-todo' : (statusValue == 'InProgress' ? 'status-progress' : 'status-done') }}">
                                         {{ project.status ? project.status.getDisplayName() : 'N/A' }}
                                     </span>

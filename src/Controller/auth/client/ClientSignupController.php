@@ -28,11 +28,9 @@ class ClientSignupController extends AbstractController
         ClientRepository       $clientRepo
     ): Response {
         // Guard: must have a pending user from step 1
-        $userId = $request->getSession()->get('pending_user_id');
-
+        $userId = $request->getSession()->get('pending_user_id') ?? $request->getSession()->get('user_id');
+        
         if (!$userId) {
-            $loggedInId = $request->getSession()->get('user_id');
-            if ($loggedInId) return $this->redirectToRoute('user_dashboard');
             return $this->redirectToRoute('user_signup');
         }
 

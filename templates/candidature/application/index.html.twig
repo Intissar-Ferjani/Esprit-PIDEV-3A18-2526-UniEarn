@@ -19,14 +19,6 @@
             {% endif %}
         </p>
     </div>
-    {% if freelancer is defined and freelancer is not null %}
-        <a href="{{ path('app_application_new') }}" 
-           style="display:inline-flex; align-items:center; gap:8px; background: linear-gradient(135deg, #4f46e5, #7c3aed); color:white; padding:10px 20px; border-radius:12px; font-weight:700; text-decoration:none; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); transition: all 0.3s;"
-           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 15px rgba(79, 70, 229, 0.3)'"
-           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(79, 70, 229, 0.2)'">
-            <span style="font-size:18px;">+</span> New Application
-        </a>
-    {% endif %}
 </div>
 
 {# ─── Search and Sort (Premium Design) ───────────────────────────── #}

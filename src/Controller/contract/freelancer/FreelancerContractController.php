@@ -162,7 +162,12 @@ class FreelancerContractController extends AbstractController
             
             if ($isGoogle) {
                 // Gemini API
-                $response = $client->request('POST', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $apiKey, [
+                $baseUrl = $_ENV['GEMINI_BASE_URL'] ?? $_SERVER['GEMINI_BASE_URL'] ?? 'https://generativelanguage.googleapis.com/v1beta';
+                $model = $_ENV['GEMINI_MODEL'] ?? $_SERVER['GEMINI_MODEL'] ?? 'gemini-flash-latest';
+                
+                $url = rtrim($baseUrl, '/') . '/models/' . rawurlencode($model) . ':generateContent?key=' . urlencode($apiKey);
+
+                $response = $client->request('POST', $url, [
                     'json' => [
                         'contents' => [
                             ['role' => 'user', 'parts' => [['text' => "Agissez comme un avocat expert. Résumez ce contrat de freelance en français en 3 puces courtes et claires. Mettez en évidence l'argent, les délais, et les points critiques : \n\n" . $contract->getContent()]]]

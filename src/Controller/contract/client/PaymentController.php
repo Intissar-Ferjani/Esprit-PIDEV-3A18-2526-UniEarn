@@ -22,6 +22,31 @@ class PaymentController extends AbstractController
         return null;
     }
 
+    // ── PAYMENTS PAGE ────────────────────────────────────────────────────
+
+    #[Route('/payments', name: 'client_payments_index', methods: ['GET'])]
+    public function paymentsIndex(Request $request, ContractRepository $repo, ClientRepository $clientRepo): Response
+    {
+        if ($r = $this->requireClient($request)) return $r;
+
+        $userId = $request->getSession()->get('user_id');
+        $client = $clientRepo->findByUserId($userId);
+        if (!$client) throw $this->createNotFoundException('Client not found.');
+
+        $allPaymentContracts = $repo->findByClientIdAndStatuses(
+            $client->getIdClient(),
+            ['signed', 'funded', 'released']
+        );
+
+        $toPay  = array_filter($allPaymentContracts, fn($c) => $c->getStatus() === 'signed');
+        $paid   = array_filter($allPaymentContracts, fn($c) => in_array($c->getStatus(), ['funded', 'released'], true));
+
+        return $this->render('frontOffice/contract/payments.html.twig', [
+            'toPay' => $toPay,
+            'paid'  => $paid,
+        ]);
+    }
+
     #[Route('/{id}/pay', name: 'client_contract_pay', methods: ['POST'])]
     public function pay(int $id, Request $request, ContractRepository $repo, ClientRepository $clientRepo): Response
     {

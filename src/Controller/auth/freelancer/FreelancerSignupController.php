@@ -33,7 +33,7 @@ class FreelancerSignupController extends AbstractController
         FreelancerRepository   $freelancerRepo,
         SluggerInterface       $slugger
     ): Response {
-        $userId = $request->getSession()->get('pending_user_id');
+        $userId = $request->getSession()->get('pending_user_id') ?? $request->getSession()->get('user_id');
         if (!$userId) return $this->redirectToRoute('user_signup');
 
         $user = $userRepo->find($userId);

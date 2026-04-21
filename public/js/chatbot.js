@@ -1,11 +1,13 @@
-// public/js/chatbot.js
-document.addEventListener('DOMContentLoaded', function() {
+function initChatbot() {
     const openBtn = document.getElementById('open-chatbot');
     const closeBtn = document.getElementById('close-chatbot');
     const chatbotWindow = document.getElementById('chatbot-window');
     const msgContainer = document.getElementById('chatbot-messages');
     const input = document.getElementById('chatbot-input');
     const sendBtn = document.getElementById('send-chatbot-msg');
+
+    if (!openBtn || openBtn.dataset.chatbotInitialized) return;
+    openBtn.dataset.chatbotInitialized = 'true'; // Prevent duplicate listeners
 
     openBtn.addEventListener('click', () => {
         chatbotWindow.classList.toggle('hidden');
@@ -71,4 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
     input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
     });
-});
+}
+
+document.addEventListener('DOMContentLoaded', initChatbot);
+document.addEventListener('turbo:load', initChatbot);

@@ -19,7 +19,7 @@ class EmailService
 
     public function sendPasswordResetEmail(string $toEmail, string $resetToken): void
     {
-        $htmlBody = $this->twig->render('emails/password_reset.html.twig', [
+        $htmlBody = $this->twig->render('frontOffice/user/emails/password_reset.html.twig', [
             'token' => $resetToken,
         ]);
 
@@ -38,7 +38,7 @@ class EmailService
             ->from('UniEarn Security <i.ferjani.26@gmail.com>')
             ->to($user->getEmail())
             ->subject('🚨 Tentative de connexion suspecte — UniEarn')
-            ->html($this->twig->render('emails/intruder_alert.html.twig', [
+            ->html($this->twig->render('frontOffice/user/emails/intruder_alert.html.twig', [
                 'user' => $user,
                 'ip' => $ip,
                 'timestamp' => (new \DateTime())->format('d/m/Y à H:i:s'),

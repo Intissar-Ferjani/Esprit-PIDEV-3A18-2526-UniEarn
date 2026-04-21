@@ -599,7 +599,6 @@
             
             <div style="display: flex; align-items: center; gap: 20px;">
                 <span class="top-bar-user" style="font-weight: 600; color: #1e293b; font-size: 15px;">👤 {{ app.session.get('user_name') }}</span>
-                <img src="{{ asset('images/UniEarn_full_logo.png') }}" alt="UniEarn Logo" style="height: 55px; width: auto; object-fit: contain;">
             </div>
         </div>
 
@@ -666,6 +665,19 @@
                                 </a>
                             </div>
                         </div>
+
+                        <div class="control-group" style="flex: 1 1 200px;">
+                            <label class="control-label" for="projectSelector">Filter by Project</label>
+                            <select name="project" id="projectSelector" class="control-input">
+                                <option value="">All Projects</option>
+                                {% for project in form_projects|default([]) %}
+                                    <option value="{{ project.idProject }}" {{ selected_project_id == project.idProject ? 'selected' : '' }}>
+                                        {{ project.title }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
                         <input type="hidden" name="view" value="{{ board_view }}">
                     </form>
                 </div>
@@ -938,7 +950,7 @@
         }
     }
 
-    document.getElementById('projectSelector').addEventListener('change', function() {
+    document.getElementById('projectSelector')?.addEventListener('change', function() {
         this.form.submit();
     });
 </script>

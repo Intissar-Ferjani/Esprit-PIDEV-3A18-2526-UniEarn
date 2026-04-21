@@ -388,7 +388,7 @@ setInterval(async () => {
         const data = await res.json();
         (data.messages || []).forEach(appendBubble);
     } catch { /* ignore */ }
-}, 2000);
+}, 8000);
 
 // ── Send on Enter (Shift+Enter = newline) ──
 document.getElementById('msgInput')?.addEventListener('keydown', function(e) {
@@ -460,9 +460,9 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Poll badge every 15 s
+// Poll badge every 60 s
 loadNotifications();
-setInterval(loadNotifications, 15000);
+setInterval(loadNotifications, 60000);
 </script>
 </body>
 </html>
