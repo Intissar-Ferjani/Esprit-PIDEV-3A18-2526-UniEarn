@@ -238,9 +238,11 @@ class MessagingController extends AbstractController
         $afterId = (int) $request->query->get('after', 0);
         $newMsgs = $msgRepo->findAfter($chatId, $afterId);
 
-        // Mark incoming as seen
-        $msgRepo->markSeenInChat($chatId, $userId);
-        $em->flush();
+        // Mark incoming as seen only if we pulled new messages
+        if (count($newMsgs) > 0) {
+            $msgRepo->markSeenInChat($chatId, $userId);
+            $em->flush();
+        }
 
         $data = array_map(fn(Message $m) => [
             'id'       => $m->getIdMessage(),

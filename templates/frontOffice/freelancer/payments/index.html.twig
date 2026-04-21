@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn – Mes Paiements</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <style>
+        .payments-section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            margin: 28px 0 12px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid;
+        }
+        .payments-section-title.blocked { color: #d97706; border-color: #fde68a; }
+        .payments-section-title.received { color: #166534; border-color: #bbf7d0; }
+
+        .pay-table { width:100%; border-collapse:collapse; }
+        .pay-table thead tr th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+        .pay-table.blocked thead tr th { background:#fffbeb; color:#92400e; }
+        .pay-table.received thead tr th { background:#f0fdf4; color:#166534; }
+
+        .pay-table tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+            transition: background .15s;
+        }
+        .pay-table tbody tr:hover { background:#f8fafc; }
+        .pay-table tbody td { padding: 12px 16px; font-size:13px; color:#334155; }
+
+        .badge {
+            display:inline-block;
+            padding:3px 12px;
+            border-radius:20px;
+            font-size:11px;
+            font-weight:700;
+        }
+        .badge-funded   { background:#fef3c7; color:#92400e; }
+        .badge-completed { background:#dcfce7; color:#166534; }
+        .badge-released { background:#dbeafe; color:#1d4ed8; }
+
+        .btn-view {
+            display:inline-flex; align-items:center; gap:6px;
+            background:#f1f5f9; color:#475569; border:none; cursor:pointer;
+            padding:6px 14px; border-radius:8px;
+            font-size:12px; font-weight:600;
+            text-decoration:none; transition:background .2s;
+        }
+        .btn-view:hover { background:#e2e8f0; }
+
+        .empty-state {
+            text-align:center;
+            padding:32px;
+            color:#94a3b8;
+            font-size:13px;
+        }
+        .empty-state .icon { font-size:32px; display:block; margin-bottom:8px; }
+
+        .stats-row {
+            display:flex; gap:16px; margin-bottom:24px; flex-wrap:wrap;
+        }
+        .stat-card {
+            flex:1; min-width:140px;
+            background:white;
+            border-radius:12px;
+            padding:16px 20px;
+            box-shadow:0 1px 4px rgba(0,0,0,.07);
+            border-left:4px solid;
+        }
+        .stat-card.orange { border-color:#f59e0b; }
+        .stat-card.green  { border-color:#22c55e; }
+        .stat-card .stat-label { font-size:11px; color:#94a3b8; font-weight:600; text-transform:uppercase; }
+        .stat-card .stat-value { font-size:22px; font-weight:800; color:#1e293b; margin-top:4px; }
+    </style>
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': 'payments'} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">💳 Suivi de mes Revenus</span>
+        </div>
+
+        <div class="dashboard-content">
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            {# ── Stats Cards ── #}
+            <div class="stats-row">
+                <div class="stat-card orange">
+                    <div class="stat-label">🔒 Montants Bloqués</div>
+                    <div class="stat-value">${{ totalBlocked|number_format(2) }}</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-label">💰 Montants Reçus</div>
+                    <div class="stat-value">${{ totalReceived|number_format(2) }}</div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-label">📄 Contrats en Séquestre</div>
+                    <div class="stat-value">{{ blockedContracts|length }}</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-label">✅ Mission Terminées</div>
+                    <div class="stat-value">{{ receivedContracts|length }}</div>
+                </div>
+            </div>
+
+            {# ══════════════════════════════════════════════════════════
+               TABLEAU 1 — Montants Bloqués (status = funded)
+            ══════════════════════════════════════════════════════════ #}
+            <div class="payments-section-title blocked">
+                🔒 Montants en Séquestre (Bloqués)
+                <span style="font-size:12px;font-weight:500;color:#b45309;">(Le client a payé, fonds détenus par UniEarn)</span>
+            </div>
+
+            <div class="content-section" style="padding:0;overflow:hidden;margin-bottom:8px;">
+                <table class="pay-table blocked">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Contrat</th>
+                            <th>Client</th>
+                            <th>Montant Attendu</th>
+                            <th>Date de Paiement</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for contract in blockedContracts %}
+                        <tr>
+                            <td style="color:#94a3b8;">{{ contract.idContract }}</td>
+                            <td style="font-weight:700;color:#1e293b;">{{ contract.title }}</td>
+                            <td>{{ contract.client.name }}</td>
+                            <td style="font-weight:700;color:#d97706;">${{ contract.amount|number_format(2) }}</td>
+                            <td style="color:#94a3b8;">{{ contract.updatedAt|date('d/m/Y') }}</td>
+                            <td>
+                                <a href="{{ path('freelancer_contract_show', {id: contract.idContract}) }}" class="btn-view">👁 Voir Contrat</a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <span class="icon">⏳</span>
+                                    Aucun montant n'est actuellement en séquestre.
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {# ══════════════════════════════════════════════════════════
+               TABLEAU 2 — Montants Reçus (status = completed / released)
+            ══════════════════════════════════════════════════════════ #}
+            <div class="payments-section-title received" style="margin-top:36px;">
+                ✅ Montants Reçus (Libérés)
+                <span style="font-size:12px;font-weight:500;color:#15803d;">(Transférés vers votre compte bancaire)</span>
+            </div>
+
+            <div class="content-section" style="padding:0;overflow:hidden;">
+                <table class="pay-table received">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Contrat</th>
+                            <th>Client</th>
+                            <th>Montant Reçu</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for contract in receivedContracts %}
+                        <tr>
+                            <td style="color:#94a3b8;">{{ contract.idContract }}</td>
+                            <td style="font-weight:700;color:#1e293b;">{{ contract.title }}</td>
+                            <td>{{ contract.client.name }}</td>
+                            <td style="font-weight:700;color:#16a34a;">${{ contract.amount|number_format(2) }}</td>
+                            <td>
+                                <span class="badge badge-completed">✅ Terminé</span>
+                            </td>
+                            <td>
+                                <a href="{{ path('freelancer_contract_show', {id: contract.idContract}) }}" class="btn-view">👁 Détails</a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <span class="icon">💰</span>
+                                    Vous n'avez pas encore reçu de paiements.
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>{# /dashboard-content #}
+    </div>{# /dashboard-main #}
+</div>{# /dashboard-layout #}
+</body>
+</html>

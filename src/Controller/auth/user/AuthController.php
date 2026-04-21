@@ -92,7 +92,13 @@ class AuthController extends AbstractController
     }
 
     #[Route('/login', name: 'user_login', methods: ['GET', 'POST'])]
-    public function login(Request $request, UserRepository $userRepo, \App\Service\users\user\LoginAttemptService $attemptService): Response
+    public function login(
+        Request                                    $request,
+        UserRepository                             $userRepo,
+        \App\Repository\users\freelancer\FreelancerRepository $freelancerRepo,
+        \App\Repository\users\client\ClientRepository     $clientRepo,
+        \App\Service\users\user\LoginAttemptService $attemptService
+    ): Response
     {
         if ($request->isMethod('POST')) {
             $email    = strtolower(trim($request->request->get('email')));
@@ -135,12 +141,18 @@ class AuthController extends AbstractController
 
             if (!$isMatch) {
                 $state = $attemptService->recordFailure($email);
-                $this->addFlash('error', 'Incorrect password.');
+                
+                if ($attemptService->isLocked($email)) {
+                    $remTime = $attemptService->getRemainingLockTime($email);
+                    $remSeconds = $attemptService->getRemainingSeconds($email);
+                    $this->addFlash('error', "Your account is locked due to too many failed attempts. Try again in <span id='live-timer' data-seconds='$remSeconds'>$remTime</span>.");
+                } else {
+                    $this->addFlash('error', 'Incorrect password.');
+                }
                 
                 $renderParams = ['last_email' => $email];
                 if ($state['count'] === $attemptService->getMaxAttempts()) {
                     $renderParams['trigger_capture'] = true;
-                    // Note: Flash message for lock will be shown on next load if they try again
                 }
                 
                 return $this->render('frontOffice/user/auth/login.html.twig', $renderParams);
@@ -159,9 +171,19 @@ class AuthController extends AbstractController
                 return $this->redirectToRoute('admin_manage_users');
             }
             if ($user->getRole() === 'CLIENT') {
+                if (!$clientRepo->findOneBy(['user' => $user])) {
+                    $request->getSession()->set('pending_user_id', $user->getIdUser());
+                    $this->addFlash('info', 'Please complete your client profile first.');
+                    return $this->redirectToRoute('client_setup');
+                }
                 return $this->redirectToRoute('client_dashboard');
             }
             if ($user->getRole() === 'FREELANCER') {
+                if (!$freelancerRepo->findOneBy(['user' => $user])) {
+                    $request->getSession()->set('pending_user_id', $user->getIdUser());
+                    $this->addFlash('info', 'Please complete your freelancer profile first.');
+                    return $this->redirectToRoute('freelancer_setup');
+                }
                 return $this->redirectToRoute('freelancer_dashboard');
             }
 
