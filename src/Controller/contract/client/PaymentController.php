@@ -41,7 +41,7 @@ class PaymentController extends AbstractController
         $toPay  = array_filter($allPaymentContracts, fn($c) => $c->getStatus() === 'signed');
         $paid   = array_filter($allPaymentContracts, fn($c) => in_array($c->getStatus(), ['funded', 'released'], true));
 
-        return $this->render('frontOffice/contract/payments.html.twig', [
+        return $this->render('frontOffice/client/contract/payments.html.twig', [
             'toPay' => $toPay,
             'paid'  => $paid,
         ]);
@@ -70,6 +70,7 @@ class PaymentController extends AbstractController
         // VRAIE INTÉGRATION STRIPE (Nécessite: composer require stripe/stripe-php)
         if ($stripeSecret && class_exists('\Stripe\Stripe')) {
             \Stripe\Stripe::setApiKey($stripeSecret);
+            \Stripe\Stripe::setVerifySslCerts(false);
             $successUrl = $this->generateUrl('client_contract_pay_success', ['id' => $id], UrlGeneratorInterface::ABSOLUTE_URL);
             $cancelUrl = $this->generateUrl('client_contract_show', ['id' => $id], UrlGeneratorInterface::ABSOLUTE_URL);
 

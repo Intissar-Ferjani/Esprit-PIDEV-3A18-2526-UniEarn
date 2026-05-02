@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>UniEarn – Mes Paiements</title>
+    <title>UniEarn – My Payments</title>
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <style>
@@ -16,8 +16,8 @@
             padding-bottom: 8px;
             border-bottom: 2px solid;
         }
-        .payments-section-title.blocked { color: #d97706; border-color: #fde68a; }
-        .payments-section-title.received { color: #166534; border-color: #bbf7d0; }
+        .payments-section-title.to-pay  { color: #d97706; border-color: #fde68a; }
+        .payments-section-title.paid     { color: #166534; border-color: #bbf7d0; }
 
         .pay-table { width:100%; border-collapse:collapse; }
         .pay-table thead tr th {
@@ -28,8 +28,8 @@
             text-transform: uppercase;
             letter-spacing: .5px;
         }
-        .pay-table.blocked thead tr th { background:#fffbeb; color:#92400e; }
-        .pay-table.received thead tr th { background:#f0fdf4; color:#166534; }
+        .pay-table.to-pay thead tr th { background:#fffbeb; color:#92400e; }
+        .pay-table.paid   thead tr th { background:#f0fdf4; color:#166534; }
 
         .pay-table tbody tr {
             border-bottom: 1px solid #f1f5f9;
@@ -45,9 +45,19 @@
             font-size:11px;
             font-weight:700;
         }
-        .badge-funded   { background:#fef3c7; color:#92400e; }
-        .badge-completed { background:#dcfce7; color:#166534; }
+        .badge-signed   { background:#fef3c7; color:#92400e; }
+        .badge-funded   { background:#dcfce7; color:#166534; }
         .badge-released { background:#dbeafe; color:#1d4ed8; }
+
+        .btn-pay {
+            display:inline-flex; align-items:center; gap:6px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color:white; border:none; cursor:pointer;
+            padding:6px 16px; border-radius:8px;
+            font-size:12px; font-weight:700;
+            text-decoration:none; transition:opacity .2s;
+        }
+        .btn-pay:hover { opacity:.85; }
 
         .btn-view {
             display:inline-flex; align-items:center; gap:6px;
@@ -90,7 +100,7 @@
 
     <div class="dashboard-main">
         <div class="top-bar">
-            <span class="top-bar-title">💳 Suivi de mes Revenus</span>
+            <span class="top-bar-title">💳 My Payments</span>
         </div>
 
         <div class="dashboard-content">
@@ -104,61 +114,71 @@
             {# ── Stats Cards ── #}
             <div class="stats-row">
                 <div class="stat-card orange">
-                    <div class="stat-label">🔒 Montants Bloqués</div>
-                    <div class="stat-value">${{ totalBlocked|number_format(2) }}</div>
+                    <div class="stat-label">⏳ To Pay</div>
+                    <div class="stat-value">{{ toPay|length }}</div>
                 </div>
                 <div class="stat-card green">
-                    <div class="stat-label">💰 Montants Reçus</div>
-                    <div class="stat-value">${{ totalReceived|number_format(2) }}</div>
+                    <div class="stat-label">✅ Paid (Escrow)</div>
+                    <div class="stat-value">{{ paid|length }}</div>
                 </div>
                 <div class="stat-card orange">
-                    <div class="stat-label">📄 Contrats en Séquestre</div>
-                    <div class="stat-value">{{ blockedContracts|length }}</div>
+                    <div class="stat-label">💰 Amount Due</div>
+                    <div class="stat-value">
+                        ${% set total = 0 %}{% for c in toPay %}{% set total = total + c.amount %}{% endfor %}{{ total|number_format(2) }}
+                    </div>
                 </div>
                 <div class="stat-card green">
-                    <div class="stat-label">✅ Mission Terminées</div>
-                    <div class="stat-value">{{ receivedContracts|length }}</div>
+                    <div class="stat-label">💰 Amount Secured</div>
+                    <div class="stat-value">
+                        ${% set totalPaid = 0 %}{% for c in paid %}{% set totalPaid = totalPaid + c.amount %}{% endfor %}{{ totalPaid|number_format(2) }}
+                    </div>
                 </div>
             </div>
 
             {# ══════════════════════════════════════════════════════════
-               TABLEAU 1 — Montants Bloqués (status = funded)
+               TABLE 1 — Contracts To Pay (status = signed)
             ══════════════════════════════════════════════════════════ #}
-            <div class="payments-section-title blocked">
-                🔒 Montants en Séquestre (Bloqués)
-                <span style="font-size:12px;font-weight:500;color:#b45309;">(Le client a payé, fonds détenus par UniEarn)</span>
+            <div class="payments-section-title to-pay">
+                ⏳ Contracts To Pay
+                <span style="font-size:12px;font-weight:500;color:#b45309;">(signed by both parties — payment pending)</span>
             </div>
 
             <div class="content-section" style="padding:0;overflow:hidden;margin-bottom:8px;">
-                <table class="pay-table blocked">
+                <table class="pay-table to-pay">
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Contrat</th>
-                            <th>Client</th>
-                            <th>Montant Attendu</th>
-                            <th>Date de Paiement</th>
+                            <th>Contract Title</th>
+                            <th>Freelancer</th>
+                            <th>Amount</th>
+                            <th>Signed On</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                    {% for contract in blockedContracts %}
+                    {% for contract in toPay %}
                         <tr>
                             <td style="color:#94a3b8;">{{ contract.idContract }}</td>
                             <td style="font-weight:700;color:#1e293b;">{{ contract.title }}</td>
-                            <td>{{ contract.client.name }}</td>
+                            <td>{{ contract.freelancer.name }}</td>
                             <td style="font-weight:700;color:#d97706;">${{ contract.amount|number_format(2) }}</td>
-                            <td style="color:#94a3b8;">{{ contract.updatedAt|date('d/m/Y') }}</td>
-                            <td>
-                                <a href="{{ path('freelancer_contract_show', {id: contract.idContract}) }}" class="btn-view">👁 Voir Contrat</a>
+                            <td style="color:#94a3b8;">
+                                {{ contract.freelancerSignature ? contract.freelancerSignature|date('d/m/Y') : '—' }}
+                            </td>
+                            <td style="display:flex;gap:8px;align-items:center;">
+                                <form method="post" action="{{ path('client_contract_pay', {id: contract.idContract}) }}" style="display:inline;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('pay' ~ contract.idContract) }}">
+                                    <button type="submit" class="btn-pay">💳 Pay Now</button>
+                                </form>
+                                <a href="{{ path('client_contract_show', {id: contract.idContract}) }}" class="btn-view">👁 View</a>
                             </td>
                         </tr>
                     {% else %}
                         <tr>
                             <td colspan="6">
                                 <div class="empty-state">
-                                    <span class="icon">⏳</span>
-                                    Aucun montant n'est actuellement en séquestre.
+                                    <span class="icon">🎉</span>
+                                    No pending payments — all contracts are funded!
                                 </div>
                             </td>
                         </tr>
@@ -168,45 +188,49 @@
             </div>
 
             {# ══════════════════════════════════════════════════════════
-               TABLEAU 2 — Montants Reçus (status = completed / released)
+               TABLE 2 — Contracts Already Paid (status = funded / released)
             ══════════════════════════════════════════════════════════ #}
-            <div class="payments-section-title received" style="margin-top:36px;">
-                ✅ Montants Reçus (Libérés)
-                <span style="font-size:12px;font-weight:500;color:#15803d;">(Transférés vers votre compte bancaire)</span>
+            <div class="payments-section-title paid" style="margin-top:36px;">
+                ✅ Paid Contracts (Escrow)
+                <span style="font-size:12px;font-weight:500;color:#15803d;">(funds secured in escrow)</span>
             </div>
 
             <div class="content-section" style="padding:0;overflow:hidden;">
-                <table class="pay-table received">
+                <table class="pay-table paid">
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Contrat</th>
-                            <th>Client</th>
-                            <th>Montant Reçu</th>
-                            <th>Statut</th>
+                            <th>Contract Title</th>
+                            <th>Freelancer</th>
+                            <th>Amount Secured</th>
+                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                    {% for contract in receivedContracts %}
+                    {% for contract in paid %}
                         <tr>
                             <td style="color:#94a3b8;">{{ contract.idContract }}</td>
                             <td style="font-weight:700;color:#1e293b;">{{ contract.title }}</td>
-                            <td>{{ contract.client.name }}</td>
+                            <td>{{ contract.freelancer.name }}</td>
                             <td style="font-weight:700;color:#16a34a;">${{ contract.amount|number_format(2) }}</td>
                             <td>
-                                <span class="badge badge-completed">✅ Terminé</span>
+                                {% if contract.status == 'funded' %}
+                                    <span class="badge badge-funded">🔒 Funded</span>
+                                {% elseif contract.status == 'released' %}
+                                    <span class="badge badge-released">✅ Released</span>
+                                {% endif %}
                             </td>
                             <td>
-                                <a href="{{ path('freelancer_contract_show', {id: contract.idContract}) }}" class="btn-view">👁 Détails</a>
+                                <a href="{{ path('client_contract_show', {id: contract.idContract}) }}" class="btn-view">👁 View</a>
                             </td>
                         </tr>
                     {% else %}
                         <tr>
                             <td colspan="6">
                                 <div class="empty-state">
-                                    <span class="icon">💰</span>
-                                    Vous n'avez pas encore reçu de paiements.
+                                    <span class="icon">💳</span>
+                                    No paid contracts yet.
                                 </div>
                             </td>
                         </tr>

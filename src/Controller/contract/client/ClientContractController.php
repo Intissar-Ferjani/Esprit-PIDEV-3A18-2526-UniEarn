@@ -13,6 +13,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Knp\Component\Pager\PaginatorInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[Route('/client/contracts')]
 class ClientContractController extends AbstractController
@@ -226,20 +228,31 @@ class ClientContractController extends AbstractController
                         ]
                     ]
                 ]);
+            $response = $clientHttp->request('POST', 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=' . $apiKey, [
+    'verify_peer' => false,
+    'json' => [
+        'contents' => [
+            ['role' => 'user', 'parts' => [['text' => "Agissez comme un avocat expert conseil d'un client. Résumez ce contrat en français en 3 puces courtes et claires. Mettez en évidence le budget, les délais, et les points de vigilance : \n\n" . $contract->getContent()]]]
+        ]
+    ]
+]);
                 $data = $response->toArray();
                 $aiText = $data['candidates'][0]['content']['parts'][0]['text'] ?? "Impossible de générer le résumé.";
             } else {
                 // OpenAI API fallback
                 $response = $clientHttp->request('POST', 'https://api.openai.com/v1/chat/completions', [
+                    'verify_peer' => false,
                     'headers' => ['Authorization' => 'Bearer ' . $apiKey],
                     'json' => [
                         'model' => 'gpt-4o-mini',
                         'messages' => [
-                            ['role' => 'system', 'content' => "Tu es un assistant IA qui aide les clients à lire les contrats."],
-                            ['role' => 'user', 'content' => "Résume ce contrat en 3 puces, focalise-toi sur le budget et le temps : " . $contract->getContent()]
-                        ]
+                            ['role' => 'system', 'content' => "Tu es un avocat expert conseil. Ton rôle est de résumer des contrats de manière claire et concise."],
+                            ['role' => 'user', 'content' => "Résume ce contrat en français en 3 puces courtes et claires. Mettez en évidence le budget, les délais, et les points de vigilance : \n\n" . $contract->getContent()]
+                        ],
+                        'temperature' => 0.3
                     ]
                 ]);
+                
                 $data = $response->toArray();
                 $aiText = $data['choices'][0]['message']['content'] ?? "Impossible de générer le résumé.";
             }

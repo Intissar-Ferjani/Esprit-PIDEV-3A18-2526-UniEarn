@@ -83,6 +83,9 @@
                class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
                 📄 <span>My Contracts</span>
             </a>
+            <a href="#" class="nav-item {{ active == 'messages' ? 'active' : '' }}">
+                💬 <span>Messages</span>
+            </a>
             <a href="{{ path('client_payments_index') }}" class="nav-item {{ active == 'payments' ? 'active' : '' }}">
                 💳 <span>Payments</span>
             </a>
@@ -122,10 +125,6 @@
                     width:17px; height:17px; font-size:10px; font-weight:700;
                     display:none; align-items:center; justify-content:center;
                 "></span>
-            </a>
-            <a href="{{ path('freelancer_contract_index') }}"
-               class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
-                📄 <span>My Contracts</span>
             </a>
             <a href="{{ path('freelancer_payments_index') }}" class="nav-item {{ active == 'payments' ? 'active' : '' }}">
                 💳 <span>Payments</span>
