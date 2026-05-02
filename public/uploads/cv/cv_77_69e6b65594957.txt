@@ -1,0 +1,81 @@
+# **Curriculum Vitae**
+
+## **Personal Information**
+
+**Full Name:** Your Name
+**Phone:** +216 XX XXX XXX
+**Email:** [yourname@email.com](mailto:yourname@email.com)
+**Address:** Your City, Tunisia
+**LinkedIn:** linkedin.com/in/yourname *(optional)*
+
+---
+
+## **Profile**
+
+Motivated and detail-oriented student/recent graduate with skills in web development and database management. Passionate about learning new technologies, solving problems, and contributing to team success through hard work and dedication.
+
+---
+
+## **Education**
+
+**Degree / Diploma Name**
+School / University Name — City
+*Year – Year*
+
+Example:
+**Bachelor’s Degree in Computer Science**
+Higher Institute of Computer Science — Tunis
+*2022 – Present*
+
+---
+
+## **Skills**
+
+* HTML / CSS / JavaScript
+* PHP / Symfony
+* MySQL / Database Design
+* Git / GitHub
+* Problem Solving
+* Teamwork
+* Communication
+
+---
+
+## **Projects**
+
+**E-commerce Website**
+
+* Developed an online shopping website using Symfony and MySQL.
+* Created features for product management, user authentication, and order processing.
+
+**Database Management Project**
+
+* Designed and implemented a relational database for managing client and project information.
+* Wrote SQL queries for CRUD operations and reporting.
+
+---
+
+## **Experience**
+
+**Intern / Freelancer / Part-time Job** *(if any)*
+Company Name — City
+*Month Year – Month Year*
+
+* Assisted in developing and maintaining web applications.
+* Collaborated with team members to solve technical issues.
+
+---
+
+## **Languages**
+
+* Arabic: Native
+* French: Intermediate
+* English: Intermediate
+
+---
+
+## **Interests**
+
+* Web Development
+* Technology
+* UI/UX Design
