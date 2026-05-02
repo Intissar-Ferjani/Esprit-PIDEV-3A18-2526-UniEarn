@@ -10,6 +10,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Knp\Component\Pager\PaginatorInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[Route('/freelancer/contracts')]
 class FreelancerContractController extends AbstractController
@@ -144,7 +146,7 @@ class FreelancerContractController extends AbstractController
         $contract = $repo->find($id);
 
         if (!$contract || $contract->getFreelancer()->getIdFreelancer() !== $freelancer->getIdFreelancer()) {
-            return new \Symfony\Component\HttpFoundation\JsonResponse(['error' => 'Contract not found.'], 404);
+            return new JsonResponse(['error' => 'Contract not found.'], 404);
         }
         
         $apiKey = $_ENV['GEMINI_API_KEY'] ?? $_ENV['OPENAI_API_KEY'] ?? '';
@@ -152,7 +154,7 @@ class FreelancerContractController extends AbstractController
         if (!$apiKey) {
             // Simulation pour la démonstration (quand pas de clé API)
             sleep(2);
-            return new \Symfony\Component\HttpFoundation\JsonResponse([
+            return new JsonResponse([
                 'summary' => "<ul><li style='margin-bottom:8px'><strong>💰 Rémunération :</strong> Le montant total est fixé à $" . $contract->getAmount() . ".</li><li style='margin-bottom:8px'><strong>📅 Engagement :</strong> Le travail s'étend du " . $contract->getStartDate()->format('d/m/Y') . " au " . $contract->getEndDate()->format('d/m/Y') . ".</li><li style='margin-bottom:8px'><strong>ℹ️ Recommandation IA :</strong> Lisez attentivement toutes les clauses avant signature. <br><em style='font-size:11px;color:#a855f7;'>(Mode simulation : ajoutez GEMINI_API_KEY dans votre fichier .env pour activer la vraie analyse !)</em></li></ul>",
             ]);
         }
@@ -163,6 +165,7 @@ class FreelancerContractController extends AbstractController
             if ($isGoogle) {
                 // Gemini API
                 $response = $client->request('POST', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $apiKey, [
+                    'verify_peer' => false,
                     'json' => [
                         'contents' => [
                             ['role' => 'user', 'parts' => [['text' => "Agissez comme un avocat expert. Résumez ce contrat de freelance en français en 3 puces courtes et claires. Mettez en évidence l'argent, les délais, et les points critiques : \n\n" . $contract->getContent()]]]
@@ -174,13 +177,15 @@ class FreelancerContractController extends AbstractController
             } else {
                 // OpenAI API fallback
                 $response = $client->request('POST', 'https://api.openai.com/v1/chat/completions', [
+                    'verify_peer' => false,
                     'headers' => ['Authorization' => 'Bearer ' . $apiKey],
                     'json' => [
                         'model' => 'gpt-4o-mini',
                         'messages' => [
-                            ['role' => 'system', 'content' => "Tu es un assistant IA qui aide les freelances à lire les contrats."],
-                            ['role' => 'user', 'content' => "Résume ce contrat en 3 puces, focalise-toi sur l'argent et le temps : " . $contract->getContent()]
-                        ]
+                            ['role' => 'system', 'content' => "Tu es un avocat expert conseil. Ton rôle est de résumer des contrats pour des freelances de manière claire."],
+                            ['role' => 'user', 'content' => "Résume ce contrat en français en 3 puces courtes et claires. Mettez en évidence l'argent, les délais, et les points critiques : \n\n" . $contract->getContent()]
+                        ],
+                        'temperature' => 0.3
                     ]
                 ]);
                 $data = $response->toArray();
@@ -192,9 +197,9 @@ class FreelancerContractController extends AbstractController
             // Simple string replace for common markdown bullets
             $aiHtml = str_replace('* ', '• ', $aiHtml);
 
-            return new \Symfony\Component\HttpFoundation\JsonResponse(['summary' => $aiHtml]);
+            return new JsonResponse(['summary' => $aiHtml]);
         } catch (\Exception $e) {
-            return new \Symfony\Component\HttpFoundation\JsonResponse(['error' => 'Erreur IA: ' . $e->getMessage()], 500);
+            return new JsonResponse(['error' => 'Erreur IA: ' . $e->getMessage()], 500);
         }
     }
 }

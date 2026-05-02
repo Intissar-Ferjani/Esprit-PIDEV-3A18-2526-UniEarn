@@ -56,4 +56,36 @@ class ContractRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Returns contracts for a client filtered by multiple statuses.
+     * Used for the dedicated Payments page (to-pay + paid).
+     */
+    public function findByClientIdAndStatuses(int $clientId, array $statuses): array
+    {
+        return $this->createQueryBuilder('c')
+            ->where('c.client = :clientId')
+            ->andWhere('c.status IN (:statuses)')
+            ->setParameter('clientId', $clientId)
+            ->setParameter('statuses', $statuses)
+            ->orderBy('c.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Returns contracts for a freelancer filtered by multiple statuses.
+     * Used for the dedicated Payments page (blocked + received).
+     */
+    public function findByFreelancerIdAndStatuses(int $freelancerId, array $statuses): array
+    {
+        return $this->createQueryBuilder('c')
+            ->where('c.freelancer = :freelancerId')
+            ->andWhere('c.status IN (:statuses)')
+            ->setParameter('freelancerId', $freelancerId)
+            ->setParameter('statuses', $statuses)
+            ->orderBy('c.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn – My Payments</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <style>
+        .payments-section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            margin: 28px 0 12px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid;
+        }
+        .payments-section-title.to-pay  { color: #d97706; border-color: #fde68a; }
+        .payments-section-title.paid     { color: #166534; border-color: #bbf7d0; }
+
+        .pay-table { width:100%; border-collapse:collapse; }
+        .pay-table thead tr th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+        .pay-table.to-pay thead tr th { background:#fffbeb; color:#92400e; }
+        .pay-table.paid   thead tr th { background:#f0fdf4; color:#166534; }
+
+        .pay-table tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+            transition: background .15s;
+        }
+        .pay-table tbody tr:hover { background:#f8fafc; }
+        .pay-table tbody td { padding: 12px 16px; font-size:13px; color:#334155; }
+
+        .badge {
+            display:inline-block;
+            padding:3px 12px;
+            border-radius:20px;
+            font-size:11px;
+            font-weight:700;
+        }
+        .badge-signed   { background:#fef3c7; color:#92400e; }
+        .badge-funded   { background:#dcfce7; color:#166534; }
+        .badge-released { background:#dbeafe; color:#1d4ed8; }
+
+        .btn-pay {
+            display:inline-flex; align-items:center; gap:6px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color:white; border:none; cursor:pointer;
+            padding:6px 16px; border-radius:8px;
+            font-size:12px; font-weight:700;
+            text-decoration:none; transition:opacity .2s;
+        }
+        .btn-pay:hover { opacity:.85; }
+
+        .btn-view {
+            display:inline-flex; align-items:center; gap:6px;
+            background:#f1f5f9; color:#475569; border:none; cursor:pointer;
+            padding:6px 14px; border-radius:8px;
+            font-size:12px; font-weight:600;
+            text-decoration:none; transition:background .2s;
+        }
+        .btn-view:hover { background:#e2e8f0; }
+
+        .empty-state {
+            text-align:center;
+            padding:32px;
+            color:#94a3b8;
+            font-size:13px;
+        }
+        .empty-state .icon { font-size:32px; display:block; margin-bottom:8px; }
+
+        .stats-row {
+            display:flex; gap:16px; margin-bottom:24px; flex-wrap:wrap;
+        }
+        .stat-card {
+            flex:1; min-width:140px;
+            background:white;
+            border-radius:12px;
+            padding:16px 20px;
+            box-shadow:0 1px 4px rgba(0,0,0,.07);
+            border-left:4px solid;
+        }
+        .stat-card.orange { border-color:#f59e0b; }
+        .stat-card.green  { border-color:#22c55e; }
+        .stat-card .stat-label { font-size:11px; color:#94a3b8; font-weight:600; text-transform:uppercase; }
+        .stat-card .stat-value { font-size:22px; font-weight:800; color:#1e293b; margin-top:4px; }
+    </style>
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': 'payments'} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">💳 My Payments</span>
+        </div>
+
+        <div class="dashboard-content">
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            {# ── Stats Cards ── #}
+            <div class="stats-row">
+                <div class="stat-card orange">
+                    <div class="stat-label">⏳ To Pay</div>
+                    <div class="stat-value">{{ toPay|length }}</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-label">✅ Paid (Escrow)</div>
+                    <div class="stat-value">{{ paid|length }}</div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-label">💰 Amount Due</div>
+                    <div class="stat-value">
+                        ${% set total = 0 %}{% for c in toPay %}{% set total = total + c.amount %}{% endfor %}{{ total|number_format(2) }}
+                    </div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-label">💰 Amount Secured</div>
+                    <div class="stat-value">
+                        ${% set totalPaid = 0 %}{% for c in paid %}{% set totalPaid = totalPaid + c.amount %}{% endfor %}{{ totalPaid|number_format(2) }}
+                    </div>
+                </div>
+            </div>
+
+            {# ══════════════════════════════════════════════════════════
+               TABLE 1 — Contracts To Pay (status = signed)
+            ══════════════════════════════════════════════════════════ #}
+            <div class="payments-section-title to-pay">
+                ⏳ Contracts To Pay
+                <span style="font-size:12px;font-weight:500;color:#b45309;">(signed by both parties — payment pending)</span>
+            </div>
+
+            <div class="content-section" style="padding:0;overflow:hidden;margin-bottom:8px;">
+                <table class="pay-table to-pay">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Contract Title</th>
+                            <th>Freelancer</th>
+                            <th>Amount</th>
+                            <th>Signed On</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for contract in toPay %}
+                        <tr>
+                            <td style="color:#94a3b8;">{{ contract.idContract }}</td>
+                            <td style="font-weight:700;color:#1e293b;">{{ contract.title }}</td>
+                            <td>{{ contract.freelancer.name }}</td>
+                            <td style="font-weight:700;color:#d97706;">${{ contract.amount|number_format(2) }}</td>
+                            <td style="color:#94a3b8;">
+                                {{ contract.freelancerSignature ? contract.freelancerSignature|date('d/m/Y') : '—' }}
+                            </td>
+                            <td style="display:flex;gap:8px;align-items:center;">
+                                <form method="post" action="{{ path('client_contract_pay', {id: contract.idContract}) }}" style="display:inline;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('pay' ~ contract.idContract) }}">
+                                    <button type="submit" class="btn-pay">💳 Pay Now</button>
+                                </form>
+                                <a href="{{ path('client_contract_show', {id: contract.idContract}) }}" class="btn-view">👁 View</a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <span class="icon">🎉</span>
+                                    No pending payments — all contracts are funded!
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {# ══════════════════════════════════════════════════════════
+               TABLE 2 — Contracts Already Paid (status = funded / released)
+            ══════════════════════════════════════════════════════════ #}
+            <div class="payments-section-title paid" style="margin-top:36px;">
+                ✅ Paid Contracts (Escrow)
+                <span style="font-size:12px;font-weight:500;color:#15803d;">(funds secured in escrow)</span>
+            </div>
+
+            <div class="content-section" style="padding:0;overflow:hidden;">
+                <table class="pay-table paid">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Contract Title</th>
+                            <th>Freelancer</th>
+                            <th>Amount Secured</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for contract in paid %}
+                        <tr>
+                            <td style="color:#94a3b8;">{{ contract.idContract }}</td>
+                            <td style="font-weight:700;color:#1e293b;">{{ contract.title }}</td>
+                            <td>{{ contract.freelancer.name }}</td>
+                            <td style="font-weight:700;color:#16a34a;">${{ contract.amount|number_format(2) }}</td>
+                            <td>
+                                {% if contract.status == 'funded' %}
+                                    <span class="badge badge-funded">🔒 Funded</span>
+                                {% elseif contract.status == 'released' %}
+                                    <span class="badge badge-released">✅ Released</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ path('client_contract_show', {id: contract.idContract}) }}" class="btn-view">👁 View</a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <span class="icon">💳</span>
+                                    No paid contracts yet.
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>{# /dashboard-content #}
+    </div>{# /dashboard-main #}
+</div>{# /dashboard-layout #}
+</body>
+</html>
