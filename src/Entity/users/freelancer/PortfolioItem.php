@@ -13,7 +13,6 @@ class PortfolioItem
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'idItem', type: 'integer')]
-    /** @phpstan-ignore property.unusedType */
     private ?int $idItem = null;
 
     #[ORM\Column(name: 'title', type: 'string', length: 255, nullable: true)]
@@ -58,7 +57,7 @@ class PortfolioItem
 
     #[ORM\ManyToOne(targetEntity: Portfolio::class)]
     #[ORM\JoinColumn(name: 'idPortfolio', referencedColumnName: 'idPortfolio', nullable: false, onDelete: 'CASCADE')]
-    private ?Portfolio $portfolio = null;
+    private Portfolio $portfolio;
 
     public function __construct()
     {

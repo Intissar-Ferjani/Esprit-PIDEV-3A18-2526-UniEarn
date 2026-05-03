@@ -12,14 +12,20 @@ use Doctrine\ORM\EntityManagerInterface;
 class ApplicationRepositoryTest extends KernelTestCase
 {
     private ?EntityManagerInterface $entityManager = null;
-    private $repository = null;
+    private \App\Repository\candidature\ApplicationRepository $repository;
 
     protected function setUp(): void
     {
         $kernel = self::bootKernel();
-        $this->entityManager = $kernel->getContainer()
+        $manager = $kernel->getContainer()
             ->get('doctrine')
             ->getManager();
+        
+        if (!$manager instanceof EntityManagerInterface) {
+            throw new \RuntimeException('Expected EntityManagerInterface');
+        }
+        
+        $this->entityManager = $manager;
         $this->repository = $this->entityManager->getRepository(Application::class);
 
         // Purge existing applications to ensure isolation

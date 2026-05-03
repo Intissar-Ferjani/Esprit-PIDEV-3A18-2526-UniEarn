@@ -13,7 +13,6 @@ class Chat
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'idChat', type: 'integer')]
-    /** @phpstan-ignore property.unusedType */
     private ?int $idChat = null;
 
     #[ORM\Column(name: 'freelancer1_id', type: 'integer')]

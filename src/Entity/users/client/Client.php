@@ -14,7 +14,6 @@ class Client
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'idClient', type: 'integer')]
-    /** @phpstan-ignore property.unusedType */
     private ?int $idClient = null;
 
     #[ORM\Column(name: 'amount', type: 'float')]
@@ -32,7 +31,7 @@ class Client
         minMessage: 'Company name must be at least 2 characters.',
         maxMessage: 'Company name cannot exceed 100 characters.'
     )]
-    private ?string $company = null;
+    private string $company;
 
     #[Assert\Choice(
     choices: [
@@ -61,7 +60,7 @@ class Client
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: 'userID', referencedColumnName: 'idUser', nullable: false, onDelete: 'CASCADE')]
-    private ?User $user = null;
+    private User $user;
 
     // ── Getters & Setters ───────────────────────────────────────────────
 
@@ -84,10 +83,10 @@ class Client
 
     // ── Delegate User fields (mirrors Java's inherited getters) ─────────
 
-    public function getName(): ?string       { return $this->user?->getName(); }
-    public function getEmail(): ?string      { return $this->user?->getEmail(); }
-    public function getRole(): string        { return $this->user?->getRole() ?? 'CLIENT'; }
-    public function isActivated(): bool      { return $this->user?->isActivated() ?? true; }
-    public function getProfilePicturePath(): ?string { return $this->user?->getProfilePicturePath(); }
-    public function getIdUser(): ?int        { return $this->user?->getIdUser(); }
+    public function getName(): string       { return $this->user->getName(); }
+    public function getEmail(): string      { return $this->user->getEmail(); }
+    public function getRole(): string        { return $this->user->getRole(); }
+    public function isActivated(): bool      { return $this->user->isActivated(); }
+    public function getProfilePicturePath(): ?string { return $this->user->getProfilePicturePath(); }
+    public function getIdUser(): ?int        { return $this->user->getIdUser(); }
 }

@@ -17,7 +17,7 @@ class Admin
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: 'idUser', referencedColumnName: 'idUser', nullable: false, onDelete: 'CASCADE')]
-    private ?User $user = null;
+    private User $user;
 
     public function getIdAdmin(): ?int { return $this->idAdmin; }
 
@@ -25,7 +25,7 @@ class Admin
     public function setUser(User $user): static { $this->user = $user; return $this; }
 
     // Delegate user fields
-    public function getName(): ?string  { return $this->user?->getName(); }
-    public function getEmail(): ?string { return $this->user?->getEmail(); }
-    public function getIdUser(): ?int   { return $this->user?->getIdUser(); }
+    public function getName(): string  { return $this->user->getName(); }
+    public function getEmail(): string { return $this->user->getEmail(); }
+    public function getIdUser(): ?int   { return $this->user->getIdUser(); }
 }

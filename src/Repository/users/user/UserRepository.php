@@ -6,6 +6,8 @@ use App\Entity\users\user\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+use Doctrine\ORM\QueryBuilder;
+
 /** @extends ServiceEntityRepository<User> */
 class UserRepository extends ServiceEntityRepository
 {
@@ -19,7 +21,7 @@ class UserRepository extends ServiceEntityRepository
         return $this->findOneBy(['email' => strtolower(trim($email))]);
     }
 
-    public function getAdminSearchQueryBuilder(string $search, ?int $userId, string $role, string $status, string $sort)
+    public function getAdminSearchQueryBuilder(string $search, ?int $userId, string $role, string $status, string $sort): QueryBuilder
     {
         $qb = $this->createQueryBuilder('u')
             ->where('u.role != :admin')

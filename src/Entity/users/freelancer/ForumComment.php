@@ -16,10 +16,10 @@ class ForumComment
     private ?int $commentId = null;
 
     #[ORM\Column(name: 'post_id', type: 'integer')]
-    private ?int $postId = null;
+    private int $postId;
 
     #[ORM\Column(name: 'freelancer_id', type: 'integer')]
-    private ?int $freelancerId = null;
+    private int $freelancerId;
 
     #[ORM\Column(name: 'comment_text', type: 'text')]
     #[Assert\NotBlank(message: 'Your comment cannot be empty.')]
@@ -30,7 +30,7 @@ class ForumComment
     private ?string $gifUrl = null;
 
     #[ORM\Column(name: 'created_at', type: 'datetime')]
-    private ?\DateTimeInterface $createdAt = null;
+    private \DateTimeInterface $createdAt;
 
     public function __construct()
     {

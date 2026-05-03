@@ -7,6 +7,8 @@ use App\Entity\users\user\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+use Doctrine\ORM\QueryBuilder;
+
 /** @extends ServiceEntityRepository<Freelancer> */
 class FreelancerRepository extends ServiceEntityRepository
 {
@@ -31,7 +33,7 @@ class FreelancerRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
-    public function getSearchQueryBuilder(string $search, string $verification, string $minRating, string $sort)
+    public function getSearchQueryBuilder(string $search, string $verification, string $minRating, string $sort): QueryBuilder
     {
         $qb = $this->createQueryBuilder('f')
             ->join('f.user', 'u')

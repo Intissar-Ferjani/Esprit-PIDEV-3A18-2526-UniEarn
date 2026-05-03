@@ -12,9 +12,9 @@ use Doctrine\DBAL\Connection;
  * @extends ServiceEntityRepository<Application>
  *
  * @method Application|null find($id, $lockMode = null, $lockVersion = null)
- * @method Application|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Application|null findOneBy(array<string, mixed> $criteria, array<string, string> $orderBy = null)
  * @method Application[]    findAll()
- * @method Application[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method Application[]    findBy(array<string, mixed> $criteria, array<string, string> $orderBy = null, $limit = null, $offset = null)
  */
 class ApplicationRepository extends ServiceEntityRepository
 {
@@ -57,6 +57,9 @@ class ApplicationRepository extends ServiceEntityRepository
     /**
      * Finds applications matching search and sort criteria.
      * Complies with MVC standard: handles filtering/sorting in the persistence layer.
+     *
+     * @param int[]|null $projectIds
+     * @return Application[]
      */
     public function findBySearchAndSort(?\App\Entity\users\freelancer\Freelancer $freelancer, string $search, string $sortBy, ?array $projectIds = null): array
     {
@@ -103,6 +106,7 @@ class ApplicationRepository extends ServiceEntityRepository
      * by reading the project table directly via DBAL.
      *
      * @param int[] $projectIds
+     * @return array<int, array{userID: int, name: string, company: string}>
      */
     public function getClientInfoByProjectIds(array $projectIds): array
     {

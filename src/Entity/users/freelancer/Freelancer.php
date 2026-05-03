@@ -14,7 +14,6 @@ class Freelancer
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'idFreelancer', type: 'integer')]
-    /** @phpstan-ignore property.unusedType */
     private ?int $idFreelancer = null;
 
     #[ORM\Column(name: 'pricePerHour', type: 'float')]
@@ -68,7 +67,7 @@ class Freelancer
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: 'idUser', referencedColumnName: 'idUser', nullable: false, onDelete: 'CASCADE')]
-    private ?User $user = null;
+    private User $user;
 
     // ── Getters & Setters ───────────────────────────────────────────────
 
@@ -128,10 +127,10 @@ class Freelancer
 
     // ── Delegate User fields ────────────────────────────────────────────
 
-    public function getName(): ?string            { return $this->user?->getName(); }
-    public function getEmail(): ?string           { return $this->user?->getEmail(); }
-    public function getRole(): string             { return $this->user?->getRole() ?? 'FREELANCER'; }
-    public function isActivated(): bool           { return $this->user?->isActivated() ?? true; }
-    public function getProfilePicturePath(): ?string { return $this->user?->getProfilePicturePath(); }
-    public function getIdUser(): ?int             { return $this->user?->getIdUser(); }
+    public function getName(): string            { return $this->user->getName(); }
+    public function getEmail(): string           { return $this->user->getEmail(); }
+    public function getRole(): string             { return $this->user->getRole(); }
+    public function isActivated(): bool           { return $this->user->isActivated(); }
+    public function getProfilePicturePath(): ?string { return $this->user->getProfilePicturePath(); }
+    public function getIdUser(): ?int             { return $this->user->getIdUser(); }
 }

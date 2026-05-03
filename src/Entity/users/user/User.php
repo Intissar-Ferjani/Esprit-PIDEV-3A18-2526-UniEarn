@@ -13,7 +13,6 @@ class User
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'idUser', type: 'integer')]
-    /** @phpstan-ignore property.unusedType */
     private ?int $idUser = null;
 
     #[ORM\Column(name: 'name', type: 'string', length: 50)]
@@ -27,16 +26,16 @@ class User
         pattern: '/^[\p{L}\s\-]+$/u',
         message: 'Name can only contain letters, spaces, and hyphens.'
     )]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\Column(name: 'email', type: 'string', length: 50, unique: true)]
     #[Assert\NotBlank(message: 'Email is required.')]
     #[Assert\Email(message: 'Please enter a valid email address.')]
     #[Assert\Length(max: 50, maxMessage: 'Email cannot exceed 50 characters.')]
-    private ?string $email = null;
+    private string $email;
 
     #[ORM\Column(name: 'password', type: 'string', length: 255)]
-    private ?string $password = null;
+    private string $password;
     
     #[ORM\Column(name: 'profilePicturePath', type: 'string', length: 255, nullable: true)]
     private ?string $profilePicturePath = null;
