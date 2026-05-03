@@ -6,6 +6,7 @@ use App\Entity\contract\Contract;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/** @extends ServiceEntityRepository<Contract> */
 class ContractRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -13,6 +14,7 @@ class ContractRepository extends ServiceEntityRepository
         parent::__construct($registry, Contract::class);
     }
 
+    /** @return Contract[] */
     public function findByClientId(int $clientId, ?string $status = null): array
     {
         $qb = $this->createQueryBuilder('c')
@@ -26,6 +28,7 @@ class ContractRepository extends ServiceEntityRepository
         return $qb->orderBy('c.createdAt', 'DESC')->getQuery()->getResult();
     }
 
+    /** @return Contract[] */
     public function findByFreelancerId(int $freelancerId, ?string $status = null): array
     {
         $qb = $this->createQueryBuilder('c')
@@ -39,6 +42,7 @@ class ContractRepository extends ServiceEntityRepository
         return $qb->orderBy('c.createdAt', 'DESC')->getQuery()->getResult();
     }
 
+    /** @return Contract[] */
     public function findByStatus(string $status): array
     {
         return $this->createQueryBuilder('c')
@@ -49,6 +53,7 @@ class ContractRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /** @return Contract[] */
     public function findAllOrderedByDate(): array
     {
         return $this->createQueryBuilder('c')
@@ -60,6 +65,8 @@ class ContractRepository extends ServiceEntityRepository
     /**
      * Returns contracts for a client filtered by multiple statuses.
      * Used for the dedicated Payments page (to-pay + paid).
+     * @param string[] $statuses
+     * @return Contract[]
      */
     public function findByClientIdAndStatuses(int $clientId, array $statuses): array
     {
@@ -76,6 +83,8 @@ class ContractRepository extends ServiceEntityRepository
     /**
      * Returns contracts for a freelancer filtered by multiple statuses.
      * Used for the dedicated Payments page (blocked + received).
+     * @param string[] $statuses
+     * @return Contract[]
      */
     public function findByFreelancerIdAndStatuses(int $freelancerId, array $statuses): array
     {
