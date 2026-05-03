@@ -160,7 +160,7 @@ class BrowseFreelancersController extends AbstractController
             foreach (array_slice($freelancers, 0, 5) as $f) {
                 $simulated[] = [
                     'freelancer' => $f,
-                    'projectTitle' => !empty($activeProjects) ? reset($activeProjects)->getTitle() : 'General Match',
+                    'projectTitle' => reset($activeProjects)->getTitle(),
                     'role' => 'Full Stack Developer',
                     'reason' => "Simulated match based on strong general rating. (Add GEMINI_API_KEY to .env for real AI matching)"
                 ];

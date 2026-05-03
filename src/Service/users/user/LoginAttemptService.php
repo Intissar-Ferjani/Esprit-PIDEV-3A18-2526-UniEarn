@@ -18,6 +18,7 @@ class LoginAttemptService
         $this->cache = $cache;
     }
 
+    /** @phpstan-impure */
     public function recordFailure(string $email): array
     {
         $key = $this->getCacheKey($email);
@@ -44,6 +45,7 @@ class LoginAttemptService
         return $state;
     }
 
+    /** @phpstan-impure */
     public function isLocked(string $email): bool
     {
         $state = $this->getAttemptState($email);

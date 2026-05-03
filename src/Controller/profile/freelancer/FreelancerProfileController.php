@@ -313,7 +313,7 @@ class FreelancerProfileController extends AbstractController
             'freelancer'   => $freelancer,
             'user'         => $freelancer->getUser(),
             'portfolio'    => $portfolio,
-            'items'        => $portfolio ? $em->getRepository(PortfolioItem::class)->findByPortfolioId($portfolio->getIdPortfolio()) : [],
+            'items'        => $em->getRepository(PortfolioItem::class)->findByPortfolioId($portfolio->getIdPortfolio()),
             'addForm'      => $form->createView(),
             'editForm'     => $editForm->createView(),
             'openAddModal' => true,

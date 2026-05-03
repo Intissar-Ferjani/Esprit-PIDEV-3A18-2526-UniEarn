@@ -24,7 +24,7 @@ class GoogleController extends AbstractController
             ->getClient('google')
             ->redirect([
                 'openid', 'email', 'profile'
-            ]);
+            ], []);
     }
 
     /**

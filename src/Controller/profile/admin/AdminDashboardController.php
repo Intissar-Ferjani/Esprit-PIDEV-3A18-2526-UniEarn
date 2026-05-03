@@ -248,7 +248,7 @@ class AdminDashboardController extends AbstractController
 
         if ($status !== 'All') {
             $projects = array_filter($projects, static fn ($project): bool =>
-                ($project->getStatus()?->value ?? '') === $status
+                ($project->getStatus()->value ?? '') === $status
             );
         }
 

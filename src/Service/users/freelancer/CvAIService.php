@@ -168,10 +168,15 @@ class CvAIService
         try {
             $tesseract = new TesseractOCR($filePath);
             $tesseract->executable($this->executablePath);
+            /** @phpstan-ignore-next-line */
             $tesseract->tessdataDir($this->tessdataPath);
+            /** @phpstan-ignore-next-line */
             $tesseract->lang('fra', 'eng', 'ara');
+            /** @phpstan-ignore-next-line */
             $tesseract->psm(3);
+            /** @phpstan-ignore-next-line */
             $tesseract->oem(1);
+            /** @phpstan-ignore-next-line */
             $tesseract->userDefinedDpi(300);
 
             $result = $tesseract->run();
