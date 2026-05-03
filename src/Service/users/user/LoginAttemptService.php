@@ -21,6 +21,7 @@ class LoginAttemptService
     public function recordFailure(string $email): array
     {
         $key = $this->getCacheKey($email);
+        /** @var array{count: int, lockedUntil: ?int} $state */
         $state = $this->cache->get($key, function (ItemInterface $item) {
             $item->expiresAfter(3600); // 1 hour TTL for the tracking record
             return [

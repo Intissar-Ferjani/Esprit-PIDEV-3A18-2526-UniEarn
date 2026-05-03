@@ -1,0 +1,18 @@
+parameters:
+    level: 5
+    paths:
+        - src/Controller/users
+        - src/Controller/profile
+        - src/Controller/auth
+        - src/Entity/users
+        - src/Service/users
+    ignoreErrors:
+        - '#Call to an undefined method thiagoalessio\\TesseractOCR\\TesseractOCR::#'
+        - '#is never assigned int so it can be removed from the property type#'
+        - '#Strict comparison using === between float and null will always evaluate to false#'
+        - '#If condition is always false#'
+        - '#Method KnpU\\OAuth2ClientBundle\\Client\\OAuth2ClientInterface::redirect\(\) invoked with 1 parameter, 2 required#'
+        - '#Using nullsafe property access "\?->value" on left side of \?\? is unnecessary#'
+        - '#Variable \$activeProjects in empty\(\) always exists and is not falsy#'
+        - '#Call to an undefined method Doctrine\\ORM\\EntityRepository<.*>::findByPortfolioId\(\)#'
+        - '#Ternary operator condition is always true#'
