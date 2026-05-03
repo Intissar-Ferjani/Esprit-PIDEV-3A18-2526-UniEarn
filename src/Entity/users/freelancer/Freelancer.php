@@ -14,6 +14,7 @@ class Freelancer
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'idFreelancer', type: 'integer')]
+    /** @phpstan-ignore property.unusedType */
     private ?int $idFreelancer = null;
 
     #[ORM\Column(name: 'pricePerHour', type: 'float')]
@@ -73,13 +74,13 @@ class Freelancer
     public function getRating(): float { return $this->rating; }
     public function setRating(float $v): static { $this->rating = $v; return $this; }
 
-    /** Returns skills as an array */
+    /** @return array<int, string> */
     public function getSkillsArray(): array
     {
-        return $this->skills ? array_filter(array_map('trim', explode(',', $this->skills))) : [];
+        return $this->skills ? array_values(array_filter(array_map('trim', explode(',', $this->skills)))) : [];
     }
 
-    /** Accepts an array and stores as comma-separated string */
+    /** @param array<int, string> $skills */
     public function setSkillsArray(array $skills): static
     {
         $this->skills = implode(',', $skills);

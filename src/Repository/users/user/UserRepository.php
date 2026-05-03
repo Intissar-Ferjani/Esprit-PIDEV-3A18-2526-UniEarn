@@ -6,6 +6,7 @@ use App\Entity\users\user\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/** @extends ServiceEntityRepository<User> */
 class UserRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -18,7 +19,7 @@ class UserRepository extends ServiceEntityRepository
         return $this->findOneBy(['email' => strtolower(trim($email))]);
     }
 
-    /** Returns all non-admin users */
+    /** @return User[] */
     public function findAllUsers(): array
     {
         return $this->createQueryBuilder('u')
@@ -29,7 +30,7 @@ class UserRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    /** Returns only active non-admin users */
+    /** @return User[] */
     public function findAllActiveUsers(): array
     {
         return $this->createQueryBuilder('u')

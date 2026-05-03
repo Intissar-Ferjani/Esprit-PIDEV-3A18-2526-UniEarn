@@ -13,6 +13,7 @@ class Portfolio
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'idPortfolio', type: 'integer')]
+    /** @phpstan-ignore property.unusedType */
     private ?int $idPortfolio = null;
 
     #[ORM\Column(name: 'title', type: 'string', length: 255)]

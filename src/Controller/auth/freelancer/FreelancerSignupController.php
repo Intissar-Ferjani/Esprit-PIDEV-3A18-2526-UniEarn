@@ -3,6 +3,7 @@
 namespace App\Controller\auth\freelancer;
 
 use App\Entity\users\freelancer\Freelancer;
+use App\Entity\users\user\User;
 use App\Entity\users\freelancer\Portfolio;
 use App\Entity\users\freelancer\PortfolioItem;
 use App\Form\users\freelancer\FreelancerProfileFormType;
@@ -215,7 +216,7 @@ class FreelancerSignupController extends AbstractController
 
     // ── Helper ─────────────────────────────────────────────────────────
 
-    private function finalizeLogin(Request $request, $user): void
+    private function finalizeLogin(Request $request, User $user): void
     {
         $session = $request->getSession();
         $session->remove('pending_user_id');
