@@ -211,18 +211,31 @@ class ClientContractController extends AbstractController
 
         try {
             $isGoogle = str_starts_with($apiKey, 'AIza'); // Google API Keys start with AIza
+
+            // Build a rich prompt with ALL contract metadata so the AI always has data
+            $contractText = "Titre du contrat : " . ($contract->getTitle() ?? 'Non spécifié') . "\n";
+            $contractText .= "Montant : $" . ($contract->getAmount() ?? '0') . "\n";
+            $contractText .= "Date de début : " . ($contract->getStartDate() ? $contract->getStartDate()->format('d/m/Y') : 'Non spécifiée') . "\n";
+            $contractText .= "Date de fin : " . ($contract->getEndDate() ? $contract->getEndDate()->format('d/m/Y') : 'Non spécifiée') . "\n";
+            $contractText .= "Freelancer : " . ($contract->getFreelancer() ? $contract->getFreelancer()->getName() : 'Non spécifié') . "\n";
+            $contractText .= "Statut : " . $contract->getStatus() . "\n";
+            if ($contract->getContent()) {
+                $contractText .= "\nContenu du contrat :\n" . $contract->getContent();
+            }
+
+            $prompt = "Agissez comme un avocat expert conseil d'un client. Résumez ce contrat en français en 3 puces courtes et claires. Structurez votre réponse ainsi :\n1. Aspect financier (montant, modalités)\n2. Calendrier et délais (dates, durée)\n3. Points de vigilance critiques\n\nVoici les informations du contrat :\n\n" . $contractText;
             
             if ($isGoogle) {
                 // Gemini API
                 $baseUrl = $_ENV['GEMINI_BASE_URL'] ?? $_SERVER['GEMINI_BASE_URL'] ?? 'https://generativelanguage.googleapis.com/v1beta';
-                $model = $_ENV['GEMINI_MODEL'] ?? $_SERVER['GEMINI_MODEL'] ?? 'gemini-flash-latest';
+                $model = $_ENV['GEMINI_MODEL'] ?? $_SERVER['GEMINI_MODEL'] ?? 'gemini-2.0-flash';
                 
                 $url = rtrim($baseUrl, '/') . '/models/' . rawurlencode($model) . ':generateContent?key=' . urlencode($apiKey);
 
                 $response = $clientHttp->request('POST', $url, [
                     'json' => [
                         'contents' => [
-                            ['role' => 'user', 'parts' => [['text' => "Agissez comme un avocat expert conseil d'un client. Résumez ce contrat en français en 3 puces courtes et claires. Mettez en évidence le budget, les délais, et les points de vigilance : \n\n" . $contract->getContent()]]]
+                            ['role' => 'user', 'parts' => [['text' => $prompt]]]
                         ]
                     ]
                 ]);
@@ -236,7 +249,7 @@ class ClientContractController extends AbstractController
                         'model' => 'gpt-4o-mini',
                         'messages' => [
                             ['role' => 'system', 'content' => "Tu es un assistant IA qui aide les clients à lire les contrats."],
-                            ['role' => 'user', 'content' => "Résume ce contrat en 3 puces, focalise-toi sur le budget et le temps : " . $contract->getContent()]
+                            ['role' => 'user', 'content' => $prompt]
                         ]
                     ]
                 ]);
@@ -244,10 +257,10 @@ class ClientContractController extends AbstractController
                 $aiText = $data['choices'][0]['message']['content'] ?? "Impossible de générer le résumé.";
             }
 
-            // Simple markdown-to-html for basic bolding
-            $aiHtml = nl2br(preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', htmlspecialchars($aiText)));
-            // Simple string replace for common markdown bullets
+            // Convert markdown to HTML: bold, bullets, newlines
+            $aiHtml = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $aiText);
             $aiHtml = str_replace('* ', '• ', $aiHtml);
+            $aiHtml = nl2br($aiHtml);
 
             return new \Symfony\Component\HttpFoundation\JsonResponse(['summary' => $aiHtml]);
         } catch (\Exception $e) {

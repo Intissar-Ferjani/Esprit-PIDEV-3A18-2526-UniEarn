@@ -26,7 +26,7 @@ class ApplicationController extends AbstractController
 {
     #[Route('/', name: 'app_application_index', methods: ['GET'])]
     public function index(
-        Request $request, 
+        Request $request,
         ApplicationRepository $applicationRepository,
         FreelancerRepository $freelancerRepo,
         ClientRepository $clientRepo,
@@ -34,11 +34,12 @@ class ApplicationController extends AbstractController
         PaginatorInterface $paginator
     ): Response {
         $userId = $request->getSession()->get('user_id');
-        if (!$userId) return $this->redirectToRoute('user_login');
+        if (!$userId)
+            return $this->redirectToRoute('user_login');
 
         $freelancer = $freelancerRepo->findByUserId($userId);
         $client = $clientRepo->findByUserId($userId);
-        
+
         $search = $request->query->get('search', '');
         $sortBy = $request->query->get('sort', 'date');
 
@@ -88,25 +89,26 @@ class ApplicationController extends AbstractController
         return $this->render('candidature/application/index.html.twig', [
             'applicationsPending' => $paginationPending,
             'applicationsTreated' => $paginationTreated,
-            'clientByProject'     => $clientByProject,
-            'projectTitles'       => $projectTitles,
+            'clientByProject' => $clientByProject,
+            'projectTitles' => $projectTitles,
             'freelancer' => $freelancer ?? null,
-            'client'     => $client ?? null,
-            'user'       => $freelancer ? $freelancer->getUser() : ($client ? $client->getUser() : null),
-            'active'     => 'applications',
+            'client' => $client ?? null,
+            'user' => $freelancer ? $freelancer->getUser() : ($client ? $client->getUser() : null),
+            'active' => 'applications',
         ]);
     }
 
     #[Route('/new', name: 'app_application_new', methods: ['GET', 'POST'])]
     public function new(
-        Request $request, 
-        EntityManagerInterface $entityManager, 
+        Request $request,
+        EntityManagerInterface $entityManager,
         FreelancerRepository $freelancerRepository,
         ApplicationRepository $applicationRepo,
         AiAnalysisService $aiService
     ): Response {
         $userId = $request->getSession()->get('user_id');
-        if (!$userId) return $this->redirectToRoute('user_login');
+        if (!$userId)
+            return $this->redirectToRoute('user_login');
 
         $freelancer = $freelancerRepository->findByUserId($userId);
         if (!$freelancer) {
@@ -121,7 +123,7 @@ class ApplicationController extends AbstractController
         if ($projectId > 0) {
             $application->setProjectId($projectId);
         }
-        
+
         $form = $this->createForm(ApplicationType::class, $application);
         $form->handleRequest($request);
 
@@ -190,7 +192,8 @@ class ApplicationController extends AbstractController
         CurrencyService $currencyService
     ): Response {
         $userId = $request->getSession()->get('user_id');
-        if (!$userId) return $this->redirectToRoute('user_login');
+        if (!$userId)
+            return $this->redirectToRoute('user_login');
 
         $freelancer = $freelancerRepo->findByUserId($userId);
         $client = $clientRepo->findByUserId($userId);
@@ -225,9 +228,9 @@ class ApplicationController extends AbstractController
         EntityManagerInterface $entityManager,
         ApplicationRepository $appRepo
     ): Response {
-        if ($this->isCsrfTokenValid('accept'.$application->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('accept' . $application->getId(), $request->request->get('_token'))) {
             $application->setStatus(\App\Enum\ApplicationStatus::ACCEPTED);
-            
+
             // Reject other applications for the same project
             $others = $appRepo->findBy(['projectId' => $application->getProjectId()]);
             foreach ($others as $other) {
@@ -235,7 +238,7 @@ class ApplicationController extends AbstractController
                     $other->setStatus(\App\Enum\ApplicationStatus::REJECTED);
                 }
             }
-            
+
             $entityManager->flush();
             $this->addFlash('success', 'Application accepted successfully.');
         }
@@ -249,7 +252,7 @@ class ApplicationController extends AbstractController
         Application $application,
         EntityManagerInterface $entityManager
     ): Response {
-        if ($this->isCsrfTokenValid('reject'.$application->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('reject' . $application->getId(), $request->request->get('_token'))) {
             $application->setStatus(\App\Enum\ApplicationStatus::REJECTED);
             $entityManager->flush();
             $this->addFlash('success', 'Application rejected.');
@@ -264,7 +267,7 @@ class ApplicationController extends AbstractController
         Application $application,
         EntityManagerInterface $entityManager
     ): Response {
-        if ($this->isCsrfTokenValid('delete'.$application->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $application->getId(), $request->request->get('_token'))) {
             $entityManager->remove($application);
             $entityManager->flush();
             $this->addFlash('success', 'Application deleted successfully.');
