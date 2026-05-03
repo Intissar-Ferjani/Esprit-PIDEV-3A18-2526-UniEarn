@@ -142,6 +142,27 @@
             cursor:pointer; transition: background .2s;
         }
         .modal-close:hover { background:#e2e8f0; }
+
+        /* ── Tabs ────────────────────────────────────────────────── */
+        .tabs-container {
+            display: flex; gap: 10px; margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;
+        }
+        .tab-btn {
+            background: none; border: none; padding: 10px 20px;
+            font-size: 15px; font-weight: 700; color: #64748b;
+            cursor: pointer; border-radius: 8px; transition: all 0.2s;
+        }
+        .tab-btn:hover { background: #f1f5f9; color: #1e293b; }
+        .tab-btn.active {
+            background: #e0e7ff; color: #2563EB;
+        }
+
+        .ai-reason-box {
+            background: #fdf4ff; border: 1px solid #fbcfe8;
+            border-radius: 8px; padding: 12px; margin-top: 10px;
+            font-size: 13px; color: #86198f;
+        }
     </style>
 </head>
 <script>
@@ -219,6 +240,64 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+function switchTab(tabId) {
+    const allTab = document.getElementById('tab-all');
+    const recommendedTab = document.getElementById('tab-recommended');
+    const filterBar = document.getElementById('filter-bar-container');
+    const allResults = document.getElementById('freelancer-results');
+    const recommendedWrapper = document.getElementById('recommended-wrapper');
+    const recommendedResults = document.getElementById('recommended-results-container');
+
+    if (tabId === 'all') {
+        allTab.classList.add('active');
+        recommendedTab.classList.remove('active');
+        filterBar.style.display = 'flex';
+        allResults.style.display = 'block';
+        recommendedWrapper.style.display = 'none';
+    } else if (tabId === 'recommended') {
+        allTab.classList.remove('active');
+        recommendedTab.classList.add('active');
+        filterBar.style.display = 'none';
+        allResults.style.display = 'none';
+        recommendedWrapper.style.display = 'block';
+
+        // Load AI Recommendations if not already loaded
+        if (recommendedResults.innerHTML.trim() === '') {
+            loadAIRecommendations();
+        }
+    }
+}
+
+let aiFilterTimer;
+
+function loadAIRecommendations(event = null) {
+    if (event) event.preventDefault();
+    
+    clearTimeout(aiFilterTimer);
+    aiFilterTimer = setTimeout(() => {
+        const recommendedResults = document.getElementById('recommended-results-container');
+        const aiForm = document.getElementById('ai-filter-bar');
+        let url = '/client/freelancers/recommended';
+        
+        if (aiForm) {
+            const formData = new FormData(aiForm);
+            const params = new URLSearchParams(formData);
+            url += '?' + params.toString();
+        }
+
+        recommendedResults.innerHTML = '<div style="text-align:center; padding:40px; color:#64748b;"><i class="fa fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">Analyzing projects and finding the best matches using AI...</p></div>';
+        
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                recommendedResults.innerHTML = html;
+            })
+            .catch(err => {
+                recommendedResults.innerHTML = '<div class="flash flash-error">Failed to load AI recommendations.</div>';
+            });
+    }, 500); // 500ms debounce
+}
 </script>
 <body class="dashboard-body">
 <div class="dashboard-layout">
@@ -241,8 +320,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 {% endfor %}
             {% endfor %}
 
+            {# ── Tabs ── #}
+            <div class="tabs-container">
+                <button id="tab-all" class="tab-btn active" onclick="switchTab('all')">All Freelancers</button>
+                <button id="tab-recommended" class="tab-btn" onclick="switchTab('recommended')">✨ AI Recommended</button>
+            </div>
+
             {# ── Filter bar ── #}
-            <form method="get" action="{{ path('client_browse_freelancers') }}" class="filter-bar">
+            <form id="filter-bar-container" method="get" action="{{ path('client_browse_freelancers') }}" class="filter-bar">
                 <div class="filter-group" style="flex:1;min-width:200px;">
                     <label>Search</label>
                     <input type="text" name="search" value="{{ search }}"
@@ -293,6 +378,41 @@ document.addEventListener('DOMContentLoaded', function() {
             {# ── Results Wrapper for AJAX ── #}
             <div id="freelancer-results" style="transition: opacity 0.2s ease;">
                 {% include 'frontOffice/client/profile/_freelancer_results.html.twig' %}
+            </div>
+
+            {# ── AI Recommended Wrapper ── #}
+            <div id="recommended-wrapper" style="display: none; transition: opacity 0.2s ease;">
+                <form id="ai-filter-bar" class="filter-bar" onsubmit="loadAIRecommendations(event)">
+                    <div class="filter-group" style="flex:1;min-width:200px;">
+                        <label>Target Project</label>
+                        <select name="projectId" onchange="loadAIRecommendations()">
+                            <option value="All">All Active Projects</option>
+                            {% for p in activeProjects %}
+                                <option value="{{ p.idProject }}">{{ p.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Min Rating</label>
+                        <select name="minRating" onchange="loadAIRecommendations()">
+                            <option value="Any">Any</option>
+                            <option value="4.0+">4.0+</option>
+                            <option value="4.5+">4.5+</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Max Price/hr</label>
+                        <select name="maxPrice" onchange="loadAIRecommendations()">
+                            <option value="Any">Any</option>
+                            <option value="50">Under 50 TND</option>
+                            <option value="100">Under 100 TND</option>
+                        </select>
+                    </div>
+                </form>
+
+                <div id="recommended-results-container">
+                    {# Injected via JS #}
+                </div>
             </div>
 
         </div>
