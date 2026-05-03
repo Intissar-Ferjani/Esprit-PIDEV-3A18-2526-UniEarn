@@ -75,7 +75,7 @@ class PaymentController extends AbstractController
             $cancelUrl = $this->generateUrl('client_contract_show', ['id' => $id], UrlGeneratorInterface::ABSOLUTE_URL);
 
             try {
-                $session = \Stripe\Checkout\Session::create([ // @phpstan-ignore class.notFound
+                $session = \Stripe\Checkout\Session::create([
                     'payment_method_types' => ['card'],
                     'line_items' => [[
                         'price_data' => [
