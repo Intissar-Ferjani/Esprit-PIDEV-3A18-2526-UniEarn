@@ -66,7 +66,8 @@ class MessagingController extends AbstractController
         }
 
         // Sort: unread first, then by last message date
-        usort($freelancers, function ($a, $b) {
+        /** @var array<int, array{freelancer: \App\Entity\users\freelancer\Freelancer, user: \App\Entity\users\user\User, online: bool, unread: int, lastMsg: Message|null, chatId: int|null}> $freelancers */
+        usort($freelancers, function (array $a, array $b): int {
             if ($a['unread'] !== $b['unread']) return $b['unread'] <=> $a['unread'];
             $aTime = $a['lastMsg'] ? $a['lastMsg']->getSentDate()->getTimestamp() : 0;
             $bTime = $b['lastMsg'] ? $b['lastMsg']->getSentDate()->getTimestamp() : 0;
@@ -141,7 +142,8 @@ class MessagingController extends AbstractController
                 'chatId'     => $c?->getIdChat(),
             ];
         }
-        usort($freelancers, function ($a, $b) {
+        /** @var array<int, array{freelancer: \App\Entity\users\freelancer\Freelancer, user: \App\Entity\users\user\User, online: bool, unread: int, lastMsg: Message|null, chatId: int|null}> $freelancers */
+        usort($freelancers, function (array $a, array $b): int {
             if ($a['unread'] !== $b['unread']) return $b['unread'] <=> $a['unread'];
             $aTime = $a['lastMsg'] ? $a['lastMsg']->getSentDate()->getTimestamp() : 0;
             $bTime = $b['lastMsg'] ? $b['lastMsg']->getSentDate()->getTimestamp() : 0;

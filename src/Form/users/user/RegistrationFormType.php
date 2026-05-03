@@ -19,6 +19,7 @@ use Symfony\Component\Validator\Constraints\Regex;
 use App\Form\Type\RoleCardType;
 
 
+/** @extends AbstractType<User> */
 class RegistrationFormType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void

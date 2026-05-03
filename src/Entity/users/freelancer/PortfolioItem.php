@@ -13,6 +13,7 @@ class PortfolioItem
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'idItem', type: 'integer')]
+    /** @phpstan-ignore property.unusedType */
     private ?int $idItem = null;
 
     #[ORM\Column(name: 'title', type: 'string', length: 255, nullable: true)]
@@ -72,7 +73,7 @@ class PortfolioItem
     public function getDescription(): ?string { return $this->description; }
     public function setDescription(?string $v): static { $this->description = $v; return $this; }
 
-    /** Returns technologies as array */
+    /** @return array<int, string> */
     public function getTechnologiesArray(): array
     {
         if (!$this->technologies) return [];

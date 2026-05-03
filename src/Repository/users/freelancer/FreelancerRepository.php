@@ -7,6 +7,7 @@ use App\Entity\users\user\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/** @extends ServiceEntityRepository<Freelancer> */
 class FreelancerRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -62,5 +63,11 @@ class FreelancerRepository extends ServiceEntityRepository
         }
 
         return $qb;
+    }
+
+    /** @return Freelancer[] */
+    public function findAllWithUser(): array
+    {
+        return $this->getSearchQueryBuilder('', 'All', 'Any', '')->getQuery()->getResult();
     }
 }

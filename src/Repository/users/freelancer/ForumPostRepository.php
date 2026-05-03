@@ -6,6 +6,7 @@ use App\Entity\users\freelancer\ForumPost;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/** @extends ServiceEntityRepository<ForumPost> */
 class ForumPostRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -13,6 +14,7 @@ class ForumPostRepository extends ServiceEntityRepository
         parent::__construct($registry, ForumPost::class);
     }
 
+    /** @return ForumPost[] */
     public function findAllOrderedByDate(): array
     {
         return $this->createQueryBuilder('p')
@@ -36,14 +38,13 @@ class ForumPostRepository extends ServiceEntityRepository
             ->orderBy('p.createdAt', 'DESC');
     }
 
+    /** @return ForumPost[] */
     public function findByCategory(string $category): array
     {
         return $this->queryByCategory($category)->getQuery()->getResult();
     }
 
-    /**
-     * Search posts by title or content
-     */
+    /** @return ForumPost[] */
     public function searchByContent(string $query): array
     {
         return $this->createQueryBuilder('p')

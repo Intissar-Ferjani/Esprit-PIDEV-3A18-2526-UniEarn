@@ -58,9 +58,7 @@ class ClientSignupController extends AbstractController
             // Link the User object — this is the equivalent of client.setIdUser(userId) in Java
             $client->setUser($user);
             $client->setRating(0.0);
-            if ($client->getAmount() === null) {
-                $client->setAmount(0.0);
-            }
+            $client->setAmount(0.0);
 
             $em->persist($client);
             $em->flush();

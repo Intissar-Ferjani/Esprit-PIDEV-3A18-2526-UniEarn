@@ -14,6 +14,7 @@ class Client
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'idClient', type: 'integer')]
+    /** @phpstan-ignore property.unusedType */
     private ?int $idClient = null;
 
     #[ORM\Column(name: 'amount', type: 'float')]

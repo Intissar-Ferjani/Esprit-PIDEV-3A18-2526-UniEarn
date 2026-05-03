@@ -7,6 +7,7 @@ use App\Entity\users\user\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/** @extends ServiceEntityRepository<Client> */
 class ClientRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -48,7 +49,7 @@ class ClientRepository extends ServiceEntityRepository
         return (int) $qb->getQuery()->getSingleScalarResult() > 0;
     }
 
-    /** Returns all clients with their user data eagerly loaded */
+    /** @return Client[] */
     public function findAllWithUser(): array
     {
         return $this->createQueryBuilder('c')

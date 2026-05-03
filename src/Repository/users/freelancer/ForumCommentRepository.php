@@ -6,6 +6,7 @@ use App\Entity\users\freelancer\ForumComment;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/** @extends ServiceEntityRepository<ForumComment> */
 class ForumCommentRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -13,6 +14,7 @@ class ForumCommentRepository extends ServiceEntityRepository
         parent::__construct($registry, ForumComment::class);
     }
 
+    /** @return ForumComment[] */
     public function findByPostId(int $postId): array
     {
         return $this->createQueryBuilder('c')

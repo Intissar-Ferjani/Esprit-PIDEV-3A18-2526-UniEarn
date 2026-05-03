@@ -13,6 +13,7 @@ class User
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'idUser', type: 'integer')]
+    /** @phpstan-ignore property.unusedType */
     private ?int $idUser = null;
 
     #[ORM\Column(name: 'name', type: 'string', length: 50)]

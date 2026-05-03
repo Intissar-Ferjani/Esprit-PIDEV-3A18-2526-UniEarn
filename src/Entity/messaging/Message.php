@@ -12,6 +12,7 @@ class Message
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'idMessage', type: 'integer')]
+    /** @phpstan-ignore property.unusedType */
     private ?int $idMessage = null;
 
     #[ORM\Column(name: 'content', type: 'string', length: 255)]

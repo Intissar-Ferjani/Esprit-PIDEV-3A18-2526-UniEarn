@@ -75,6 +75,7 @@ class FreelancerForumController extends AbstractController
         return 'I am in fallback mode now. Ask me about client communication, pricing, project planning, forum posts, or portfolio optimization.';
     }
 
+    /** @param array<string, mixed> $data */
     private function extractApiErrorMessage(array $data): string
     {
         $candidates = [

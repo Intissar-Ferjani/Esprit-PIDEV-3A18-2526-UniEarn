@@ -6,6 +6,7 @@ use App\Entity\users\freelancer\PortfolioItem;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/** @extends ServiceEntityRepository<PortfolioItem> */
 class PortfolioItemRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -13,6 +14,7 @@ class PortfolioItemRepository extends ServiceEntityRepository
         parent::__construct($registry, PortfolioItem::class);
     }
 
+    /** @return PortfolioItem[] */
     public function findByPortfolioId(int $portfolioId): array
     {
         return $this->createQueryBuilder('pi')
