@@ -1,0 +1,74 @@
+{% if error %}
+    <div class="empty-state">
+        <span class="empty-icon">🤖</span>
+        <p class="empty-text">AI Recommendations Unavailable</p>
+        <p class="empty-subtext">{{ error }}</p>
+    </div>
+{% elseif recommendations is empty %}
+    <div class="empty-state">
+        <span class="empty-icon">🤖</span>
+        <p class="empty-text">No Recommendations Found</p>
+        <p class="empty-subtext">The AI could not find strong matches for your current projects among available freelancers.</p>
+    </div>
+{% else %}
+    <p style="color:#64748b;font-size:13px;margin-bottom:16px;">
+        ✨ Based on your active projects, here are the top {{ recommendations|length }} freelancers matched by AI:
+    </p>
+
+    {% for item in recommendations %}
+        {% set f = item.freelancer %}
+        <div class="freelancer-card" style="flex-direction: column; align-items: stretch; gap: 0;">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                {# Avatar #}
+                {% if f.profilePicturePath %}
+                    <img src="{{ asset(f.profilePicturePath) }}" class="f-avatar" alt="{{ f.name }}">
+                {% else %}
+                    <img src="{{ asset('images/default-avatar.jpg') }}" class="f-avatar" alt="{{ f.name }}">
+                {% endif %}
+
+                {# Info #}
+                <div class="f-info">
+                    <div class="f-name-row">
+                        <span class="f-name">{{ f.name }}</span>
+                        {% if f.verificationStatus == 'verified' %}
+                            <span class="verified-badge">✓ Verified</span>
+                        {% else %}
+                            <span class="unverified-badge">⏳ Unverified</span>
+                        {% endif %}
+                        <span class="role-badge" style="background: #ede9fe; color: #6d28d9; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-left: auto; border: 1px solid #ddd6fe;">
+                            🎯 {{ item.role }}
+                        </span>
+                    </div>
+                    <div class="f-email">📧 {{ f.email }}</div>
+                    <div class="f-stats">
+                        <span class="f-stat f-stat-rating">⭐ {{ f.rating }}</span>
+                        <span class="f-stat f-stat-price">💰 {{ f.pricePerHour }} TND/hr</span>
+                    </div>
+                    {% set skills = f.skillsArray %}
+                    {% if skills is not empty %}
+                    <div class="f-skills">
+                        {% for skill in skills|slice(0, 3) %}
+                            <span class="f-skill">{{ skill }}</span>
+                        {% endfor %}
+                        {% if skills|length > 3 %}
+                            <span class="f-skill-more">+{{ skills|length - 3 }} more</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <a href="{{ path('client_view_freelancer', {id: f.idFreelancer}) }}"
+                class="btn-view-profile" style="text-decoration: none;">
+                    View Profile
+                </a>
+            </div>
+            
+            <div class="ai-reason-box">
+                <div style="margin-bottom: 6px; font-weight: 600; color: #4c1d95;">
+                    🎯 Matched for Project: {{ item.projectTitle }}
+                </div>
+                <strong>✨ AI Match Reason:</strong> {{ item.reason }}
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
