@@ -7,7 +7,6 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 class CurrencyService
 {
     private $httpClient;
-    private const BASE_URL = 'https://open.er-api.get/v6/latest/TND'; // Fixed URL or proxy if needed
     // Using a reliable public API: exchangerate-api.com
     private const PUBLIC_API = 'https://open.er-api.com/v6/latest/TND';
 

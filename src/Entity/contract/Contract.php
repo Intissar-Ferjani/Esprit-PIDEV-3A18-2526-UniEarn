@@ -21,37 +21,37 @@ class Contract
 
     #[ORM\ManyToOne(targetEntity: ContractTemplate::class)]
     #[ORM\JoinColumn(name: 'idContractTemplate', referencedColumnName: 'idContractTemplate', nullable: false)]
-    private ?ContractTemplate $template = null; // @phpstan-ignore doctrine.associationType
+    private ?ContractTemplate $template = null;
 
     #[ORM\ManyToOne(targetEntity: Client::class)]
     #[ORM\JoinColumn(name: 'idClient', referencedColumnName: 'idClient', nullable: false)]
-    private ?Client $client = null; // @phpstan-ignore doctrine.associationType
+    private ?Client $client = null;
 
     #[ORM\ManyToOne(targetEntity: Freelancer::class)]
     #[ORM\JoinColumn(name: 'idFreelancer', referencedColumnName: 'idFreelancer', nullable: false)]
-    private ?Freelancer $freelancer = null; // @phpstan-ignore doctrine.associationType
+    private ?Freelancer $freelancer = null;
 
     #[ORM\Column(name: 'title', type: 'string', length: 255)]
     #[Assert\NotBlank(message: 'Title is required.')]
     #[Assert\Length(min: 3, max: 255)]
-    private ?string $title = null; // @phpstan-ignore doctrine.columnType
+    private ?string $title = null;
 
     #[ORM\Column(name: 'content', type: 'text')]
     #[Assert\NotBlank(message: 'Content is required.')]
-    private ?string $content = null; // @phpstan-ignore doctrine.columnType
+    private ?string $content = null;
 
     #[ORM\Column(name: 'amount', type: 'decimal', precision: 10, scale: 2)]
     #[Assert\NotBlank(message: 'Amount is required.')]
     #[Assert\Positive(message: 'Amount must be positive.')]
-    private ?string $amount = null; // @phpstan-ignore doctrine.columnType
+    private ?string $amount = null;
 
     #[ORM\Column(name: 'startDate', type: 'date')]
     #[Assert\NotBlank(message: 'Start date is required.')]
-    private ?\DateTimeInterface $startDate = null; // @phpstan-ignore doctrine.columnType
+    private ?\DateTimeInterface $startDate = null;
 
     #[ORM\Column(name: 'endDate', type: 'date')]
     #[Assert\NotBlank(message: 'End date is required.')]
-    private ?\DateTimeInterface $endDate = null; // @phpstan-ignore doctrine.columnType
+    private ?\DateTimeInterface $endDate = null;
 
     #[ORM\Column(name: 'status', type: 'string', length: 20)]
     private string $status = 'pending';

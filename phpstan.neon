@@ -1,10 +1,10 @@
 parameters:
     level: 5
     paths:
-        - src/Controller/users
-        - src/Controller/profile
-        - src/Controller/auth
-        - src/Entity/users
-        - src/Service/users
+        - src/Controller/
+        - src/Entity/
+        - src/Service/
+        - src/
     ignoreErrors:
         - '#is never assigned int so it can be removed from the property type#'
+        - '#PHPDoc tag @extends contains generic type Symfony\\Component\\Form\\AbstractType.*but class Symfony\\Component\\Form\\AbstractType is not generic\.#'

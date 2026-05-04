@@ -18,7 +18,7 @@ class ContractTemplate
     #[ORM\Column(name: 'title', type: 'string', length: 255)]
     #[Assert\NotBlank(message: 'Title is required.')]
     #[Assert\Length(min: 3, max: 255)]
-    private ?string $title = null; // @phpstan-ignore doctrine.columnType
+    private ?string $title = null;
 
     #[ORM\Column(name: 'description', type: 'text', nullable: true)]
     #[Assert\Length(max: 1000, maxMessage: 'Description cannot exceed 1000 characters.')]
@@ -27,12 +27,12 @@ class ContractTemplate
     #[ORM\Column(name: 'content', type: 'text')]
     #[Assert\NotBlank(message: 'Content is required.')]
     #[Assert\Length(min: 10, minMessage: 'Content must be at least 10 characters.')]
-    private ?string $content = null; // @phpstan-ignore doctrine.columnType
+    private ?string $content = null;
 
     #[ORM\Column(name: 'contractType', type: 'string', length: 50)]
     #[Assert\NotBlank(message: 'Contract type is required.')]
     #[Assert\Choice(choices: ['fixed_price', 'hourly', 'milestone', 'retainer'], message: 'Invalid contract type.')]
-    private ?string $contractType = null; // @phpstan-ignore doctrine.columnType
+    private ?string $contractType = null;
 
     #[ORM\Column(name: 'createdAt', type: 'datetime')]
     private \DateTimeInterface $createdAt;

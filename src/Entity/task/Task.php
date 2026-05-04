@@ -35,7 +35,7 @@ class Task
 
     #[ORM\Column(name: 'TaskStatus', type: 'string', length: 50, enumType: TaskStatus::class)]
     #[Assert\NotBlank(message: 'Status is required.')]
-    private ?TaskStatus $taskStatus = TaskStatus::TODO;
+    private TaskStatus $taskStatus = TaskStatus::TODO;
 
     #[ORM\Column(name: 'dateAssign', type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $dateAssign = null;
@@ -47,7 +47,7 @@ class Task
     #[ORM\Column(name: 'priority', type: 'string', length: 50)]
     #[Assert\NotBlank(message: 'Priority is required.')]
     #[Assert\Choice(choices: ['High', 'Medium', 'Low'], message: 'Choose a valid priority: High, Medium, or Low.')]
-    private ?string $priority = 'Medium';
+    private string $priority = 'Medium';
 
     #[ORM\Column(name: 'submission_link', type: 'string', length: 255, nullable: true)]
     private ?string $submissionLink = null;
@@ -106,7 +106,7 @@ class Task
         return $this;
     }
 
-    public function getTaskStatus(): ?TaskStatus
+    public function getTaskStatus(): TaskStatus
     {
         return $this->taskStatus;
     }
@@ -139,7 +139,7 @@ class Task
         return $this;
     }
 
-    public function getPriority(): ?string
+    public function getPriority(): string
     {
         return $this->priority;
     }
