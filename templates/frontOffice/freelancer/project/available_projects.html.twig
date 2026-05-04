@@ -3,55 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Available Projects</title>
+    <title>Available Projects | UniEarn</title>
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        .content-wrap { padding: 24px; }
-        .toolbar { display:flex; gap:12px; align-items:center; margin-bottom:20px; }
-        .search { flex:1; padding:10px; border:1px solid #d1d5db; border-radius:8px; }
-        .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px; }
-        .card { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:14px; }
-        .title { font-weight:700; margin-bottom:8px; }
-        .desc { color:#475569; font-size:13px; min-height:60px; }
-        .meta { margin-top:8px; font-size:13px; color:#0f172a; }
-        .actions { margin-top:12px; }
-        .btn { display:inline-block; padding:8px 12px; border-radius:8px; text-decoration:none; }
-        .btn-apply { background:#2563eb; color:#fff; }
-        .btn-disabled { background:#94a3b8; color:#fff; cursor:not-allowed; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+            padding: 2px;
+        }
+        .hero-section {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 32px;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-pattern {
+            position: absolute;
+            top: -20%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(37,99,235,0.2) 0%, rgba(37,99,235,0) 70%);
+            border-radius: 50%;
+        }
+        .project-card-premium {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+        .card-footer {
+            margin-top: auto;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            padding-top: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
     </style>
 </head>
-<body class="dashboard-body">
+<body class="dashboard-body premium-gradient-bg">
 <div class="dashboard-layout">
     {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': 'projects'} %}
 
     <div class="dashboard-main">
-        <div class="top-bar">
-            <span class="top-bar-title">📋 Available Projects</span>
+        <div class="top-bar glass-card">
+            <span class="top-bar-title budget-glow">UniEarn Marketplace</span>
+            <div class="top-bar-right">
+                <span class="top-bar-user">Freelancer Portal</span>
+            </div>
         </div>
 
-        <div class="content-wrap">
-            <form class="toolbar" method="get" action="{{ path('freelancer_available_projects') }}">
-                <input class="search" type="text" name="search" placeholder="Search projects..." value="{{ app.request.query.get('search') }}">
-            </form>
+        <div class="dashboard-content">
+            <!-- Hero Section -->
+            <div class="hero-section animate-fade-in">
+                <div class="hero-pattern"></div>
+                <h1 style="font-size: 28px; font-weight: 800; margin-bottom: 8px;">Find Your Next Project</h1>
+                <p style="color: #94a3b8; font-size: 15px; max-width: 500px;">Explore high-quality opportunities from verified clients across all industries.</p>
+                
+                <div style="display: flex; gap: 32px; margin-top: 24px;">
+                    <div>
+                        <div style="font-size: 24px; font-weight: 800;">{{ projects|length }}</div>
+                        <div style="font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Opportunities</div>
+                    </div>
+                    <div style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 32px;">
+                        <div style="font-size: 24px; font-weight: 800;">TND</div>
+                        <div style="font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Best Rates</div>
+                    </div>
+                </div>
+            </div>
 
-            <div class="grid">
+            <!-- Toolbar -->
+            <div class="section-header" style="margin-bottom: 24px;">
+                <form class="search-container" method="get" action="{{ path('freelancer_available_projects') }}">
+                    <svg class="search-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <input class="search-premium" type="text" name="search" placeholder="Search by title, skills or industry..." value="{{ app.request.query.get('search') }}">
+                </form>
+            </div>
+
+            <div class="grid-container">
                 {% for project in projects %}
-                    <div class="card">
-                        <div class="title">{{ project.title }}</div>
-                        <div class="desc">{{ project.description|length > 120 ? project.description|slice(0, 120) ~ '...' : project.description }}</div>
-                        <div class="meta">Budget: {{ project.budget|number_format(2, '.', ',') }}</div>
-                        <div class="meta">Status: {{ project.status ? project.status.getDisplayName() : 'N/A' }}</div>
-                        <div class="actions">
+                    <div class="glass-card project-card-premium animate-fade-in" style="padding: 24px; animation-delay: {{ loop.index0 * 0.05 }}s;">
+                        <div class="card-body">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                                {% if project.status and project.status.value == 'TODO' %}
+                                    <span class="badge-vibrant badge-vibrant-todo">
+                                        <span style="width: 8px; height: 8px; background: #3b82f6; border-radius: 50%;"></span>
+                                        Available
+                                    </span>
+                                {% else %}
+                                    <span class="badge-vibrant badge-vibrant-review">
+                                        <span style="width: 8px; height: 8px; background: #f59f00; border-radius: 50%;"></span>
+                                        Review
+                                    </span>
+                                {% endif %}
+                                <div class="budget-glow" style="font-size: 20px;">{{ project.budget|number_format(0, '.', ',') }} TND</div>
+                            </div>
+
+                            <h3 style="font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 12px; line-height: 1.4;">{{ project.title }}</h3>
+                            <p style="color: #64748b; font-size: 14.5px; line-height: 1.7; margin-bottom: 24px;">
+                                {{ project.description|length > 150 ? project.description|slice(0, 150) ~ '...' : project.description }}
+                            </p>
+                        </div>
+
+                        <div class="card-footer" style="padding-top: 20px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #475569; font-size: 13px; font-weight: 800; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                    {{ project.client.name|first|upper }}
+                                </div>
+                                <div style="font-size: 14px; font-weight: 700; color: #334155;">{{ project.client.name }}</div>
+                            </div>
+
                             {% if project.idProject in applied_project_ids %}
-                                <span class="btn btn-disabled">Already Applied</span>
+                                <button class="btn-premium" style="opacity: 0.6; cursor: not-allowed; filter: grayscale(0.5);" disabled>
+                                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    Applied
+                                </button>
                             {% else %}
-                                <a class="btn btn-apply" href="{{ path('app_application_new', {'projectId': project.idProject}) }}">Apply</a>
+                                <a href="{{ path('app_application_new', {'projectId': project.idProject}) }}" class="btn-premium">
+                                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="transform: rotate(45deg);">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                    </svg>
+                                    Apply Now
+                                </a>
                             {% endif %}
                         </div>
                     </div>
                 {% else %}
-                    <p>No projects found.</p>
+                    <div class="glass-card" style="grid-column: 1 / -1; padding: 60px; text-align: center; border-radius: 20px;">
+                        <svg style="margin-bottom: 16px; color: #cbd5e1;" width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                        <h3 style="font-size: 20px; font-weight: 700; color: #334155;">No matches found</h3>
+                        <p style="color: #94a3b8; margin-top: 8px;">Try adjusting your search criteria or explore other categories.</p>
+                    </div>
                 {% endfor %}
             </div>
         </div>

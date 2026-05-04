@@ -6,6 +6,7 @@ use App\Entity\users\freelancer\ForumReaction;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/** @extends ServiceEntityRepository<ForumReaction> */
 class ForumReactionRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)

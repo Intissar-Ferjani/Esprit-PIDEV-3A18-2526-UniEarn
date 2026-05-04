@@ -19,6 +19,7 @@ use Symfony\Component\Validator\Constraints\Regex;
 use App\Form\Type\RoleCardType;
 
 
+/** @extends AbstractType<User> */
 class RegistrationFormType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
@@ -75,6 +76,14 @@ class RegistrationFormType extends AbstractType
                 'required' => false,
                 'constraints' => [
                     new File(['maxSize' => '2M']),
+                ],
+            ])
+            ->add('agreeTerms', \Symfony\Component\Form\Extension\Core\Type\CheckboxType::class, [
+                'mapped'      => false,
+                'constraints' => [
+                    new \Symfony\Component\Validator\Constraints\IsTrue([
+                        'message' => 'You must agree to our terms and conditions.',
+                    ]),
                 ],
             ]);
     }

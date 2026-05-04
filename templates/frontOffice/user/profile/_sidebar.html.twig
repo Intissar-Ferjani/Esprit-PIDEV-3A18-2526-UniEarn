@@ -39,6 +39,10 @@
                class="nav-item {{ active == 'projects_admin' ? 'active' : '' }}">
                 📁 <span>Manage Projects</span>
             </a>
+            <a href="{{ path('admin_application_index') }}"
+               class="nav-item {{ active == 'applications' ? 'active' : '' }}">
+                📋 <span>All Applications</span>
+            </a>
             <a href="{{ path('admin_forum_index') }}"
                class="nav-item {{ active == 'forum' ? 'active' : '' }}">
                 📝 <span>Forum Management</span>
@@ -51,20 +55,21 @@
                class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
                 📋 <span>All Contracts</span>
             </a>
-            <a href="#" class="nav-item {{ active == 'reports' ? 'active' : '' }}">
-                📊 <span>Reports</span>
+            <a href="{{ path('admin_escrow_index') }}"
+               class="nav-item {{ active == 'escrow' ? 'active' : '' }}">
+                💰 <span>Escrow Manager</span>
             </a>
         {% endif %}
 
         {# ── CLIENT tabs ── #}
         {% if role == 'CLIENT' %}
-            <a href="{{ path('client_project_index') }}"
-               class="nav-item {{ active == 'projects' ? 'active' : '' }}">
-                📁 <span>MyProjects</span>
-            </a>
             <a href="{{ path('client_browse_freelancers') }}"
                class="nav-item {{ active == 'freelancers' ? 'active' : '' }}">
                 👥 <span>Browse Freelancers</span>
+            </a>
+            <a href="{{ path('client_project_index') }}"
+               class="nav-item {{ active == 'projects' ? 'active' : '' }}">
+                📁 <span>My Projects</span>
             </a>
             <a href="{{ path('app_application_index') }}"
                class="nav-item {{ active == 'applications' ? 'active' : '' }}">
@@ -81,13 +86,17 @@
             <a href="#" class="nav-item {{ active == 'messages' ? 'active' : '' }}">
                 💬 <span>Messages</span>
             </a>
-            <a href="#" class="nav-item {{ active == 'payments' ? 'active' : '' }}">
+            <a href="{{ path('client_payments_index') }}" class="nav-item {{ active == 'payments' ? 'active' : '' }}">
                 💳 <span>Payments</span>
             </a>
         {% endif %}
 
         {# ── FREELANCER tabs ── #}
         {% if role == 'FREELANCER' %}
+            <a href="{{ path('freelancer_portfolio_page') }}"
+               class="nav-item {{ active == 'portfolio' ? 'active' : '' }}">
+                💼 <span>Portfolio</span>
+            </a>
             <a href="{{ path('freelancer_available_projects') }}" class="nav-item {{ active == 'projects' ? 'active' : '' }}">
                 📋 <span>Available Projects</span>
             </a>
@@ -95,30 +104,33 @@
                class="nav-item {{ active == 'applications' ? 'active' : '' }}">
                 📋 <span>My Applications</span>
             </a>
-            <a href="{{ path('freelancer_contract_index') }}"
-               class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
-                📄 <span>My Contracts</span>
+            <a href="{{ path('freelancer_task_index') }}" class="nav-item {{ active == 'tasks' ? 'active' : '' }}">
+                📝 <span>Task Board</span>
             </a>
             <a href="{{ path('app_evaluation_index') }}"
                class="nav-item {{ active == 'evaluations' ? 'active' : '' }}">
                 ⭐ <span>Evaluations</span>
             </a>
-            <a href="{{ path('freelancer_task_index') }}" class="nav-item {{ active == 'tasks' ? 'active' : '' }}">
-                📝 <span>Task Board</span>
-            </a>
-            <a href="{{ path('freelancer_portfolio_page') }}"
-               class="nav-item {{ active == 'portfolio' ? 'active' : '' }}">
-                💼 <span>Portfolio</span>
-            </a>
             <a href="{{ path('freelancer_forum') }}"
                class="nav-item {{ active == 'forum' ? 'active' : '' }}">
                 💬 <span>Community Forum</span>
             </a>
-            <a href="#" class="nav-item {{ active == 'messages' ? 'active' : '' }}">
-                💬 <span>Messages</span>
+            <a href="{{ path('freelancer_messages') }}"
+               class="nav-item {{ active == 'messages' ? 'active' : '' }}"
+               style="position:relative;">
+                ✉️ <span>Messages</span>
+                <span id="sidebarMsgBadge" style="
+                    position:absolute; top:8px; right:12px;
+                    background:#ef4444; color:#fff; border-radius:50%;
+                    width:17px; height:17px; font-size:10px; font-weight:700;
+                    display:none; align-items:center; justify-content:center;
+                "></span>
             </a>
-            <a href="#" class="nav-item {{ active == 'payments' ? 'active' : '' }}">
+            <a href="{{ path('freelancer_payments_index') }}" class="nav-item {{ active == 'payments' ? 'active' : '' }}">
                 💳 <span>Payments</span>
+            </a>
+            <a href="{{ path('freelancer_billing_settings') }}" class="nav-item {{ active == 'billing' ? 'active' : '' }}">
+                🏦 <span>Bank Details</span>
             </a>
         {% endif %}
 
@@ -131,3 +143,30 @@
         </a>
     </div>
 </aside>
+
+{# Include Premium AI Chatbot #}
+{% include 'frontOffice/components/_chatbot.html.twig' %}
+<script src="{{ asset('js/chatbot.js') }}"></script>
+
+{# ── Notification badge refresher script ── #}
+<script>
+(function() {
+    async function refreshSidebarBadge() {
+        try {
+            const res  = await fetch('/freelancer/notifications');
+            const data = await res.json();
+            const badge = document.getElementById('sidebarMsgBadge');
+            if (!badge) return;
+            const count = (data.notifications || []).filter(n => n.type === 'MESSAGE').length;
+            if (count > 0) {
+                badge.textContent = count > 9 ? '9+' : count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        } catch {}
+    }
+    refreshSidebarBadge();
+    setInterval(refreshSidebarBadge, 15000);
+})();
+</script>

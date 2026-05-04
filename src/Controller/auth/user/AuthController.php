@@ -24,18 +24,29 @@ class AuthController extends AbstractController
         UserRepository         $userRepo,
         SluggerInterface       $slugger
     ): Response {
-        $user = new User();
+        $userId = $request->getSession()->get('pending_user_id');
+        $user = null;
+        if ($userId) {
+            $user = $userRepo->find($userId);
+        }
+        if (!$user) {
+            $user = new User();
+        }
+
         $form = $this->createForm(RegistrationFormType::class, $user);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
 
-            if ($userRepo->findByEmail($user->getEmail())) {
+            $existingUser = $userRepo->findByEmail($user->getEmail());
+            if ($existingUser && $existingUser->getIdUser() !== $user->getIdUser()) {
                 $this->addFlash('error', 'This email address is already registered.');
                 return $this->render('frontOffice/user/auth/signup.html.twig', ['form' => $form]);
             }
 
-            $user->setPassword($form->get('plainPassword')->getData());
+            // Secure BCrypt Hashing matching Java's implementation
+            $plainPassword = $form->get('plainPassword')->getData();
+            $user->setPassword(password_hash($plainPassword, PASSWORD_BCRYPT));
             $user->setEmail(strtolower(trim($user->getEmail())));
             $user->setActivated(true);
 
@@ -81,12 +92,29 @@ class AuthController extends AbstractController
     }
 
     #[Route('/login', name: 'user_login', methods: ['GET', 'POST'])]
-    public function login(Request $request, UserRepository $userRepo): Response
+    public function login(
+        Request                                    $request,
+        UserRepository                             $userRepo,
+        \App\Repository\users\freelancer\FreelancerRepository $freelancerRepo,
+        \App\Repository\users\client\ClientRepository     $clientRepo,
+        \App\Service\users\user\LoginAttemptService $attemptService
+    ): Response
     {
         if ($request->isMethod('POST')) {
             $email    = strtolower(trim($request->request->get('email')));
             $password = $request->request->get('password');
-            $user     = $userRepo->findByEmail($email);
+
+            // 1. Check if account is locked
+            if ($attemptService->isLocked($email)) {
+                $remTime = $attemptService->getRemainingLockTime($email);
+                $remSeconds = $attemptService->getRemainingSeconds($email);
+                $this->addFlash('error', "Your account is locked due to too many failed attempts. Try again in <span id='live-timer' data-seconds='$remSeconds'>$remTime</span>.");
+                return $this->render('frontOffice/user/auth/login.html.twig', [
+                    'last_email' => $email
+                ]);
+            }
+
+            $user = $userRepo->findByEmail($email);
 
             if (!$user) {
                 $this->addFlash('error', 'No account found with that email.');
@@ -112,9 +140,26 @@ class AuthController extends AbstractController
             }
 
             if (!$isMatch) {
-                $this->addFlash('error', 'Incorrect password.');
-                return $this->render('frontOffice/user/auth/login.html.twig', ['last_email' => $email]);
+                $state = $attemptService->recordFailure($email);
+                
+                if ($attemptService->isLocked($email)) {
+                    $remTime = $attemptService->getRemainingLockTime($email);
+                    $remSeconds = $attemptService->getRemainingSeconds($email);
+                    $this->addFlash('error', "Your account is locked due to too many failed attempts. Try again in <span id='live-timer' data-seconds='$remSeconds'>$remTime</span>.");
+                } else {
+                    $this->addFlash('error', 'Incorrect password.');
+                }
+                
+                $renderParams = ['last_email' => $email];
+                if ($state['count'] === $attemptService->getMaxAttempts()) {
+                    $renderParams['trigger_capture'] = true;
+                }
+                
+                return $this->render('frontOffice/user/auth/login.html.twig', $renderParams);
             }
+
+            // Success: reset attempts
+            $attemptService->reset($email);
 
             $request->getSession()->set('user_id',   $user->getIdUser());
             $request->getSession()->set('user_name', $user->getName());
@@ -126,9 +171,19 @@ class AuthController extends AbstractController
                 return $this->redirectToRoute('admin_manage_users');
             }
             if ($user->getRole() === 'CLIENT') {
+                if (!$clientRepo->findOneBy(['user' => $user])) {
+                    $request->getSession()->set('pending_user_id', $user->getIdUser());
+                    $this->addFlash('info', 'Please complete your client profile first.');
+                    return $this->redirectToRoute('client_setup');
+                }
                 return $this->redirectToRoute('client_dashboard');
             }
             if ($user->getRole() === 'FREELANCER') {
+                if (!$freelancerRepo->findOneBy(['user' => $user])) {
+                    $request->getSession()->set('pending_user_id', $user->getIdUser());
+                    $this->addFlash('info', 'Please complete your freelancer profile first.');
+                    return $this->redirectToRoute('freelancer_setup');
+                }
                 return $this->redirectToRoute('freelancer_dashboard');
             }
 

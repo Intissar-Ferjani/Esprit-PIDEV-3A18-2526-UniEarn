@@ -285,7 +285,7 @@
         <div class="top-bar">
             <span class="top-bar-title">📋 Gestion des Projets</span>
             <div class="top-bar-right">
-                <span class="top-bar-user">👤 {{ app.user ? app.user.name : 'Client' }}</span>
+                <span class="top-bar-user">👤 {{ app.session.get('user_name') }}</span>
             </div>
         </div>
 

@@ -7,6 +7,9 @@ use App\Entity\users\user\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+use Doctrine\ORM\QueryBuilder;
+
+/** @extends ServiceEntityRepository<Freelancer> */
 class FreelancerRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -30,14 +33,43 @@ class FreelancerRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
-    public function findAllWithUser(): array
+    public function getSearchQueryBuilder(string $search, string $verification, string $minRating, string $sort): QueryBuilder
     {
-        return $this->createQueryBuilder('f')
+        $qb = $this->createQueryBuilder('f')
             ->join('f.user', 'u')
             ->addSelect('u')
-            ->where('u.activated = true')
-            ->orderBy('f.rating', 'DESC')
-            ->getQuery()
-            ->getResult();
+            ->where('u.activated = true');
+
+        if ($search) {
+            $qb->andWhere('u.name LIKE :search OR f.bio LIKE :search OR f.skills LIKE :search')
+               ->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($verification !== 'All') {
+            $qb->andWhere('f.verificationStatus = :v')
+               ->setParameter('v', strtolower($verification));
+        }
+
+        if ($minRating !== 'Any') {
+            $min = (float) str_replace('+', '', $minRating);
+            $qb->andWhere('f.rating >= :rating')
+               ->setParameter('rating', $min);
+        }
+
+        switch ($sort) {
+            case 'rating_low':  $qb->orderBy('f.rating', 'ASC'); break;
+            case 'price_low':   $qb->orderBy('f.pricePerHour', 'ASC'); break;
+            case 'price_high':  $qb->orderBy('f.pricePerHour', 'DESC'); break;
+            case 'name_asc':    $qb->orderBy('u.name', 'ASC'); break;
+            default:            $qb->orderBy('f.rating', 'DESC'); break;
+        }
+
+        return $qb;
+    }
+
+    /** @return Freelancer[] */
+    public function findAllWithUser(): array
+    {
+        return $this->getSearchQueryBuilder('', 'All', 'Any', '')->getQuery()->getResult();
     }
 }

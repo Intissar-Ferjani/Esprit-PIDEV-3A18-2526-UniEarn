@@ -18,11 +18,11 @@ class Portfolio
     #[ORM\Column(name: 'title', type: 'string', length: 255)]
     #[Assert\NotBlank(message: 'Portfolio title is required.')]
     #[Assert\Length(min: 5, minMessage: 'Title must be at least 5 characters.')]
-    private ?string $title = null;
+    private string $title;
 
     #[ORM\Column(name: 'description', type: 'string', length: 255)]
     #[Assert\NotBlank(message: 'Portfolio description is required.')]
-    private ?string $description = null;
+    private string $description;
 
     #[ORM\Column(name: 'created_At', type: 'datetime')]
     private \DateTimeInterface $createdAt;
@@ -30,7 +30,7 @@ class Portfolio
     // Links to freelancer table via freelancerId (idFreelancer FK)
     #[ORM\ManyToOne(targetEntity: Freelancer::class)]
     #[ORM\JoinColumn(name: 'freelancerId', referencedColumnName: 'idFreelancer', nullable: false, onDelete: 'CASCADE')]
-    private ?Freelancer $freelancer = null;
+    private Freelancer $freelancer;
 
     public function __construct()
     {

@@ -113,9 +113,29 @@
 
         <div class="eval-meta">
             {% if evaluation.projectId %}
-                <span title="Project ID">📁 Project #{{ evaluation.projectId }}</span>
+                <span title="Project">📁 {{ projectTitle|default('Project') }}</span>
             {% endif %}
             <span title="Date Submitted">📅 {{ evaluation.createdAt|date('M d, Y') }}</span>
+        </div>
+
+        {# ── PREMIUM SENTIMENT & TOXIC INDICATORS ── #}
+        <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 30px;">
+            {% set colors = {
+                'pos': {'bg': 'rgba(16, 185, 129, 0.1)', 'text': '#059669', 'border': '#10b981', 'icon': '🎯', 'label': 'Highly Positive Impact'},
+                'neg': {'bg': 'rgba(239, 68, 68, 0.1)', 'text': '#dc2626', 'border': '#ef4444', 'icon': '⚠️', 'label': 'Negative Tone Detected'},
+                'neutral': {'bg': 'rgba(100, 116, 139, 0.1)', 'text': '#475569', 'border': '#64748b', 'icon': '⚖️', 'label': 'Neutral Perspective'}
+            } %}
+            {% set s = colors[evaluation.sentiment] ?? colors['neutral'] %}
+            
+            <div style="display:inline-flex; align-items:center; gap:8px; padding:10px 20px; border-radius:30px; font-size:14px; font-weight:700; background:{{ s.bg }}; color:{{ s.text }}; border: 2px solid {{ s.border }}; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <span>{{ s.icon }}</span> {{ s.label }} ({{ (evaluation.sentimentScore * 100)|round }}%)
+            </div>
+
+            {% if evaluation.isFlagged %}
+                <div style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 30px; background: linear-gradient(135deg, #ef4444, #991b1b); color: white; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);">
+                    <span>🚩</span> TOXIC ALERT
+                </div>
+            {% endif %}
         </div>
 
         <div class="comment-bubble">

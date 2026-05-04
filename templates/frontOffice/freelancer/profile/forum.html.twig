@@ -11,6 +11,111 @@
     <link rel="stylesheet" href="{{ asset('css/forum.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ── GIF Picker Modal ── */
+        .gif-picker-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.5);
+            z-index: 2000;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .gif-picker-box {
+            background: #fff; border-radius: 14px; padding: 20px;
+            width: 500px; max-width: 95vw; max-height: 82vh;
+            display: flex; flex-direction: column; gap: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,.25);
+        }
+        .gif-picker-header {
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .gif-picker-header h3 { margin: 0; font-size: 15px; font-weight: 600; }
+        .gif-picker-close {
+            background: none; border: none; font-size: 20px;
+            cursor: pointer; padding: 2px 8px; border-radius: 6px;
+            color: #6b7280;
+        }
+        .gif-picker-close:hover { background: #f3f4f6; }
+        .gif-picker-search-row { display: flex; gap: 8px; }
+        .gif-picker-search-row input { flex: 1; }
+        .gif-results-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 6px; overflow-y: auto; max-height: 320px;
+        }
+        .gif-result-thumb {
+            width: 100%; height: 80px; object-fit: cover;
+            border-radius: 6px; cursor: pointer;
+            border: 2px solid transparent; transition: border-color .15s;
+        }
+        .gif-result-thumb:hover { border-color: #6366f1; }
+        .gif-picker-attribution {
+            font-size: 11px; color: #9ca3af; text-align: right; margin-top: 2px;
+        }
+        .gif-picker-status {
+            font-size: 13px; color: #6b7280; text-align: center;
+            padding: 16px; grid-column: 1/-1;
+        }
+
+        /* ── GIF selected preview in form ── */
+        .gif-attach-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+        .btn-gif {
+            background: #f3f4f6; border: 1px solid #e5e7eb;
+            border-radius: 6px; padding: 5px 12px; font-size: 13px;
+            cursor: pointer; color: #374151; transition: background .15s; white-space: nowrap;
+        }
+        .btn-gif:hover { background: #e5e7eb; }
+        .gif-selected-wrap {
+            position: relative; display: none;
+        }
+        .gif-selected-preview {
+            max-height: 110px; border-radius: 6px; display: block; border: 1px solid #e5e7eb;
+        }
+        .gif-remove-btn {
+            position: absolute; top: -7px; right: -7px;
+            background: #ef4444; color: #fff; border: none; border-radius: 50%;
+            width: 20px; height: 20px; font-size: 11px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; padding: 0;
+        }
+
+        /* ── GIF display inside posts / comments ── */
+        .forum-post-gif { max-width: 100%; max-height: 320px; border-radius: 8px; margin-top: 10px; display: block; }
+        .forum-comment-gif { max-width: 220px; max-height: 160px; border-radius: 6px; margin-top: 6px; display: block; }
+
+        /* ── Toxicity alert toast ── */
+        .toxicity-toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b;
+            padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500;
+            z-index: 3000; box-shadow: 0 4px 20px rgba(0,0,0,.12);
+            display: flex; align-items: center; gap: 10px; max-width: 480px;
+            animation: slideDown .25s ease;
+        }
+        @keyframes slideDown { from { opacity:0; transform: translateX(-50%) translateY(-12px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+
+        /* ── Checking indicator on submit btn ── */
+        .btn-forum-primary[disabled] { opacity: .7; cursor: not-allowed; }
+
+        /* ── Comment form row with GIF ── */
+        .forum-new-comment-form { flex-wrap: wrap; }
+        .forum-comment-gif-row { width: 100%; display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+
+        /* ── Sentiment bar (author only) ── */
+        .post-sentiment-bar {
+            margin-top: 10px; padding: 8px 12px;
+            background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;
+        }
+        .sentiment-track {
+            height: 8px; background: #e5e7eb;
+            border-radius: 4px; overflow: hidden; margin-bottom: 6px;
+        }
+        .sentiment-fill {
+            height: 100%; border-radius: 4px; transition: width .4s ease;
+            min-width: 4px;
+        }
+        .sentiment-green  { background: linear-gradient(90deg, #22c55e, #16a34a); }
+        .sentiment-orange { background: linear-gradient(90deg, #f97316, #ea580c); }
+        .sentiment-red    { background: linear-gradient(90deg, #ef4444, #dc2626); }
+        .sentiment-label  { font-size: 12px; color: #6b7280; font-weight: 500; }
+    </style>
 </head>
 <body class="dashboard-body">
 
@@ -23,7 +128,26 @@
         {# ── Top Bar ── #}
         <div class="top-bar">
             <span class="top-bar-title">💬 Community Forum</span>
-            <div class="top-bar-right">
+            <div class="top-bar-right" style="display:flex;align-items:center;gap:12px;">
+
+                {# ── Notification Bell ── #}
+                <div style="position:relative;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:#f3f4f6;"
+                     id="notifBell" onclick="toggleNotifDropdown()">
+                    🔔
+                    <span id="notifBadge" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;border-radius:50%;width:17px;height:17px;font-size:10px;font-weight:700;display:{% if unreadNotifs > 0 %}flex{% else %}none{% endif %};align-items:center;justify-content:center;border:1px solid #fff;">
+                        {{ unreadNotifs > 9 ? '9+' : unreadNotifs }}
+                    </span>
+                    <div id="notifDropdown" style="position:absolute;top:44px;right:0;width:320px;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.15);z-index:500;display:none;flex-direction:column;overflow:hidden;">
+                        <div style="padding:12px 16px;border-bottom:1px solid #f3f4f6;font-size:14px;font-weight:600;color:#111827;display:flex;justify-content:space-between;align-items:center;">
+                            Notifications
+                            <span onclick="markAllRead(event)" style="font-size:12px;color:#6366f1;cursor:pointer;font-weight:500;">Mark all read</span>
+                        </div>
+                        <div id="notifList" style="max-height:320px;overflow-y:auto;">
+                            <div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px;">Loading…</div>
+                        </div>
+                    </div>
+                </div>
+
                 <span class="top-bar-user">👤 {{ user.name }}</span>
             </div>
         </div>
@@ -68,6 +192,21 @@
                                 <textarea id="post-content" name="content" class="custom-field"
                                           rows="4" placeholder="Write your post content here (min 10 characters)…" required></textarea>
                             </div>
+
+                            {# ── GIF attach row for post ── #}
+                            <div class="gif-attach-row">
+                                <button type="button" class="btn-gif"
+                                        onclick="openGifPicker('gif_url_post', 'gif_preview_post')">
+                                    🎞 Add GIF
+                                </button>
+                                <div id="gif_preview_post" class="gif-selected-wrap">
+                                    <img src="" alt="selected GIF" class="gif-selected-preview" id="gif_preview_post_img">
+                                    <button type="button" class="gif-remove-btn"
+                                            onclick="removeGif('gif_url_post','gif_preview_post')">✕</button>
+                                </div>
+                            </div>
+                            <input type="hidden" name="gif_url" id="gif_url_post">
+
                             <div class="forum-create-footer">
                                 <select name="category" id="post-category" class="forum-category-select">
                                     <option value="Technology">💻 Technology</option>
@@ -78,7 +217,7 @@
                                 </select>
                                 <div class="forum-create-actions">
                                     <button type="button" id="cancelPostBtn" class="btn-forum-secondary">Cancel</button>
-                                    <button type="submit" class="btn-forum-primary">Publish Post 🚀</button>
+                                    <button type="submit" id="postSubmitBtn" class="btn-forum-primary">Publish Post 🚀</button>
                                 </div>
                             </div>
                         </form>
@@ -142,6 +281,9 @@
                                 <div id="post-view-{{ postId }}" class="forum-post-body">
                                     <h2 class="forum-post-title">{{ post.title }}</h2>
                                     <p class="forum-post-content">{{ post.content }}</p>
+                                    {% if post.gifUrl %}
+                                        <img src="{{ post.gifUrl }}" alt="GIF" class="forum-post-gif">
+                                    {% endif %}
                                 </div>
 
                                 {# ── Post Body (edit mode — hidden by default) ── #}
@@ -190,6 +332,38 @@
                                     <span class="forum-views">👁 {{ post.views }}</span>
                                 </div>
 
+                                {# ── Sentiment Bar (author only, needs at least 1 reaction) ── #}
+                                {% if post.freelancerId == freelancer.idFreelancer %}
+                                    {% set totalReactions = item.likeCount + item.dislikeCount %}
+                                    {% if totalReactions > 0 %}
+                                        {% set likeRatio = item.likeCount / totalReactions %}
+                                        {% set barPct    = (likeRatio * 100)|round %}
+                                        {% if likeRatio >= 0.65 %}
+                                            {% set barColor = 'green' %}
+                                            {% set barEmoji = '🟢' %}
+                                            {% set barText  = 'Well received' %}
+                                        {% elseif likeRatio >= 0.35 %}
+                                            {% set barColor = 'orange' %}
+                                            {% set barEmoji = '🟡' %}
+                                            {% set barText  = 'Mixed reception' %}
+                                        {% else %}
+                                            {% set barColor = 'red' %}
+                                            {% set barEmoji = '🔴' %}
+                                            {% set barText  = 'Poorly received' %}
+                                        {% endif %}
+                                        <div class="post-sentiment-bar">
+                                            <div class="sentiment-track">
+                                                <div class="sentiment-fill sentiment-{{ barColor }}"
+                                                     style="width:{{ barPct }}%"></div>
+                                            </div>
+                                            <span class="sentiment-label">
+                                                {{ barEmoji }} {{ barText }} — {{ barPct }}% positive
+                                                ({{ item.likeCount }} 👍 / {{ item.dislikeCount }} 👎)
+                                            </span>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+
                                 {# ── Comments Section (hidden by default) ── #}
                                 <div id="comments-{{ postId }}" class="forum-comments-section" style="display:none;">
                                     <div class="forum-comments-list">
@@ -219,6 +393,9 @@
                                                 {# Comment view mode #}
                                                 <div id="comment-view-{{ c_item.id }}" class="forum-comment-body">
                                                     {{ comment.commentText }}
+                                                    {% if comment.gifUrl %}
+                                                        <img src="{{ comment.gifUrl }}" alt="GIF" class="forum-comment-gif">
+                                                    {% endif %}
                                                 </div>
 
                                                 {# Comment edit mode #}
@@ -241,18 +418,58 @@
 
                                     {# ── New Comment Input ── #}
                                     <form action="{{ path('freelancer_forum_add_comment', {id: postId}) }}"
-                                          method="POST" class="forum-new-comment-form">
+                                          method="POST" class="forum-new-comment-form"
+                                          data-post-id="{{ postId }}">
                                         <div class="forum-avatar-xs">
                                             <span>{{ user.name|first|upper }}</span>
                                         </div>
                                         <input type="text" name="content" class="custom-field forum-comment-input"
                                                placeholder="Write a comment…" required minlength="2">
                                         <button type="submit" class="btn-forum-primary btn-sm">Send</button>
+
+                                        {# GIF attach row for comment #}
+                                        <div class="forum-comment-gif-row">
+                                            <button type="button" class="btn-gif"
+                                                    onclick="openGifPicker('gif_url_c{{ postId }}','gif_prev_c{{ postId }}')">
+                                                🎞 GIF
+                                            </button>
+                                            <div id="gif_prev_c{{ postId }}" class="gif-selected-wrap">
+                                                <img src="" alt="GIF" class="gif-selected-preview"
+                                                     id="gif_prev_c{{ postId }}_img">
+                                                <button type="button" class="gif-remove-btn"
+                                                        onclick="removeGif('gif_url_c{{ postId }}','gif_prev_c{{ postId }}')">✕</button>
+                                            </div>
+                                            <input type="hidden" name="gif_url" id="gif_url_c{{ postId }}">
+                                        </div>
                                     </form>
                                 </div>
 
                             </article>
                         {% endfor %}
+                    {% endif %}
+
+                    {# ── KnpPaginator controls ── #}
+                    {% if pagination.pageCount > 1 %}
+                    <div class="forum-pagination" style="display:flex;justify-content:center;align-items:center;gap:6px;margin-top:20px;flex-wrap:wrap;">
+                        {% if pagination.currentPageNumber > 1 %}
+                            <a href="{{ path('freelancer_forum', {page: pagination.currentPageNumber - 1, category: currentCategory}) }}"
+                               class="btn-forum-secondary" style="padding:6px 14px;font-size:13px;">← Prev</a>
+                        {% endif %}
+
+                        {% for p in 1..pagination.pageCount %}
+                            <a href="{{ path('freelancer_forum', {page: p, category: currentCategory}) }}"
+                               style="padding:6px 12px;border-radius:6px;font-size:13px;font-weight:500;text-decoration:none;
+                                      background:{{ p == pagination.currentPageNumber ? '#6366f1' : '#f3f4f6' }};
+                                      color:{{ p == pagination.currentPageNumber ? '#fff' : '#374151' }};">
+                                {{ p }}
+                            </a>
+                        {% endfor %}
+
+                        {% if pagination.currentPageNumber < pagination.pageCount %}
+                            <a href="{{ path('freelancer_forum', {page: pagination.currentPageNumber + 1, category: currentCategory}) }}"
+                               class="btn-forum-secondary" style="padding:6px 14px;font-size:13px;">Next →</a>
+                        {% endif %}
+                    </div>
                     {% endif %}
 
                 </div>
@@ -321,6 +538,27 @@
     </div>{# end .dashboard-main #}
 </div>{# end .dashboard-layout #}
 
+{# ═══════════════════════════════════════════════════════ #}
+{# GIF PICKER MODAL                                        #}
+{# ═══════════════════════════════════════════════════════ #}
+<div id="gifPickerModal" class="gif-picker-overlay" style="display:none;">
+    <div class="gif-picker-box">
+        <div class="gif-picker-header">
+            <h3>🎞 Search GIFs</h3>
+            <button type="button" class="gif-picker-close" onclick="closeGifPicker()">✕</button>
+        </div>
+        <div class="gif-picker-search-row">
+            <input type="text" id="gifSearchInput" class="custom-field"
+                   placeholder="Search GIPHY (e.g. freelance, celebrate…)">
+            <button type="button" class="btn-forum-primary btn-sm" onclick="searchGifs()">Search</button>
+        </div>
+        <div id="gifResults" class="gif-results-grid">
+            <p class="gif-picker-status">Type something and press Search or Enter.</p>
+        </div>
+        <div class="gif-picker-attribution">Powered by GIPHY</div>
+    </div>
+</div>
+
 <script>
 // ── Create post form toggle ────────────────────────────────────────────
 const createPrompt = document.querySelector('.forum-create-prompt');
@@ -343,9 +581,7 @@ if (cancelBtn) {
 // ── Toggle comments section ────────────────────────────────────────────
 function toggleComments(postId) {
     const section = document.getElementById('comments-' + postId);
-    if (section) {
-        section.style.display = section.style.display === 'none' ? 'block' : 'none';
-    }
+    if (section) section.style.display = section.style.display === 'none' ? 'block' : 'none';
 }
 
 // ── Toggle inline post edit ────────────────────────────────────────────
@@ -368,32 +604,284 @@ function toggleEditComment(commentId) {
     editEl.style.display = editing ? 'none'  : 'block';
 }
 
-// ── Client-side form validation (mirrors Java controller validation) ────
-document.getElementById('createPostForm')?.addEventListener('submit', function(e) {
-    const title   = document.getElementById('post-title').value.trim();
-    const content = document.getElementById('post-content').value.trim();
-
-    if (!title || !content) {
-        e.preventDefault();
-        alert('Please fill in both title and content!');
-        return;
-    }
-    if (!/^[a-zA-Z\s]+$/.test(title)) {
-        e.preventDefault();
-        alert('Title must contain only letters and spaces (no numbers or symbols)!');
-        return;
-    }
-    if (content.length < 10) {
-        e.preventDefault();
-        alert('Post content must be at least 10 characters long!');
-    }
-});
-
 // ── Auto-dismiss flash messages after 4 s ─────────────────────────────
 document.querySelectorAll('.flash').forEach(el => {
     setTimeout(() => el.style.opacity = '0', 3500);
     setTimeout(() => el.remove(), 4000);
 });
+
+// ════════════════════════════════════════════════════════
+// SPAM DETECTOR – repeated chars / keyboard mashing
+// ════════════════════════════════════════════════════════
+function isSpam(text) {
+    if (!text) return false;
+    // 6+ identical characters in a row: aaaaaaa, 111111, ......
+    if (/(.)\1{5,}/i.test(text)) return true;
+    // Text 75%+ composed of one character (ignoring spaces)
+    const chars = text.replace(/\s+/g, '');
+    if (chars.length >= 8) {
+        const freq = {};
+        for (const c of chars.toLowerCase()) freq[c] = (freq[c] || 0) + 1;
+        const maxFreq = Math.max(...Object.values(freq));
+        if (maxFreq / chars.length >= 0.75) return true;
+    }
+    return false;
+}
+
+// ════════════════════════════════════════════════════════
+// PERSPECTIVE API – toxicity check
+// ════════════════════════════════════════════════════════
+function showToxicityToast(message) {
+    const existing = document.getElementById('toxicityToast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.id = 'toxicityToast';
+    toast.className = 'toxicity-toast';
+    toast.innerHTML = '⚠️ ' + message;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity .4s'; }, 4000);
+    setTimeout(() => toast.remove(), 4500);
+}
+
+async function checkToxicity(text) {
+    if (!text || text.trim().length < 3) return { ok: true, score: 0 };
+    try {
+        const res = await fetch('{{ path('freelancer_forum_check_toxicity') }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text }),
+        });
+        if (!res.ok) return { ok: true, score: 0 };
+        const data = await res.json();
+        return { ok: data.ok !== false, score: data.score ?? 0 };
+    } catch {
+        return { ok: true, score: 0 }; // fail open — server-side filter still runs
+    }
+}
+
+// ── Post creation form submit ──────────────────────────────────────────
+document.getElementById('createPostForm')?.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const title   = document.getElementById('post-title').value.trim();
+    const content = document.getElementById('post-content').value.trim();
+    const btn     = document.getElementById('postSubmitBtn');
+
+    if (!title || !content) {
+        showToxicityToast('Please fill in both title and content!');
+        return;
+    }
+    if (!/^[a-zA-Z\s]+$/.test(title)) {
+        showToxicityToast('Title must contain only letters and spaces (no numbers or symbols)!');
+        return;
+    }
+    if (content.length < 10) {
+        showToxicityToast('Post content must be at least 10 characters long!');
+        return;
+    }
+    if (isSpam(title) || isSpam(content)) {
+        showToxicityToast('Spam detected! Avoid repeating the same characters over and over.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '🔍 Checking…';
+
+    const { ok, score } = await checkToxicity(title + ' ' + content);
+
+    btn.disabled = false;
+    btn.textContent = 'Publish Post 🚀';
+
+    if (!ok) {
+        showToxicityToast('Inappropriate content detected (toxicity score: ' + score + '%). Please revise your post before submitting.');
+        return;
+    }
+
+    this.submit();
+});
+
+// ── Comment forms submit ───────────────────────────────────────────────
+document.querySelectorAll('.forum-new-comment-form').forEach(function (form) {
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const input = this.querySelector('input[name="content"]');
+        const text  = input ? input.value.trim() : '';
+        const btn   = this.querySelector('button[type="submit"]');
+
+        if (!text) { showToxicityToast('Please write a comment before submitting!'); return; }
+        if (isSpam(text)) {
+            showToxicityToast('Spam detected! Avoid repeating the same characters.');
+            return;
+        }
+
+        const origText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '…';
+
+        const { ok, score } = await checkToxicity(text);
+
+        btn.disabled = false;
+        btn.textContent = origText;
+
+        if (!ok) {
+            showToxicityToast('Inappropriate language detected in your comment (toxicity score: ' + score + '%). Please revise it.');
+            return;
+        }
+
+        this.submit();
+    });
+});
+
+// ════════════════════════════════════════════════════════
+// GIPHY – GIF picker
+// ════════════════════════════════════════════════════════
+let _gifTargetInputId  = null;
+let _gifTargetPreviewId = null;
+
+function openGifPicker(inputId, previewId) {
+    _gifTargetInputId   = inputId;
+    _gifTargetPreviewId = previewId;
+    const modal = document.getElementById('gifPickerModal');
+    modal.style.display = 'flex';
+    document.getElementById('gifSearchInput').value = '';
+    document.getElementById('gifResults').innerHTML =
+        '<p class="gif-picker-status">Type something and press Search or Enter.</p>';
+    document.getElementById('gifSearchInput').focus();
+}
+
+function closeGifPicker() {
+    document.getElementById('gifPickerModal').style.display = 'none';
+}
+
+// Close on overlay click
+document.getElementById('gifPickerModal').addEventListener('click', function (e) {
+    if (e.target === this) closeGifPicker();
+});
+
+// Search on Enter
+document.getElementById('gifSearchInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); searchGifs(); }
+});
+
+async function searchGifs() {
+    const q = document.getElementById('gifSearchInput').value.trim();
+    const container = document.getElementById('gifResults');
+    if (!q) return;
+
+    container.innerHTML = '<p class="gif-picker-status">Searching…</p>';
+
+    try {
+        const res  = await fetch('{{ path('freelancer_forum_giphy_search') }}?q=' + encodeURIComponent(q));
+        const data = await res.json();
+
+        if (data.error && !data.data) {
+            container.innerHTML = '<p class="gif-picker-status">GIPHY not configured. Add GIPHY_API_KEY to .env.local</p>';
+            return;
+        }
+
+        if (!data.data || data.data.length === 0) {
+            container.innerHTML = '<p class="gif-picker-status">No GIFs found for "' + q + '".</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        data.data.forEach(function (gif) {
+            const img = document.createElement('img');
+            img.src   = gif.preview;
+            img.alt   = gif.title || 'GIF';
+            img.title = gif.title || '';
+            img.className = 'gif-result-thumb';
+            img.addEventListener('click', function () {
+                selectGif(gif.original || gif.preview);
+            });
+            container.appendChild(img);
+        });
+    } catch {
+        container.innerHTML = '<p class="gif-picker-status">Error loading GIFs. Try again.</p>';
+    }
+}
+
+function selectGif(url) {
+    if (_gifTargetInputId) {
+        document.getElementById(_gifTargetInputId).value = url;
+    }
+    if (_gifTargetPreviewId) {
+        const wrap = document.getElementById(_gifTargetPreviewId);
+        const img  = document.getElementById(_gifTargetPreviewId + '_img');
+        if (img) img.src = url;
+        wrap.style.display = 'inline-block';
+    }
+    closeGifPicker();
+}
+
+function removeGif(inputId, previewId) {
+    const input = document.getElementById(inputId);
+    const wrap  = document.getElementById(previewId);
+    const img   = document.getElementById(previewId + '_img');
+    if (input) input.value = '';
+    if (img)   img.src = '';
+    if (wrap)  wrap.style.display = 'none';
+}
+
+// ════════════════════════════════════════════════════════
+// NOTIFICATION BELL
+// ════════════════════════════════════════════════════════
+const NOTIF_ICONS = { LIKE:'👍', DISLIKE:'👎', COMMENT:'💬', MESSAGE:'✉️' };
+
+function escHtmlN(t) {
+    return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function loadNotifications() {
+    try {
+        const res  = await fetch('{{ path('freelancer_notifications_list') }}');
+        const data = await res.json();
+        const badge = document.getElementById('notifBadge');
+        const list  = document.getElementById('notifList');
+        if (!badge || !list) return;
+
+        if (data.unread > 0) {
+            badge.style.display = 'flex';
+            badge.textContent   = data.unread > 9 ? '9+' : data.unread;
+        } else { badge.style.display = 'none'; }
+
+        if (!data.notifications.length) {
+            list.innerHTML = '<div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px;">No new notifications</div>';
+            return;
+        }
+        list.innerHTML = data.notifications.map(n => `
+            <a href="${n.link||'#'}" style="display:flex;gap:10px;align-items:flex-start;padding:12px 16px;border-bottom:1px solid #f9fafb;text-decoration:none;color:inherit;">
+                <span style="font-size:18px;flex-shrink:0;">${NOTIF_ICONS[n.type]||'🔔'}</span>
+                <div>
+                    <div style="font-size:13px;color:#374151;line-height:1.4;">${escHtmlN(n.content)}</div>
+                    <div style="font-size:11px;color:#9ca3af;margin-top:3px;">${n.createdAt}</div>
+                </div>
+            </a>`).join('');
+    } catch {}
+}
+
+function toggleNotifDropdown() {
+    const dd = document.getElementById('notifDropdown');
+    if (!dd) return;
+    const isOpen = dd.style.display === 'flex';
+    dd.style.display = isOpen ? 'none' : 'flex';
+    dd.style.flexDirection = 'column';
+    if (!isOpen) loadNotifications();
+}
+
+async function markAllRead(e) {
+    e.stopPropagation();
+    await fetch('{{ path('freelancer_notifications_mark_read') }}', { method: 'POST' });
+    loadNotifications();
+}
+
+document.addEventListener('click', function(e) {
+    const bell = document.getElementById('notifBell');
+    const dd   = document.getElementById('notifDropdown');
+    if (bell && dd && !bell.contains(e.target)) dd.style.display = 'none';
+});
+
+loadNotifications();
+setInterval(loadNotifications, 15000);
 </script>
 
 </body>

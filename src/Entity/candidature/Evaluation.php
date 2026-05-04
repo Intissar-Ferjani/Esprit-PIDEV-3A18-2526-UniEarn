@@ -21,11 +21,11 @@ class Evaluation
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: 'evaluator_id', referencedColumnName: 'idUser', nullable: false)]
-    private ?User $evaluator = null;
+    private User $evaluator;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: 'evaluated_id', referencedColumnName: 'idUser', nullable: false)]
-    private ?User $evaluated = null;
+    private User $evaluated;
 
     #[ORM\Column(nullable: true)]
     private ?int $projectId = null;
@@ -33,21 +33,30 @@ class Evaluation
     #[ORM\Column]
     #[Assert\NotBlank(message: 'Rating is required.')]
     #[Assert\Range(min: 1, max: 5, notInRangeMessage: 'Rating must be between 1 and 5.')]
-    private ?int $rating = null;
+    private int $rating;
 
     #[ORM\Column(type: Types::TEXT)]
     #[Assert\NotBlank(message: 'Comment is required.')]
     #[Assert\Length(min: 15, minMessage: 'Comment must be at least 15 characters.')]
-    private ?string $comment = null;
+    private string $comment;
 
     #[ORM\Column(length: 255, enumType: EvaluationType::class)]
-    private ?EvaluationType $type = null;
+    private EvaluationType $type;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $createdAt = null;
+    private \DateTimeInterface $createdAt;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $updatedAt = null;
+    private \DateTimeInterface $updatedAt;
+
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $sentiment = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $sentimentScore = null;
+
+    #[ORM\Column]
+    private bool $isFlagged = false;
 
     public function __construct()
     {
@@ -160,6 +169,42 @@ class Evaluation
     public function setUpdatedAt(\DateTimeInterface $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+    public function getSentiment(): ?string
+    {
+        return $this->sentiment;
+    }
+
+    public function setSentiment(?string $sentiment): static
+    {
+        $this->sentiment = $sentiment;
+
+        return $this;
+    }
+
+    public function getSentimentScore(): ?float
+    {
+        return $this->sentimentScore;
+    }
+
+    public function setSentimentScore(?float $sentimentScore): static
+    {
+        $this->sentimentScore = $sentimentScore;
+
+        return $this;
+    }
+
+    public function isFlagged(): bool
+    {
+        return $this->isFlagged;
+    }
+
+    public function setIsFlagged(bool $isFlagged): static
+    {
+        $this->isFlagged = $isFlagged;
 
         return $this;
     }

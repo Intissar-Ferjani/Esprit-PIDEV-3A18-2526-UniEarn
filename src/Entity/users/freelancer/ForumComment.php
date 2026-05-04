@@ -16,18 +16,21 @@ class ForumComment
     private ?int $commentId = null;
 
     #[ORM\Column(name: 'post_id', type: 'integer')]
-    private ?int $postId = null;
+    private int $postId;
 
     #[ORM\Column(name: 'freelancer_id', type: 'integer')]
-    private ?int $freelancerId = null;
+    private int $freelancerId;
 
     #[ORM\Column(name: 'comment_text', type: 'text')]
     #[Assert\NotBlank(message: 'Your comment cannot be empty.')]
     #[Assert\Length(min: 2, max: 1000, minMessage: 'Your comment is too short.')]
     private string $commentText = '';
 
+    #[ORM\Column(name: 'gif_url', type: 'string', length: 500, nullable: true)]
+    private ?string $gifUrl = null;
+
     #[ORM\Column(name: 'created_at', type: 'datetime')]
-    private ?\DateTimeInterface $createdAt = null;
+    private \DateTimeInterface $createdAt;
 
     public function __construct()
     {
@@ -47,6 +50,9 @@ class ForumComment
 
     public function getCommentText(): string { return $this->commentText; }
     public function setCommentText(string $text): static { $this->commentText = $text; return $this; }
+
+    public function getGifUrl(): ?string { return $this->gifUrl; }
+    public function setGifUrl(?string $url): static { $this->gifUrl = $url; return $this; }
 
     public function getCreatedAt(): ?\DateTimeInterface { return $this->createdAt; }
     public function setCreatedAt(?\DateTimeInterface $dt): static { $this->createdAt = $dt; return $this; }

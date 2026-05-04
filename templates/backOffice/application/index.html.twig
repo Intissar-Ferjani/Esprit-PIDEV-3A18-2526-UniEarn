@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn Admin – Applications</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': 'applications'} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">📋 All Applications</span>
+            <div class="top-bar-right">
+                <a href="{{ path('admin_dashboard') }}" style="color:#2563EB;text-decoration:none;font-size:13px;">← Back to Dashboard</a>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            {# ── Search and Sort (Premium Design) ── #}
+            <div style="background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); padding: 18px; border-radius: 16px; margin-bottom: 24px; border: 1px solid rgba(226, 232, 240, 0.8); box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                <form method="get" action="{{ path('admin_application_index') }}" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <div style="flex-grow: 1; min-width: 250px; position: relative;">
+                        <input type="text" name="search" value="{{ app.request.query.get('search') }}" placeholder="Search applications..." 
+                               style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; background: white; font-size: 14px; outline: none; transition: border-color 0.2s;"
+                               onfocus="this.style.borderColor='#4f46e5'" onblur="this.style.borderColor='#e2e8f0'">
+                    </div>
+                    
+                    <select name="sort" style="padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; background: white; min-width: 160px; font-size: 14px; color: #475569; outline: none;">
+                        <option value="date" {% if app.request.query.get('sort') == 'date' %}selected{% endif %}>📅 Sort by Date</option>
+                        <option value="budget" {% if app.request.query.get('sort') == 'budget' %}selected{% endif %}>💰 Sort by Budget</option>
+                        <option value="duration" {% if app.request.query.get('sort') == 'duration' %}selected{% endif %}>⏱ Sort by Duration</option>
+                    </select>
+                    
+                    <button type="submit" style="padding: 12px 24px; background: #2563EB; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: background 0.2s;"
+                            onmouseover="this.style.background='#1D4ED8'"
+                            onmouseout="this.style.background='#2563EB'">Filter</button>
+                    <a href="{{ path('admin_application_index') }}" style="padding: 12px 20px; background: #f1f5f9; color: #475569; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px;">Reset</a>
+                </form>
+            </div>
+
+            {# ── Table ── #}
+            <div class="content-section" style="padding:0;overflow:hidden;">
+                <table id="applicationsTable" style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Freelancer</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Project</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Duration</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Price</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Status</th>
+                            <th style="background:#2563EB;color:white;padding:13px 16px;text-align:left;font-size:13px;">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for application in applications %}
+                        <tr class="app-row"
+                            style="border-bottom:1px solid #e2e8f0;transition:background .15s;">
+                            <td style="padding:12px 16px;font-weight:600;color:#1e293b;font-size:14px;">
+                                {{ application.freelancer ? application.freelancer.name : 'Unknown' }}
+                            </td>
+                            <td style="padding:12px 16px;color:#64748b;font-size:13px;font-weight:600;">
+                                {{ projectTitles[application.projectId] ?? ('#' ~ application.projectId) }}
+                            </td>
+                            <td style="padding:12px 16px;color:#64748b;font-size:13px;">
+                                {{ application.estimatedDuration }} Days
+                            </td>
+                            <td style="padding:12px 16px;font-weight:600;color:#10b981;font-size:14px;">
+                                ${{ application.proposedBudget }}
+                            </td>
+                            <td style="padding:12px 16px;">
+                                {% if application.status.value == 'PENDING' %}
+                                    <span class="pill pill-yellow" style="font-size:11px;">PENDING</span>
+                                {% elseif application.status.value == 'ACCEPTED' %}
+                                    <span class="pill pill-green" style="font-size:11px;">ACCEPTED</span>
+                                {% else %}
+                                    <span class="pill pill-red" style="font-size:11px;">REJECTED</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding:12px 16px;color:#64748b;font-size:13px;">{{ application.appliedAt | date('Y-m-d') }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">
+                                No applications submitted yet.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

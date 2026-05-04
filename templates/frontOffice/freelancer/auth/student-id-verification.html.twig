@@ -62,7 +62,7 @@
             <div class="feature-list">
                 <div class="feature-item"><div class="feature-dot">🔒</div><span>Safe & secure verification</span></div>
                 <div class="feature-item"><div class="feature-dot">🎓</div><span>Students-only platform</span></div>
-                <div class="feature-item"><div class="feature-dot">✅</div><span>Builds trust with clients</span></div>
+                <div class="feature-item"><div class="feature-dot">✓</div><span>Builds trust with clients</span></div>
                 <div class="feature-item"><div class="feature-dot">⚡</div><span>Quick review process</span></div>
             </div>
         </div>
@@ -134,13 +134,14 @@
                                 <span class="remove-file">✕</span>
                             </span>
                         </div>
+                        <div id="verification-status" class="verification-status hidden" style="margin-top: 15px; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 600;"></div>
                         <div class="field-errors">{{ form_errors(form.studentCardFile) }}</div>
                     </div>
                 </div>
 
                 <div class="btn-row">
                     <a href="{{ path('freelancer_setup') }}" class="back-button">← Back</a>
-                    <button type="submit" class="btn-submit" style="flex:1.5; margin-top:0;">Next →</button>
+                    <button type="submit" id="next-btn" class="btn-submit" style="flex:1.5; margin-top:0;" disabled>Next →</button>
                 </div>
 
             {{ form_end(form) }}
@@ -153,19 +154,92 @@ const uploadBtn = document.querySelector('.upload-btn');
 const fileChip = document.querySelector('.file-chip');
 const fileName = document.querySelector('.file-name');
 const removeBtn = document.querySelector('.remove-file');
+const statusDiv = document.querySelector('#verification-status');
+const nextBtn   = document.querySelector('#next-btn');
+
+// Initialize state from session (Restoration)
+window.addEventListener('DOMContentLoaded', () => {
+    const savedPath = "{{ app.session.get('card_path')|default('') }}";
+    const isVerified = "{{ app.session.get('card_verified')|default(false) ? '1' : '0' }}" === '1';
+
+    if (savedPath) {
+        const basename = savedPath.split('/').pop();
+        fileName.textContent = basename;
+        fileChip.classList.remove('hidden');
+        
+        statusDiv.textContent = isVerified 
+           ? " Previously verified card restored." 
+           : "⚠️ Card found but needs verification.";
+        statusDiv.style.background = isVerified ? "#f0fdf4" : "#fffbeb";
+        statusDiv.style.color = isVerified ? "#16a34a" : "#92400e";
+        statusDiv.style.border = isVerified ? "1.5px solid #bbf7d0" : "1.5px solid #fde68a";
+        statusDiv.classList.remove('hidden');
+        
+        if (isVerified) {
+            nextBtn.disabled = false;
+        }
+    }
+});
 
 uploadBtn.addEventListener('click', () => fileInput.click());
 
-fileInput.addEventListener('change', () => {
+fileInput.addEventListener('change', async () => {
     if (fileInput.files.length > 0) {
-        fileName.textContent = fileInput.files[0].name;
+        const file = fileInput.files[0];
+        fileName.textContent = file.name;
         fileChip.classList.remove('hidden');
+
+        // Start OCR process
+        statusDiv.textContent = "🔍 Analyzing your student card, please wait...";
+        statusDiv.style.background = "#eff6ff";
+        statusDiv.style.color = "#2563EB";
+        statusDiv.style.border = "1.5px solid #bfdbfe";
+        statusDiv.classList.remove('hidden');
+        
+        uploadBtn.disabled = true;
+        nextBtn.disabled = true;
+
+        const formData = new FormData();
+        formData.append('studentCardFile', file);
+
+        try {
+            const response = await fetch("{{ path('freelancer_verify_card_process') }}", {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            
+            statusDiv.textContent = (result.success ? " " : "❌ ") + result.message;
+            
+            if (result.success) {
+                statusDiv.style.background = "#f0fdf4";
+                statusDiv.style.color = "#16a34a";
+                statusDiv.style.border = "1.5px solid #bbf7d0";
+                nextBtn.disabled = false;
+            } else {
+                statusDiv.style.background = "#fef2f2";
+                statusDiv.style.color = "#dc2626";
+                statusDiv.style.border = "1.5px solid #fecaca";
+                nextBtn.disabled = true;
+            }
+        } catch (error) {
+            console.error("Verification Error:", error);
+            statusDiv.textContent = "❌ An error occurred during verification. Please try again.";
+            statusDiv.style.background = "#fef2f2";
+            statusDiv.style.color = "#dc2626";
+            statusDiv.style.border = "1.5px solid #fecaca";
+        } finally {
+            uploadBtn.disabled = false;
+        }
     }
 });
 
 removeBtn.addEventListener('click', () => {
     fileInput.value = '';
     fileChip.classList.add('hidden');
+    statusDiv.classList.add('hidden');
+    nextBtn.disabled = true;
 });
 </script>
 </body>

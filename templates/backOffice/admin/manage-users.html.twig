@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn – Manage Users</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <style>
+        .users-table { width:100%; border-collapse:collapse; }
+        .table-head th { background:#f8f9fa; border-bottom:2px solid #e2e8f0; padding:12px 16px; text-align:left; font-size:13px; font-weight:700; color:#2c3e50; }
+        .table-body tr { border-bottom:1px solid #e2e8f0; transition:background .15s; }
+        .table-body tr:hover { background:#f0f4ff; }
+        .table-body td { padding:12px 16px; font-size:13px; color:#374151; vertical-align:middle; }
+        .role-badge { padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; color:white; }
+        .role-admin      { background:#e74c3c; }
+        .role-client     { background:#3498db; }
+        .role-freelancer { background:#9b59b6; }
+        .status-active   { background:#27ae60; color:white; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+        .status-inactive { background:#e74c3c; color:white; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+        .action-btn { padding:5px 12px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; border:none; }
+        .btn-view       { background:#3498db; color:white; text-decoration:none; }
+        .btn-activate   { background:#27ae60; color:white; }
+        .btn-deactivate { background:#e74c3c; color:white; }
+        .btn-delete     { background:#fff5f5; border:1.5px solid #fc8181; color:#c53030; }
+        .filter-bar { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+        .filter-bar input, .filter-bar select { padding:8px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; background:#f8fafc; }
+        .filter-bar input:focus, .filter-bar select:focus { outline:none; border-color:#2563EB; }
+    </style>
+</head>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form    = document.querySelector('.filter-bar');
+    const search  = form.querySelector('input[name="search"]');
+    const selects = form.querySelectorAll('select');
+    const results = document.getElementById('user-results-container');
+    let timer;
+
+    async function updateResults() {
+        const formData = new FormData(form);
+        const params   = new URLSearchParams(formData);
+        
+        // Update browser URL without reloading
+        const cleanParams = new URLSearchParams(formData);
+        window.history.replaceState({}, '', `${window.location.pathname}?${cleanParams.toString()}`);
+
+        // Fetch partial view
+        params.append('ajax', '1');
+        
+        // Show loading state
+        results.style.opacity = '0.5';
+        
+        try {
+            const response = await fetch(`${form.action}?${params.toString()}`);
+            const html     = await response.text();
+            results.innerHTML = html;
+        } catch (err) {
+            console.error('Admin AJAX Filter error:', err);
+        } finally {
+            results.style.opacity = '1';
+        }
+    }
+
+    // Make updateResults globally available for the pagination include
+    window.updateResults = updateResults;
+
+    search.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(updateResults, 400); // 400ms debounce
+    });
+
+    selects.forEach(s => {
+        s.addEventListener('change', updateResults);
+    });
+
+    // Intercept pagination clicks for AJAX
+    results.addEventListener('click', function(e) {
+        const link = e.target.closest('.pagination-ajax-link');
+        if (link) {
+            e.preventDefault();
+            const url = new URL(link.href);
+            const page = url.searchParams.get('page');
+            
+            const formData = new FormData(form);
+            const params   = new URLSearchParams(formData);
+            params.set('page', page);
+            
+            const cleanParams = new URL(link.href).search;
+            window.history.replaceState({}, '', `${window.location.pathname}${cleanParams}`);
+            
+            params.append('ajax', '1');
+            results.style.opacity = '0.5';
+            fetch(`${form.action}?${params.toString()}`)
+                .then(r => r.text())
+                .then(html => {
+                    results.innerHTML = html;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                })
+                .finally(() => results.style.opacity = '1');
+        }
+    });
+});
+</script>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': 'users'} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">👥 Manage Users</span>
+            <div class="top-bar-right">
+                <span class="top-bar-user">👤 {{ adminName }}</span>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            {# ── Filter bar ── #}
+            <div class="content-section" style="margin-bottom:20px;">
+                <form method="get" action="{{ path('admin_manage_users') }}" class="filter-bar">
+                    <div>
+                        <label class="field-label">ID</label>
+                        <input type="number" name="userId" value="{{ userId ?? '' }}" style="width:80px; height:44px;" placeholder="ID">
+                    </div>
+                    <div>
+                        <label class="field-label">Search</label>
+                        <input type="text" name="search" value="{{ search }}" style="width:510px;" placeholder="🔍 Name or email...">
+                    </div>
+                    <div>
+                        <label class="field-label">Role</label>
+                        <select name="role">
+                            {% for opt in ['All', 'Client', 'Freelancer'] %}
+                                <option value="{{ opt }}" {{ role == opt ? 'selected' : '' }}>{{ opt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label">Status</label>
+                        <select name="status">
+                            {% for opt in ['All', 'Active', 'Deactivated'] %}
+                                <option value="{{ opt }}" {{ status == opt ? 'selected' : '' }}>{{ opt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label">Sort by</label>
+                        <select name="sortBy">
+                            <option value="name_asc"  {{ sortBy == 'name_asc'  ? 'selected' : '' }}>Name (A-Z)</option>
+                            <option value="name_desc" {{ sortBy == 'name_desc' ? 'selected' : '' }}>Name (Z-A)</option>
+                            <option value="email_asc" {{ sortBy == 'email_asc' ? 'selected' : '' }}>Email (A-Z)</option>
+                            <option value="role"      {{ sortBy == 'role'      ? 'selected' : '' }}>Role</option>
+                            <option value="status"    {{ sortBy == 'status'    ? 'selected' : '' }}>Status</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-edit" style="height:38px;">Apply</button>
+                    <a href="{{ path('admin_manage_users') }}"
+                    class="back-button"
+                    style="
+                        height:38px;
+                        padding:0 10px;
+                        text-decoration:none;
+                        display:inline-flex;
+                        align-items:center;
+                        width:auto;
+                        flex:0 0 auto;
+                    ">
+                    Clear
+                    </a>
+                </form>
+            </div>
+
+            {# ── User table container for AJAX ── #}
+            <div class="content-section" id="user-results-container" style="transition: opacity 0.2s ease;">
+                {% include 'backOffice/admin/_user_table_results.html.twig' %}
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

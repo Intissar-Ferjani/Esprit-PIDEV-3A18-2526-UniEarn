@@ -5,11 +5,17 @@
     <title>UniEarn – Contract Details</title>
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <style>
+        @keyframes aispin { 100% { transform: rotate(360deg); } }
+        .ai-spin { animation: aispin 1.5s linear infinite; display: inline-block; }
+    </style>
 </head>
 <body class="dashboard-body">
 <div class="dashboard-layout">
 
-    <div class="dashboard-main" style="margin:0 auto;max-width:750px;padding:32px;">
+    {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': 'contracts'} %}
+
+    <div class="dashboard-main">
         <div class="top-bar">
             <span class="top-bar-title">📄 Contract Details</span>
             <div class="top-bar-right">
@@ -62,8 +68,22 @@
                     </div>
 
                     <div>
-                        <span class="field-label">Contract Content</span>
-                        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-top:4px;white-space:pre-wrap;font-size:13px;color:#374151;line-height:1.6;">{{ contract.content }}</div>
+                        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px;">
+                            <span class="field-label">Contract Content</span>
+                            <button type="button" id="aiSummaryBtn" style="background: linear-gradient(135deg, #a855f7, #ec4899); color: white; border: none; padding: 6px 14px; font-size: 11px; font-weight:600; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: transform 0.2s;">
+                                ✨ Résumer avec l'IA
+                            </button>
+                        </div>
+                        
+                        {# AI Summary Block #}
+                        <div id="aiSummaryContainer" style="display:none; background: linear-gradient(to right, #fdf4ff, #faf5ff); border: 1px solid #f0abfc; border-radius: 8px; padding: 16px; margin-bottom: 12px; color: #701a75; font-size: 13px;">
+                            <div id="aiSummaryLoader" style="display:flex; align-items:center; gap:10px; font-weight:600;">
+                                <span style="font-size:18px;" class="ai-spin">✨</span> <i>L'IA d'UniEarn analyse le contrat pour vous...</i>
+                            </div>
+                            <div id="aiSummaryContent" style="display:none; line-height: 1.6;"></div>
+                        </div>
+
+                        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;white-space:pre-wrap;font-size:13px;color:#374151;line-height:1.6;">{{ contract.content }}</div>
                     </div>
 
                     {# ── Signatures ── #}
@@ -166,5 +186,48 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const aiBtn = document.getElementById('aiSummaryBtn');
+    if(aiBtn) {
+        aiBtn.addEventListener('click', function() {
+            const btn = this;
+            const container = document.getElementById('aiSummaryContainer');
+            const loader = document.getElementById('aiSummaryLoader');
+            const content = document.getElementById('aiSummaryContent');
+            
+            btn.style.transform = 'scale(0.95)';
+            setTimeout(() => { btn.style.display = 'none'; }, 200);
+            
+            container.style.display = 'block';
+            loader.style.display = 'flex';
+            content.style.display = 'none';
+
+            fetch('{{ path('freelancer_contract_ai_summary', {id: contract.idContract}) }}', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                loader.style.display = 'none';
+                content.style.display = 'block';
+                if (data.error) {
+                    content.innerHTML = '<span style="color:#e11d48">❌ Erreur: ' + data.error + '</span>';
+                } else {
+                    content.innerHTML = '<div style="font-weight:700;margin-bottom:8px;font-size:14px;">✨ Résumé Express IA :</div>' + data.summary;
+                }
+            })
+            .catch(error => {
+                loader.style.display = 'none';
+                content.style.display = 'block';
+                content.innerHTML = '<span style="color:#e11d48">❌ Erreur lors de la communication avec l\'IA.</span>';
+            });
+        });
+    }
+});
+</script>
 </body>
 </html>

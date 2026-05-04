@@ -103,8 +103,8 @@ class ActivityLoggerSubscriber
 
     private function logActivity(string $action, object $entity, $em, ?array $changes = null): void
     {
-        $session = $this->requestStack->getSession();
-        $userId = $session ? $session->get('user_id') : null;
+        $request = $this->requestStack->getMainRequest();
+        $userId = $request && $request->hasSession() ? $request->getSession()->get('user_id') : null;
 
         $log = new ActivityLog();
         $log->setUserId($userId ? (int) $userId : null);

@@ -10,6 +10,9 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * @extends AbstractType<Evaluation>
+ */
 class EvaluationType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
@@ -28,8 +31,12 @@ class EvaluationType extends AbstractType
                 'multiple' => false,
             ])
             ->add('comment', TextareaType::class, [
-                'label' => 'Comment',
-                'attr' => ['rows' => 4, 'placeholder' => 'Leave your comment (minimum 15 characters)...']
+                'label' => '⭐ Detailed Feedback',
+                'attr' => [
+                    'rows' => 4, 
+                    'placeholder' => 'What did you like? What could be improved? (Minimum 15 characters)...',
+                    'class' => 'premium-input'
+                ]
             ])
             ->add('projectId', \Symfony\Component\Form\Extension\Core\Type\HiddenType::class, [
                 'required' => false,

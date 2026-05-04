@@ -12,9 +12,9 @@ use Doctrine\DBAL\Connection;
  * @extends ServiceEntityRepository<Application>
  *
  * @method Application|null find($id, $lockMode = null, $lockVersion = null)
- * @method Application|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Application|null findOneBy(array<string, mixed> $criteria, array<string, string> $orderBy = null)
  * @method Application[]    findAll()
- * @method Application[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method Application[]    findBy(array<string, mixed> $criteria, array<string, string> $orderBy = null, $limit = null, $offset = null)
  */
 class ApplicationRepository extends ServiceEntityRepository
 {
@@ -57,14 +57,26 @@ class ApplicationRepository extends ServiceEntityRepository
     /**
      * Finds applications matching search and sort criteria.
      * Complies with MVC standard: handles filtering/sorting in the persistence layer.
+     *
+     * @param int[]|null $projectIds
+     * @return Application[]
      */
-    public function findBySearchAndSort(?\App\Entity\users\freelancer\Freelancer $freelancer, string $search, string $sortBy): array
+    public function findBySearchAndSort(?\App\Entity\users\freelancer\Freelancer $freelancer, string $search, string $sortBy, ?array $projectIds = null): array
     {
         $qb = $this->createQueryBuilder('a');
 
         if ($freelancer) {
             $qb->andWhere('a.freelancer = :freelancer')
                ->setParameter('freelancer', $freelancer);
+        }
+
+        if ($projectIds !== null) {
+            if (empty($projectIds)) {
+                // Return no results if projectIds list is provided but empty
+                return [];
+            }
+            $qb->andWhere('a.projectId IN (:projectIds)')
+               ->setParameter('projectIds', $projectIds);
         }
 
         if (!empty($search)) {
@@ -91,10 +103,10 @@ class ApplicationRepository extends ServiceEntityRepository
 
     /**
      * Returns a map of projectId => ['userID' => int, 'name' => string, 'company' => string]
-
      * by reading the project table directly via DBAL.
      *
      * @param int[] $projectIds
+     * @return array<int, array{userID: int, name: string, company: string}>
      */
     public function getClientInfoByProjectIds(array $projectIds): array
     {
@@ -104,9 +116,9 @@ class ApplicationRepository extends ServiceEntityRepository
             $conn = $this->getEntityManager()->getConnection();
             $sql = '
                 SELECT p.idProject, u.idUser, u.name, c.company
-                FROM project p
-                JOIN client c   ON c.idClient = p.ClientID
-                JOIN user   u   ON u.idUser   = c.userID
+                FROM `project` p
+                JOIN `client` c   ON c.idClient = p.ClientID
+                JOIN `user`   u   ON u.idUser   = c.userID
                 WHERE p.idProject IN (:ids)
             ';
             $rows = $conn->executeQuery($sql, ['ids' => $projectIds], ['ids' => Connection::PARAM_INT_ARRAY])
@@ -124,6 +136,21 @@ class ApplicationRepository extends ServiceEntityRepository
         } catch (\Throwable $e) {
             // project table may not exist in this DB — return empty map
             return [];
+        }
+    }
+
+    /**
+     * Fetches the budget of a specific project via DBAL.
+     */
+    public function getProjectBudget(int $projectId): ?float
+    {
+        try {
+            $conn = $this->getEntityManager()->getConnection();
+            $sql = 'SELECT budget FROM `project` WHERE idProject = :id';
+            $result = $conn->executeQuery($sql, ['id' => $projectId])->fetchOne();
+            return $result ? (float)$result : null;
+        } catch (\Throwable $e) {
+            return null;
         }
     }
 

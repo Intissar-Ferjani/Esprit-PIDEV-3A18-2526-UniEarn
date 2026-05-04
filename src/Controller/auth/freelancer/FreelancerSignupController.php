@@ -3,12 +3,15 @@
 namespace App\Controller\auth\freelancer;
 
 use App\Entity\users\freelancer\Freelancer;
+use App\Entity\users\user\User;
 use App\Entity\users\freelancer\Portfolio;
 use App\Entity\users\freelancer\PortfolioItem;
 use App\Form\users\freelancer\FreelancerProfileFormType;
 use App\Form\users\freelancer\PortfolioFormType;
 use App\Form\users\freelancer\StudentCardFormType;
 use App\Repository\users\freelancer\FreelancerRepository;
+use App\Service\users\freelancer\CvAIService;
+use App\Service\users\freelancer\StudentCardOCRService;
 use App\Repository\users\user\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -28,15 +31,18 @@ class FreelancerSignupController extends AbstractController
         Request                $request,
         EntityManagerInterface $em,
         UserRepository         $userRepo,
+        FreelancerRepository   $freelancerRepo,
         SluggerInterface       $slugger
     ): Response {
-        $userId = $request->getSession()->get('pending_user_id');
+        $userId = $request->getSession()->get('pending_user_id') ?? $request->getSession()->get('user_id');
         if (!$userId) return $this->redirectToRoute('user_signup');
 
         $user = $userRepo->find($userId);
         if (!$user || $user->getRole() !== 'FREELANCER') return $this->redirectToRoute('user_signup');
 
-        $freelancer = new Freelancer();
+        // Look for existing freelancer data to restore
+        $freelancer = $freelancerRepo->findOneBy(['user' => $user]) ?: new Freelancer();
+        
         $form       = $this->createForm(FreelancerProfileFormType::class, $freelancer);        $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -71,6 +77,58 @@ class FreelancerSignupController extends AbstractController
         return $this->render('frontOffice/freelancer/auth/freelancer-information.html.twig', ['form' => $form, 'user' => $user]);
     }
 
+    // ── STEP 2b — AI Bio Generation (AJAX) ────────────────────────────
+
+    #[Route('/generate-bio', name: 'freelancer_generate_bio', methods: ['POST'])]
+    public function generateBio(
+        Request        $request,
+        UserRepository $userRepo,
+        CvAIService    $cvAIService
+    ): Response {
+        try {
+            $userId = $request->getSession()->get('pending_user_id');
+            if (!$userId) {
+                return $this->json(['success' => false, 'message' => 'Session expired.'], 403);
+            }
+
+            $user = $userRepo->find($userId);
+            if (!$user) {
+                return $this->json(['success' => false, 'message' => 'User not found.'], 404);
+            }
+
+            $file = $request->files->get('cvFile');
+
+            if (!$file || !$file->isValid()) {
+                $error = $file ? $file->getErrorMessage() : 'No file uploaded.';
+                return $this->json(['success' => false, 'message' => 'Upload failed: ' . $error], 400);
+            }
+
+            if ($file->getSize() > 10 * 1024 * 1024) {
+                return $this->json(['success' => false, 'message' => 'File too large (max 10MB).'], 400);
+            }
+
+            // Save to cv directory
+            $newFilename = 'cv_' . $userId . '_' . uniqid() . '.' . $file->guessExtension();
+            $file->move($this->getParameter('cv_directory'), $newFilename);
+            $fullPath = $this->getParameter('cv_directory') . '/' . $newFilename;
+
+            // Store the CV path in session so setup can use it
+            $request->getSession()->set('pending_cv_path', $newFilename);
+
+            // Generate bio
+            $result = $cvAIService->generateBioFromCv($fullPath, $user->getName());
+
+            return $this->json($result);
+
+        } catch (\Throwable $e) {
+            error_log("Bio Generation Error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+            return $this->json([
+                'success' => false,
+                'message' => 'Bio generation failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     // ── STEP 3 — Student Card Verification ────────────────────────────
 
     #[Route('/verify', name: 'freelancer_verify', methods: ['GET', 'POST'])]
@@ -78,8 +136,7 @@ class FreelancerSignupController extends AbstractController
         Request                $request,
         EntityManagerInterface $em,
         UserRepository         $userRepo,
-        FreelancerRepository   $freelancerRepo,
-        SluggerInterface       $slugger
+        FreelancerRepository   $freelancerRepo
     ): Response {
         $userId       = $request->getSession()->get('pending_user_id');
         $freelancerId = $request->getSession()->get('pending_freelancer_id');
@@ -91,29 +148,108 @@ class FreelancerSignupController extends AbstractController
 
         if (!$user || !$freelancer) return $this->redirectToRoute('user_signup');
 
+        // Restore card status if already uploaded
+        $existingCard = $freelancer->getStudentCardPath();
+        if ($existingCard && !$request->getSession()->has('card_path')) {
+            $request->getSession()->set('card_path', $existingCard);
+            $request->getSession()->set('card_verified', $freelancer->getVerificationStatus() === 'verified');
+        }
+
         $form = $this->createForm(StudentCardFormType::class);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $cardFile = $form->get('studentCardFile')->getData();
+            
+            // Check if card was verified via the separate process step
+            $session = $request->getSession();
+            $cardVerified = $session->get('card_verified', false);
+            $cardPath     = $session->get('card_path');
 
-            if ($cardFile) {
-                $ext         = $cardFile->guessExtension();
-                $newFilename = 'card_' . $userId . '_' . uniqid() . '.' . $ext;
-                try {
-                    $cardFile->move($this->getParameter('student_cards_directory'), $newFilename);
-                    $freelancer->setStudentCardPath('uploads/student_cards/' . $newFilename);
-                    $em->flush();
-                } catch (FileException) {
-                    $this->addFlash('error', 'Could not upload student card.');
-                    return $this->render('frontOffice/freelancer/auth/student-id-verification.html.twig', ['form' => $form, 'user' => $user]);
-                }
+            if (!$cardPath) {
+                $this->addFlash('error', 'Please upload and verify your student card first.');
+                return $this->render('frontOffice/freelancer/auth/student-id-verification.html.twig', ['form' => $form, 'user' => $user]);
             }
+
+            $freelancer->setStudentCardPath($cardPath);
+            $freelancer->setVerificationStatus($cardVerified ? 'verified' : 'unverified');
+            
+            $em->persist($freelancer);
+            $em->flush();
+
+            // Clear temporary session data
+            $session->remove('card_verified');
+            $session->remove('card_path');
 
             return $this->redirectToRoute('freelancer_portfolio');
         }
 
-        return $this->render('frontOffice/freelancer/auth/student-id-verification.html.twig', ['form' => $form, 'user' => $user]);
+        return $this->render('frontOffice/freelancer/auth/student-id-verification.html.twig', [
+            'form' => $form, 
+            'user' => $user
+        ]);
+    }
+
+    #[Route('/verify-card-process', name: 'freelancer_verify_card_process', methods: ['POST'])]
+    public function processCard(
+        Request                $request,
+        UserRepository         $userRepo,
+        FreelancerRepository   $freelancerRepo,
+        StudentCardOCRService  $ocrService
+    ): Response {
+        try {
+            $userId       = $request->getSession()->get('pending_user_id');
+            $freelancerId = $request->getSession()->get('pending_freelancer_id');
+
+            if (!$userId || !$freelancerId) {
+                return $this->json(['success' => false, 'message' => 'Session expired.'], 403);
+            }
+
+            $user       = $userRepo->find($userId);
+            $freelancer = $freelancerRepo->find($freelancerId);
+
+            $file = $request->files->get('studentCardFile');
+            
+            if (!$file || !$file->isValid()) {
+                $error = $file ? $file->getErrorMessage() : 'No file uploaded.';
+                return $this->json(['success' => false, 'message' => 'Upload failed: ' . $error], 400);
+            }
+
+            // Validate file size and type manually for the AJAX call
+            if ($file->getSize() > 10 * 1024 * 1024) { // Increased limit to 10MB just in case
+                return $this->json(['success' => false, 'message' => 'File too large (max 10MB).'], 400);
+            }
+
+            $allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+            if (!in_array($file->getMimeType(), $allowedTypes)) {
+                return $this->json(['success' => false, 'message' => 'Invalid file type. JPG, PNG or PDF required.'], 400);
+            }
+
+            $newFilename = 'card_' . $userId . '_' . uniqid() . '.' . $file->guessExtension();
+
+            $file->move($this->getParameter('student_cards_directory'), $newFilename);
+            $fullPath = $this->getParameter('student_cards_directory') . '/' . $newFilename;
+            $relativePath = 'uploads/student_cards/' . $newFilename;
+
+            // Run OCR
+            $result = $ocrService->verifyStudentCard($fullPath, $user->getName());
+
+            // Store in session
+            $request->getSession()->set('card_verified', $result['verified']);
+            $request->getSession()->set('card_path', $relativePath);
+
+            return $this->json([
+                'success'  => $result['verified'],
+                'message'  => $result['message'],
+                'filename' => $newFilename
+            ]);
+
+        } catch (\Throwable $e) {
+            error_log("AJAX Verification Error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+            return $this->json([
+                'success' => false, 
+                'message' => 'Verification failed: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     // ── STEP 4 — Portfolio ─────────────────────────────────────────────
@@ -203,7 +339,7 @@ class FreelancerSignupController extends AbstractController
 
     // ── Helper ─────────────────────────────────────────────────────────
 
-    private function finalizeLogin(Request $request, $user): void
+    private function finalizeLogin(Request $request, User $user): void
     {
         $session = $request->getSession();
         $session->remove('pending_user_id');

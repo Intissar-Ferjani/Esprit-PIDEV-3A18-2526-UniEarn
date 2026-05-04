@@ -16,7 +16,7 @@ class ForumPost
     private ?int $postId = null;
 
     #[ORM\Column(name: 'freelancer_id', type: 'integer')]
-    private ?int $freelancerId = null;
+    private int $freelancerId;
 
     #[ORM\Column(name: 'title', type: 'string', length: 200)]
     #[Assert\NotBlank(message: 'A title is required.')]
@@ -35,7 +35,7 @@ class ForumPost
     private string $category = 'General';
 
     #[ORM\Column(name: 'created_at', type: 'datetime')]
-    private ?\DateTimeInterface $createdAt = null;
+    private \DateTimeInterface $createdAt;
 
     #[ORM\Column(name: 'updated_at', type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $updatedAt = null;

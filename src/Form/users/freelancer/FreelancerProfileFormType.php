@@ -14,6 +14,7 @@ use Symfony\Component\Validator\Constraints\File;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Length;
 
+/** @extends AbstractType<\App\Entity\users\freelancer\Freelancer> */
 class FreelancerProfileFormType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void

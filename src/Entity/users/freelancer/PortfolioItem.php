@@ -57,7 +57,7 @@ class PortfolioItem
 
     #[ORM\ManyToOne(targetEntity: Portfolio::class)]
     #[ORM\JoinColumn(name: 'idPortfolio', referencedColumnName: 'idPortfolio', nullable: false, onDelete: 'CASCADE')]
-    private ?Portfolio $portfolio = null;
+    private Portfolio $portfolio;
 
     public function __construct()
     {
@@ -72,7 +72,7 @@ class PortfolioItem
     public function getDescription(): ?string { return $this->description; }
     public function setDescription(?string $v): static { $this->description = $v; return $this; }
 
-    /** Returns technologies as array */
+    /** @return array<int, string> */
     public function getTechnologiesArray(): array
     {
         if (!$this->technologies) return [];

@@ -16,16 +16,16 @@ class ForumReaction
     private ?int $reactionId = null;
 
     #[ORM\Column(name: 'post_id', type: 'integer')]
-    private ?int $postId = null;
+    private int $postId;
 
     #[ORM\Column(name: 'freelancer_id', type: 'integer')]
-    private ?int $freelancerId = null;
+    private int $freelancerId;
 
     #[ORM\Column(name: 'reaction_type', type: 'string', length: 20)]
     private string $reactionType = 'LIKE';
 
     #[ORM\Column(name: 'created_at', type: 'datetime')]
-    private ?\DateTimeInterface $createdAt = null;
+    private \DateTimeInterface $createdAt;
 
     public function __construct()
     {

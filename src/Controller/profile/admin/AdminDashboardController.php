@@ -2,6 +2,7 @@
 
 namespace App\Controller\profile\admin;
 
+use App\Entity\contract\Contract;
 use App\Repository\users\user\UserRepository;
 use App\Repository\users\client\ClientRepository;
 use App\Repository\users\freelancer\FreelancerRepository;
@@ -56,53 +57,39 @@ class AdminDashboardController extends AbstractController
         Request              $request,
         UserRepository       $userRepo,
         ClientRepository     $clientRepo,
-        FreelancerRepository $freelancerRepo
+        FreelancerRepository $freelancerRepo,
+        \Knp\Component\Pager\PaginatorInterface $paginator
     ): Response {
         if ($r = $this->requireAdmin($request)) return $r;
 
+        $userId = $request->query->get('userId') ? $request->query->getInt('userId') : null;
         $search = trim($request->query->get('search', ''));
         $role   = $request->query->get('role', 'All');
         $status = $request->query->get('status', 'All');
-        $sort   = $request->query->get('sort', 'name_asc');
+        $sortBy = $request->query->get('sortBy', 'name_asc');
+        $limit  = $request->query->getInt('limit', 10);
 
-        $users = $userRepo->findAllUsers();
+        $queryBuilder = $userRepo->getAdminSearchQueryBuilder($search, $userId, $role, $status, $sortBy);
 
-        // Search
-        if ($search) {
-            $users = array_filter($users, fn($u) =>
-                str_contains(strtolower($u->getName()), strtolower($search)) ||
-                str_contains(strtolower($u->getEmail()), strtolower($search))
-            );
-        }
+        $pagination = $paginator->paginate(
+            $queryBuilder,
+            $request->query->getInt('page', 1),
+            $limit
+        );
 
-        // Role filter
-        if ($role !== 'All') {
-            $users = array_filter($users, fn($u) => $u->getRole() === strtoupper($role));
-        }
+        $template = $request->query->get('ajax')
+            ? 'backOffice/admin/_user_table_results.html.twig'
+            : 'backOffice/admin/manage-users.html.twig';
 
-        // Status filter
-        if ($status === 'Active') {
-            $users = array_filter($users, fn($u) => $u->isActivated());
-        } elseif ($status === 'Deactivated') {
-            $users = array_filter($users, fn($u) => !$u->isActivated());
-        }
-
-        // Sort
-        $users = array_values($users);
-        usort($users, match ($sort) {
-            'name_desc'  => fn($a, $b) => strcmp($b->getName(), $a->getName()),
-            'email_asc'  => fn($a, $b) => strcmp($a->getEmail(), $b->getEmail()),
-            'role'       => fn($a, $b) => strcmp($a->getRole(), $b->getRole()),
-            'status'     => fn($a, $b) => $b->isActivated() <=> $a->isActivated(),
-            default      => fn($a, $b) => strcmp($a->getName(), $b->getName()),
-        });
-
-        return $this->render('backOffice/user/manage-users.html.twig', [
-            'users'      => $users,
+        return $this->render($template, [
+            'pagination' => $pagination,
+            'users'      => $pagination, // Map to users for compatibility
+            'userId'     => $userId,
             'search'     => $search,
             'role'       => $role,
             'status'     => $status,
-            'sort'       => $sort,
+            'sortBy'     => $sortBy,
+            'limit'      => $limit,
             'adminName'  => $request->getSession()->get('user_name'),
         ]);
     }
@@ -200,7 +187,32 @@ class AdminDashboardController extends AbstractController
         if ($r = $this->requireAdmin($request)) return $r;
 
         $user = $repo->find($id);
-        if ($user) { $em->remove($user); $em->flush(); }
+        if (!$user) {
+            $this->addFlash('error', 'User not found.');
+            return $this->redirectToRoute('admin_manage_users');
+        }
+
+        // Check if this user has linked contracts (as client or freelancer)
+        $contractRepo = $em->getRepository(Contract::class);
+        $contractCount = 0;
+
+        $client = $em->getRepository(\App\Entity\users\client\Client::class)->findOneBy(['user' => $user]);
+        if ($client) {
+            $contractCount += $contractRepo->count(['client' => $client]);
+        }
+
+        $freelancer = $em->getRepository(\App\Entity\users\freelancer\Freelancer::class)->findOneBy(['user' => $user]);
+        if ($freelancer) {
+            $contractCount += $contractRepo->count(['freelancer' => $freelancer]);
+        }
+
+        if ($contractCount > 0) {
+            $this->addFlash('error', "Cannot delete this user: $contractCount contract(s) are still linked to them.");
+            return $this->redirectToRoute('admin_manage_users');
+        }
+
+        $em->remove($user);
+        $em->flush();
 
         $this->addFlash('success', 'User deleted successfully.');
         return $this->redirectToRoute('admin_manage_users');
@@ -236,7 +248,7 @@ class AdminDashboardController extends AbstractController
 
         if ($status !== 'All') {
             $projects = array_filter($projects, static fn ($project): bool =>
-                ($project->getStatus()?->value ?? '') === $status
+                ($project->getStatus()->value ?? '') === $status
             );
         }
 

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UniEarn – Browse Freelancers</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <style>
@@ -141,24 +142,162 @@
             cursor:pointer; transition: background .2s;
         }
         .modal-close:hover { background:#e2e8f0; }
+
+        /* ── Tabs ────────────────────────────────────────────────── */
+        .tabs-container {
+            display: flex; gap: 10px; margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;
+        }
+        .tab-btn {
+            background: none; border: none; padding: 10px 20px;
+            font-size: 15px; font-weight: 700; color: #64748b;
+            cursor: pointer; border-radius: 8px; transition: all 0.2s;
+        }
+        .tab-btn:hover { background: #f1f5f9; color: #1e293b; }
+        .tab-btn.active {
+            background: #e0e7ff; color: #2563EB;
+        }
+
+        .ai-reason-box {
+            background: #fdf4ff; border: 1px solid #fbcfe8;
+            border-radius: 8px; padding: 12px; margin-top: 10px;
+            font-size: 13px; color: #86198f;
+        }
     </style>
 </head>
 <script>
-(function () {
+document.addEventListener('DOMContentLoaded', function() {
     const form    = document.querySelector('.filter-bar');
     const search  = form.querySelector('input[name="search"]');
     const selects = form.querySelectorAll('select');
+    const results = document.getElementById('freelancer-results');
     let timer;
 
-    function submit() { form.submit(); }
+    async function updateResults() {
+        const formData = new FormData(form);
+        const params   = new URLSearchParams(formData);
+        
+        // Update browser URL without reloading
+        const cleanParams = new URLSearchParams(formData);
+        window.history.replaceState({}, '', `${window.location.pathname}?${cleanParams.toString()}`);
+
+        // Fetch partial view
+        params.append('ajax', '1');
+        
+        // Show loading state
+        results.style.opacity = '0.5';
+        
+        try {
+            const response = await fetch(`${form.action}?${params.toString()}`);
+            const html     = await response.text();
+            results.innerHTML = html;
+        } catch (err) {
+            console.error('AJAX Filter error:', err);
+        } finally {
+            results.style.opacity = '1';
+        }
+    }
+
+    // Make updateResults globally available for the pagination include
+    window.updateResults = updateResults;
 
     search.addEventListener('input', () => {
         clearTimeout(timer);
-        timer = setTimeout(submit, 400);
+        timer = setTimeout(updateResults, 400); // 400ms debounce
     });
 
-    selects.forEach(s => s.addEventListener('change', submit));
-})();
+    selects.forEach(s => {
+        s.addEventListener('change', updateResults);
+    });
+
+    // Intercept pagination clicks for AJAX
+    results.addEventListener('click', function(e) {
+        const link = e.target.closest('.pagination-ajax-link');
+        if (link) {
+            e.preventDefault();
+            const url = new URL(link.href);
+            const page = url.searchParams.get('page');
+            
+            // Re-fetch using current form state but new page
+            const formData = new FormData(form);
+            const params   = new URLSearchParams(formData);
+            params.set('page', page);
+            
+            // Sync URL
+            const cleanParams = new URL(link.href).search;
+            window.history.replaceState({}, '', `${window.location.pathname}${cleanParams}`);
+            
+            // Load
+            params.append('ajax', '1');
+            results.style.opacity = '0.5';
+            fetch(`${form.action}?${params.toString()}`)
+                .then(r => r.text())
+                .then(html => {
+                    results.innerHTML = html;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                })
+                .finally(() => results.style.opacity = '1');
+        }
+    });
+});
+
+function switchTab(tabId) {
+    const allTab = document.getElementById('tab-all');
+    const recommendedTab = document.getElementById('tab-recommended');
+    const filterBar = document.getElementById('filter-bar-container');
+    const allResults = document.getElementById('freelancer-results');
+    const recommendedWrapper = document.getElementById('recommended-wrapper');
+    const recommendedResults = document.getElementById('recommended-results-container');
+
+    if (tabId === 'all') {
+        allTab.classList.add('active');
+        recommendedTab.classList.remove('active');
+        filterBar.style.display = 'flex';
+        allResults.style.display = 'block';
+        recommendedWrapper.style.display = 'none';
+    } else if (tabId === 'recommended') {
+        allTab.classList.remove('active');
+        recommendedTab.classList.add('active');
+        filterBar.style.display = 'none';
+        allResults.style.display = 'none';
+        recommendedWrapper.style.display = 'block';
+
+        // Load AI Recommendations if not already loaded
+        if (recommendedResults.innerHTML.trim() === '') {
+            loadAIRecommendations();
+        }
+    }
+}
+
+let aiFilterTimer;
+
+function loadAIRecommendations(event = null) {
+    if (event) event.preventDefault();
+    
+    clearTimeout(aiFilterTimer);
+    aiFilterTimer = setTimeout(() => {
+        const recommendedResults = document.getElementById('recommended-results-container');
+        const aiForm = document.getElementById('ai-filter-bar');
+        let url = '/client/freelancers/recommended';
+        
+        if (aiForm) {
+            const formData = new FormData(aiForm);
+            const params = new URLSearchParams(formData);
+            url += '?' + params.toString();
+        }
+
+        recommendedResults.innerHTML = '<div style="text-align:center; padding:40px; color:#64748b;"><i class="fa fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">Analyzing projects and finding the best matches using AI...</p></div>';
+        
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                recommendedResults.innerHTML = html;
+            })
+            .catch(err => {
+                recommendedResults.innerHTML = '<div class="flash flash-error">Failed to load AI recommendations.</div>';
+            });
+    }, 500); // 500ms debounce
+}
 </script>
 <body class="dashboard-body">
 <div class="dashboard-layout">
@@ -181,8 +320,14 @@
                 {% endfor %}
             {% endfor %}
 
+            {# ── Tabs ── #}
+            <div class="tabs-container">
+                <button id="tab-all" class="tab-btn active" onclick="switchTab('all')">All Freelancers</button>
+                <button id="tab-recommended" class="tab-btn" onclick="switchTab('recommended')">✨ AI Recommended</button>
+            </div>
+
             {# ── Filter bar ── #}
-            <form method="get" action="{{ path('client_browse_freelancers') }}" class="filter-bar">
+            <form id="filter-bar-container" method="get" action="{{ path('client_browse_freelancers') }}" class="filter-bar">
                 <div class="filter-group" style="flex:1;min-width:200px;">
                     <label>Search</label>
                     <input type="text" name="search" value="{{ search }}"
@@ -211,12 +356,12 @@
 
                 <div class="filter-group">
                     <label>Sort by</label>
-                    <select name="sort">
-                        <option value="rating_high" {{ sort == 'rating_high' ? 'selected' : '' }}>Rating (High)</option>
-                        <option value="rating_low"  {{ sort == 'rating_low'  ? 'selected' : '' }}>Rating (Low)</option>
-                        <option value="price_low"   {{ sort == 'price_low'   ? 'selected' : '' }}>Price (Low)</option>
-                        <option value="price_high"  {{ sort == 'price_high'  ? 'selected' : '' }}>Price (High)</option>
-                        <option value="name_asc"    {{ sort == 'name_asc'    ? 'selected' : '' }}>Name (A-Z)</option>
+                    <select name="sortBy">
+                        <option value="rating_high" {{ sortBy == 'rating_high' ? 'selected' : '' }}>Rating (High)</option>
+                        <option value="rating_low"  {{ sortBy == 'rating_low'  ? 'selected' : '' }}>Rating (Low)</option>
+                        <option value="price_low"   {{ sortBy == 'price_low'   ? 'selected' : '' }}>Price (Low)</option>
+                        <option value="price_high"  {{ sortBy == 'price_high'  ? 'selected' : '' }}>Price (High)</option>
+                        <option value="name_asc"    {{ sortBy == 'name_asc'    ? 'selected' : '' }}>Name (A-Z)</option>
                     </select>
                 </div>
 
@@ -230,65 +375,45 @@
                 </div>
             </form>
 
-            {# ── Results count ── #}
-            <p style="color:#64748b;font-size:13px;margin-bottom:16px;">
-                {{ count }} freelancer{{ count != 1 ? 's' : '' }} found
-            </p>
+            {# ── Results Wrapper for AJAX ── #}
+            <div id="freelancer-results" style="transition: opacity 0.2s ease;">
+                {% include 'frontOffice/client/profile/_freelancer_results.html.twig' %}
+            </div>
 
-            {# ── Freelancer cards ── #}
-            {% if freelancers is empty %}
-                <div class="empty-state">
-                    <span class="empty-icon">🔍</span>
-                    <p class="empty-text">No freelancers found</p>
-                    <p class="empty-subtext">Try adjusting your search or filters</p>
-                </div>
-            {% else %}
-                {% for f in freelancers %}
-                <div class="freelancer-card">
-
-                    {# Avatar #}
-                    {% if f.profilePicturePath %}
-                        <img src="{{ asset(f.profilePicturePath) }}" class="f-avatar" alt="{{ f.name }}">
-                    {% else %}
-                        <img src="{{ asset('images/default-avatar.jpg') }}" class="f-avatar" alt="{{ f.name }}">
-                    {% endif %}
-
-                    {# Info #}
-                    <div class="f-info">
-                        <div class="f-name-row">
-                            <span class="f-name">{{ f.name }}</span>
-                            {% if f.verificationStatus == 'verified' %}
-                                <span class="verified-badge">✓ Verified</span>
-                            {% else %}
-                                <span class="unverified-badge">⏳ Unverified</span>
-                            {% endif %}
-                        </div>
-                        <div class="f-email">📧 {{ f.email }}</div>
-                        <div class="f-stats">
-                            <span class="f-stat f-stat-rating">⭐ {{ f.rating }}</span>
-                            <span class="f-stat f-stat-price">💰 {{ f.pricePerHour }} TND/hr</span>
-                        </div>
-                        {% set skills = f.skillsArray %}
-                        {% if skills is not empty %}
-                        <div class="f-skills">
-                            {% for skill in skills|slice(0, 3) %}
-                                <span class="f-skill">{{ skill }}</span>
+            {# ── AI Recommended Wrapper ── #}
+            <div id="recommended-wrapper" style="display: none; transition: opacity 0.2s ease;">
+                <form id="ai-filter-bar" class="filter-bar" onsubmit="loadAIRecommendations(event)">
+                    <div class="filter-group" style="flex:1;min-width:200px;">
+                        <label>Target Project</label>
+                        <select name="projectId" onchange="loadAIRecommendations()">
+                            <option value="All">All Active Projects</option>
+                            {% for p in activeProjects %}
+                                <option value="{{ p.idProject }}">{{ p.title }}</option>
                             {% endfor %}
-                            {% if skills|length > 3 %}
-                                <span class="f-skill-more">+{{ skills|length - 3 }} more</span>
-                            {% endif %}
-                        </div>
-                        {% endif %}
+                        </select>
                     </div>
+                    <div class="filter-group">
+                        <label>Min Rating</label>
+                        <select name="minRating" onchange="loadAIRecommendations()">
+                            <option value="Any">Any</option>
+                            <option value="4.0+">4.0+</option>
+                            <option value="4.5+">4.5+</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Max Price/hr</label>
+                        <select name="maxPrice" onchange="loadAIRecommendations()">
+                            <option value="Any">Any</option>
+                            <option value="50">Under 50 TND</option>
+                            <option value="100">Under 100 TND</option>
+                        </select>
+                    </div>
+                </form>
 
-                    {# Remove the old modal button, replace with this #}
-                    <a href="{{ path('client_view_freelancer', {id: f.idFreelancer}) }}"
-                    class="btn-view-profile">
-                        View Profile
-                    </a>
+                <div id="recommended-results-container">
+                    {# Injected via JS #}
                 </div>
-                {% endfor %}
-            {% endif %}
+            </div>
 
         </div>
     </div>
@@ -348,7 +473,7 @@ function openProfile(btn) {
     document.getElementById('modalEmail').textContent  = email;
     document.getElementById('modalRating').textContent = rating.toFixed(1);
     document.getElementById('modalPrice').textContent  = price.toFixed(2) + ' TND';
-    document.getElementById('modalStatus').textContent = status === 'verified' ? '✅ Verified' : '⏳ Unverified';
+    document.getElementById('modalStatus').textContent = status === 'verified' ? ' Verified' : '⏳ Unverified';
 
     const bioSection = document.getElementById('modalBioSection');
     const bioEl      = document.getElementById('modalBio');

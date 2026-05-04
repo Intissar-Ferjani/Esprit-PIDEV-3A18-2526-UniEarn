@@ -21,36 +21,42 @@ class Application
 
     #[ORM\ManyToOne(targetEntity: Freelancer::class)]
     #[ORM\JoinColumn(name: 'freelancer_id', referencedColumnName: 'idFreelancer', nullable: false)]
-    private ?Freelancer $freelancer = null;
+    private Freelancer $freelancer;
 
     #[ORM\Column]
     #[Assert\NotBlank(message: 'Project ID is required.')]
     #[Assert\Positive(message: 'Invalid Project ID.')]
-    private ?int $projectId = null;
+    private int $projectId;
 
     #[ORM\Column(length: 255, enumType: ApplicationStatus::class)]
-    private ?ApplicationStatus $status = ApplicationStatus::PENDING;
+    private ApplicationStatus $status;
 
     #[ORM\Column(type: Types::TEXT)]
     #[Assert\NotBlank(message: 'Cover letter is required.')]
     #[Assert\Length(min: 20, minMessage: 'Cover letter must be at least 20 characters.')]
-    private ?string $coverLetter = null;
+    private string $coverLetter;
 
     #[ORM\Column]
     #[Assert\NotBlank(message: 'Proposed budget is required.')]
     #[Assert\Positive(message: 'Budget must be positive.')]
-    private ?float $proposedBudget = null;
+    private float $proposedBudget;
 
     #[ORM\Column]
     #[Assert\NotBlank(message: 'Estimated duration is required.')]
     #[Assert\Positive(message: 'Duration must be positive.')]
-    private ?int $estimatedDuration = null;
+    private int $estimatedDuration;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $appliedAt = null;
+    private \DateTimeInterface $appliedAt;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $updatedAt = null;
+    private \DateTimeInterface $updatedAt;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $compatibilityScore = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $aiAnalysis = null;
 
     public function __construct()
     {
@@ -164,6 +170,30 @@ class Application
     public function setUpdatedAt(\DateTimeInterface $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+    public function getCompatibilityScore(): ?float
+    {
+        return $this->compatibilityScore;
+    }
+
+    public function setCompatibilityScore(?float $compatibilityScore): static
+    {
+        $this->compatibilityScore = $compatibilityScore;
+
+        return $this;
+    }
+
+    public function getAiAnalysis(): ?string
+    {
+        return $this->aiAnalysis;
+    }
+
+    public function setAiAnalysis(?string $aiAnalysis): static
+    {
+        $this->aiAnalysis = $aiAnalysis;
 
         return $this;
     }

@@ -5,6 +5,7 @@
     <title>UniEarn – Edit Profile</title>
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
 </head>
 <body class="dashboard-body">
 <div class="dashboard-layout">
@@ -81,10 +82,17 @@
                         {{ form_widget(form.newPassword, {'attr': {
                             'class': 'custom-field',
                             'id': 'newPass',
-                            'style': 'width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; transition: all 0.2s; box-sizing: border-box;',
-                            'onkeyup': 'checkStrength(this.value)'
+                            'style': 'width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; transition: all 0.2s; box-sizing: border-box;'
                         }}) }}
-                        <p id="strengthMsg" style="font-size: 12px; margin-top: 6px; color: #64748b;"></p>
+                        <div id="password-strength-container" style="display:none; margin-top:10px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-size:11px; font-weight:700; color:#64748b;">
+                                <span>Password Strength</span>
+                                <span id="password-strength-text" style="color:#ef4444;">Weak</span>
+                            </div>
+                            <div style="height:6px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
+                                <div id="password-strength-bar" style="width:0%; height:100%; background:#ef4444; transition:all 0.3s ease;"></div>
+                            </div>
+                        </div>
                         {{ form_errors(form.newPassword) }}
                     </div>
 
@@ -159,5 +167,94 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
+<script>
+// Initialize Tagify for Skills
+document.addEventListener('DOMContentLoaded', function() {
+    const skillsInput = document.getElementById('freelancer_edit_form_skillsInput') || document.querySelector('[name="freelancer_edit_form[skillsInput]"]');
+    
+    if (skillsInput) {
+        var tagify = new Tagify(skillsInput, {
+            originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(','),
+            enforceWhitelist: false,
+            dropdown: {
+                maxItems: 20,           // <- maximum allowed rendered suggestions
+                classname: "tags-look", // <- custom classname for this dropdown, so it could be targeted
+                enabled: 0,             // <- show suggestions on focus
+                closeOnSelect: false    // <- do not hide the suggestions dropdown once an item has been selected
+            }
+        });
+
+        let controller; // for aborting the fetch
+
+        tagify.on('input', function(e) {
+            var value = e.detail.value
+            tagify.whitelist = null // reset the whitelist
+
+            // https://developer.mozilla.org/en-US/docs/Web/API/AbortController/abort
+            controller && controller.abort()
+            controller = new AbortController()
+
+            // show loading animation and hide the suggestions dropdown
+            tagify.loading(true).dropdown.hide()
+
+            fetch('/api/skills?q=' + value, {signal:controller.signal})
+                .then(RES => RES.json())
+                .then(function(newWhitelist){
+                    tagify.whitelist = newWhitelist // update whitelist Array in-place
+                    tagify.loading(false).dropdown.show(value) // render the suggestions dropdown
+                })
+        })
+    }
+});
+
+// Password Strength Calculator
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordField = document.getElementById('newPass');
+    const strengthContainer = document.getElementById('password-strength-container');
+    const strengthText = document.getElementById('password-strength-text');
+    const strengthBar = document.getElementById('password-strength-bar');
+
+    if (!passwordField) return;
+
+    passwordField.addEventListener('input', function() {
+        const password = this.value;
+        if (password.length === 0) {
+            strengthContainer.style.display = 'none';
+            return;
+        }
+        strengthContainer.style.display = 'block';
+        
+        let strength = 0;
+        if (password.length >= 8) strength += 1;
+        if (password.match(/[A-Z]/) && password.match(/[a-z]/)) strength += 1;
+        if (password.match(/[0-9]/)) strength += 1;
+        if (password.match(/[^A-Za-z0-9]/)) strength += 1;
+
+        switch(strength) {
+            case 0:
+            case 1:
+                strengthBar.style.width = '33%';
+                strengthBar.style.background = '#ef4444';
+                strengthText.textContent = 'Weak';
+                strengthText.style.color = '#ef4444';
+                break;
+            case 2:
+            case 3:
+                strengthBar.style.width = '66%';
+                strengthBar.style.background = '#f59e0b';
+                strengthText.textContent = 'Medium';
+                strengthText.style.color = '#f59e0b';
+                break;
+            case 4:
+                strengthBar.style.width = '100%';
+                strengthBar.style.background = '#10b981';
+                strengthText.textContent = 'Strong';
+                strengthText.style.color = '#10b981';
+                break;
+        }
+    });
+});
+</script>
 </body>
 </html>

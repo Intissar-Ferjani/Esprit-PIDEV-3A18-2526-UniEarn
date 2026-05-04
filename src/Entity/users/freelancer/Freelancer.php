@@ -57,11 +57,17 @@ class Freelancer
     #[ORM\Column(name: 'idTask', type: 'integer', nullable: true)]
     private ?int $idTask = null;
 
+    #[ORM\Column(name: 'iban', type: 'string', length: 255, nullable: true)]
+    private ?string $iban = null;
+
+    #[ORM\Column(name: 'swiftCode', type: 'string', length: 50, nullable: true)]
+    private ?string $swiftCode = null;
+
     // ── Relationship to User ────────────────────────────────────────────
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: 'idUser', referencedColumnName: 'idUser', nullable: false, onDelete: 'CASCADE')]
-    private ?User $user = null;
+    private User $user;
 
     // ── Getters & Setters ───────────────────────────────────────────────
 
@@ -76,13 +82,13 @@ class Freelancer
     public function getRating(): float { return $this->rating; }
     public function setRating(float $v): static { $this->rating = $v; return $this; }
 
-    /** Returns skills as an array */
+    /** @return array<int, string> */
     public function getSkillsArray(): array
     {
-        return $this->skills ? array_filter(array_map('trim', explode(',', $this->skills))) : [];
+        return $this->skills ? array_values(array_filter(array_map('trim', explode(',', $this->skills)))) : [];
     }
 
-    /** Accepts an array and stores as comma-separated string */
+    /** @param array<int, string> $skills */
     public function setSkillsArray(array $skills): static
     {
         $this->skills = implode(',', $skills);
@@ -113,12 +119,18 @@ class Freelancer
     public function getUser(): ?User { return $this->user; }
     public function setUser(User $user): static { $this->user = $user; return $this; }
 
+    public function getIban(): ?string { return $this->iban; }
+    public function setIban(?string $iban): static { $this->iban = $iban; return $this; }
+
+    public function getSwiftCode(): ?string { return $this->swiftCode; }
+    public function setSwiftCode(?string $swiftCode): static { $this->swiftCode = $swiftCode; return $this; }
+
     // ── Delegate User fields ────────────────────────────────────────────
 
-    public function getName(): ?string            { return $this->user?->getName(); }
-    public function getEmail(): ?string           { return $this->user?->getEmail(); }
-    public function getRole(): string             { return $this->user?->getRole() ?? 'FREELANCER'; }
-    public function isActivated(): bool           { return $this->user?->isActivated() ?? true; }
-    public function getProfilePicturePath(): ?string { return $this->user?->getProfilePicturePath(); }
-    public function getIdUser(): ?int             { return $this->user?->getIdUser(); }
+    public function getName(): string            { return $this->user->getName(); }
+    public function getEmail(): string           { return $this->user->getEmail(); }
+    public function getRole(): string             { return $this->user->getRole(); }
+    public function isActivated(): bool           { return $this->user->isActivated(); }
+    public function getProfilePicturePath(): ?string { return $this->user->getProfilePicturePath(); }
+    public function getIdUser(): ?int             { return $this->user->getIdUser(); }
 }

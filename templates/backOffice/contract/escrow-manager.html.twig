@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniEarn Admin – Escrow Manager</title>
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    {% include 'frontOffice/user/profile/_sidebar.html.twig' with {'active': 'escrow'} %}
+
+    <div class="dashboard-main">
+        <div class="top-bar">
+            <span class="top-bar-title">💰 Escrow System (Séquestre)</span>
+        </div>
+
+        <div class="dashboard-content">
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}" style="margin-bottom:16px;">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            {# ── Escrow Balance Card ── #}
+            <div style="background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 12px; padding: 24px; color: white; display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
+                <div>
+                    <h2 style="margin:0 0 8px; font-size:16px; color:#94a3b8; font-weight:500;">Solde Total en Séquestre (À Payer)</h2>
+                    <div style="font-size:36px; font-weight:700; color:#10b981; letter-spacing:-1px;">${{ totalEscrow|number_format(2) }}</div>
+                </div>
+                <div style="font-size:48px; opacity:0.2;">🏦</div>
+            </div>
+
+            <div class="content-section" style="padding:0;overflow:hidden;">
+                <div class="section-header" style="background:#f8fafc; padding:16px; display:block;">
+                     <h3 class="section-title" style="margin:0;font-size:15px; color:#334155;">Fonds Actuellement Bloqués (Contrats Terminés)</h3>
+                </div>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr>
+                            <th style="background:#f1f5f9;color:#475569;padding:12px 16px;text-align:left;font-size:12px;font-weight:600;">Contrat ID</th>
+                            <th style="background:#f1f5f9;color:#475569;padding:12px 16px;text-align:left;font-size:12px;font-weight:600;">Client</th>
+                            <th style="background:#f1f5f9;color:#475569;padding:12px 16px;text-align:left;font-size:12px;font-weight:600;">Freelancer</th>
+                            <th style="background:#f1f5f9;color:#475569;padding:12px 16px;text-align:left;font-size:12px;font-weight:600;">Infos Bancaires (RIB)</th>
+                            <th style="background:#f1f5f9;color:#475569;padding:12px 16px;text-align:left;font-size:12px;font-weight:600;">Montant</th>
+                            <th style="background:#f1f5f9;color:#475569;padding:12px 16px;text-align:center;font-size:12px;font-weight:600;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for contract in fundedContracts %}
+                        <tr style="border-bottom:1px solid #e2e8f0;transition:background .15s;" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background=''">
+                            <td style="padding:12px 16px;font-size:13px;font-weight:600;color:#3b82f6;">#{{ contract.idContract }}</td>
+                            <td style="padding:12px 16px;font-size:13px;color:#1e293b;">{{ contract.client.name }}</td>
+                            <td style="padding:12px 16px;font-size:13px;color:#1e293b;">{{ contract.freelancer.name }}</td>
+                            <td style="padding:12px 16px;font-size:12px;">
+                                {% if contract.freelancer.iban %}
+                                    <div style="font-family:monospace;color:#047857;background:#d1fae5;padding:4px 8px;border-radius:4px;display:inline-block;">{{ contract.freelancer.iban }}</div>
+                                    {% if contract.freelancer.swiftCode %}<div style="font-family:monospace;color:#64748b;margin-top:4px;">SWIFT: {{ contract.freelancer.swiftCode }}</div>{% endif %}
+                                {% else %}
+                                    <span style="color:#ef4444;background:#fee2e2;padding:4px 8px;border-radius:4px;font-style:italic;display:inline-block;">IBAN Non renseigné</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding:12px 16px;font-weight:700;color:#1e293b;font-size:14px;">${{ contract.amount }}</td>
+                            <td style="padding:12px 16px;text-align:center;">
+                                <form action="{{ path('admin_escrow_release', {id: contract.idContract}) }}" method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir transférer ces fonds au Freelancer ?');">
+                                    <button type="submit" class="btn-edit" style="width:100%;padding:8px 12px;font-size:12px;background:{{ contract.freelancer.iban ? '#10b981' : '#cbd5e1' }};color:white;border:none;border-radius:6px;cursor:{{ contract.freelancer.iban ? 'pointer' : 'not-allowed' }};font-weight:600;box-shadow:{{ contract.freelancer.iban ? '0 4px 6px -1px rgba(16, 185, 129, 0.2)' : 'none' }};transition:transform 0.1s;" {{ contract.freelancer.iban ? '' : 'disabled' }}>
+                                        💸 Libérer les fonds
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;">
+                                Aucun contrat n'est en attente de paiement actuellement. <br>
+                                <em>Les contrats apparaissent ici lorsque les clients effectuent leur paiement Stripe.</em>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

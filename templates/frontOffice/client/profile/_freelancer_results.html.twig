@@ -1,0 +1,61 @@
+{# ── Results count ── #}
+<p style="color:#64748b;font-size:13px;margin-bottom:16px;">
+    {{ count }} freelancer{{ count != 1 ? 's' : '' }} found
+</p>
+
+{# ── Freelancer cards ── #}
+{% if pagination is empty %}
+    <div class="empty-state">
+        <span class="empty-icon">🔍</span>
+        <p class="empty-text">No freelancers found</p>
+        <p class="empty-subtext">Try adjusting your search or filters</p>
+    </div>
+{% else %}
+    {% for f in pagination %}
+    <div class="freelancer-card">
+        {# ... existing card content ... #}
+        {# Avatar #}
+        {% if f.profilePicturePath %}
+            <img src="{{ asset(f.profilePicturePath) }}" class="f-avatar" alt="{{ f.name }}">
+        {% else %}
+            <img src="{{ asset('images/default-avatar.jpg') }}" class="f-avatar" alt="{{ f.name }}">
+        {% endif %}
+
+        {# Info #}
+        <div class="f-info">
+            <div class="f-name-row">
+                <span class="f-name">{{ f.name }}</span>
+                {% if f.verificationStatus == 'verified' %}
+                    <span class="verified-badge">✓ Verified</span>
+                {% else %}
+                    <span class="unverified-badge">⏳ Unverified</span>
+                {% endif %}
+            </div>
+            <div class="f-email">📧 {{ f.email }}</div>
+            <div class="f-stats">
+                <span class="f-stat f-stat-rating">⭐ {{ f.rating }}</span>
+                <span class="f-stat f-stat-price">💰 {{ f.pricePerHour }} TND/hr</span>
+            </div>
+            {% set skills = f.skillsArray %}
+            {% if skills is not empty %}
+            <div class="f-skills">
+                {% for skill in skills|slice(0, 3) %}
+                    <span class="f-skill">{{ skill }}</span>
+                {% endfor %}
+                {% if skills|length > 3 %}
+                    <span class="f-skill-more">+{{ skills|length - 3 }} more</span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <a href="{{ path('client_view_freelancer', {id: f.idFreelancer}) }}"
+        class="btn-view-profile" style="text-decoration: none;">
+            View Profile
+        </a>
+    </div>
+    {% endfor %}
+
+    {# ── Pagination Controls ── #}
+    {{ knp_pagination_render(pagination, 'inc/custom_pagination.html.twig') }}
+{% endif %}

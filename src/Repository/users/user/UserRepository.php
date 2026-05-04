@@ -6,6 +6,9 @@ use App\Entity\users\user\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+use Doctrine\ORM\QueryBuilder;
+
+/** @extends ServiceEntityRepository<User> */
 class UserRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -18,7 +21,45 @@ class UserRepository extends ServiceEntityRepository
         return $this->findOneBy(['email' => strtolower(trim($email))]);
     }
 
-    /** Returns all non-admin users */
+    public function getAdminSearchQueryBuilder(string $search, ?int $userId, string $role, string $status, string $sort): QueryBuilder
+    {
+        $qb = $this->createQueryBuilder('u')
+            ->where('u.role != :admin')
+            ->setParameter('admin', 'ADMIN');
+
+        if ($userId) {
+            $qb->andWhere('u.idUser = :userId')
+               ->setParameter('userId', $userId);
+        }
+
+        if ($search) {
+            $qb->andWhere('u.name LIKE :s OR u.email LIKE :s')
+               ->setParameter('s', '%' . $search . '%');
+        }
+
+        if ($role !== 'All') {
+            $qb->andWhere('u.role = :role')
+               ->setParameter('role', strtoupper($role));
+        }
+
+        if ($status === 'Active') {
+            $qb->andWhere('u.activated = true');
+        } elseif ($status === 'Deactivated') {
+            $qb->andWhere('u.activated = false');
+        }
+
+        switch ($sort) {
+            case 'name_desc': $qb->orderBy('u.name', 'DESC'); break;
+            case 'email_asc': $qb->orderBy('u.email', 'ASC'); break;
+            case 'role':      $qb->orderBy('u.role', 'ASC'); break;
+            case 'status':    $qb->orderBy('u.activated', 'DESC'); break;
+            default:          $qb->orderBy('u.name', 'ASC'); break;
+        }
+
+        return $qb;
+    }
+
+    /** @return User[] */
     public function findAllUsers(): array
     {
         return $this->createQueryBuilder('u')
@@ -29,7 +70,7 @@ class UserRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    /** Returns only active non-admin users */
+    /** @return User[] */
     public function findAllActiveUsers(): array
     {
         return $this->createQueryBuilder('u')

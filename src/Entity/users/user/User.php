@@ -26,16 +26,16 @@ class User
         pattern: '/^[\p{L}\s\-]+$/u',
         message: 'Name can only contain letters, spaces, and hyphens.'
     )]
-    private ?string $name = null;
+    private string $name = '';
 
     #[ORM\Column(name: 'email', type: 'string', length: 50, unique: true)]
     #[Assert\NotBlank(message: 'Email is required.')]
     #[Assert\Email(message: 'Please enter a valid email address.')]
     #[Assert\Length(max: 50, maxMessage: 'Email cannot exceed 50 characters.')]
-    private ?string $email = null;
+    private string $email = '';
 
     #[ORM\Column(name: 'password', type: 'string', length: 255)]
-    private ?string $password = null;
+    private string $password = '';
     
     #[ORM\Column(name: 'profilePicturePath', type: 'string', length: 255, nullable: true)]
     private ?string $profilePicturePath = null;
@@ -45,6 +45,15 @@ class User
 
     #[ORM\Column(name: 'activated', type: 'boolean')]
     private bool $activated = true;
+
+    #[ORM\Column(name: 'resetToken', type: 'string', length: 6, nullable: true)]
+    private ?string $resetToken = null;
+
+    #[ORM\Column(name: 'resetTokenExpiresAt', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $resetTokenExpiresAt = null;
+
+    #[ORM\Column(name: 'last_active_at', type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $lastActiveAt = null;
 
     // ── Getters & Setters ───────────────────────────────────────────────
 
@@ -67,4 +76,19 @@ class User
 
     public function isActivated(): bool { return $this->activated; }
     public function setActivated(bool $activated): static { $this->activated = $activated; return $this; }
+
+    public function getResetToken(): ?string { return $this->resetToken; }
+    public function setResetToken(?string $resetToken): static { $this->resetToken = $resetToken; return $this; }
+
+    public function getResetTokenExpiresAt(): ?\DateTimeImmutable { return $this->resetTokenExpiresAt; }
+    public function setResetTokenExpiresAt(?\DateTimeImmutable $expiresAt): static { $this->resetTokenExpiresAt = $expiresAt; return $this; }
+
+    public function getLastActiveAt(): ?\DateTimeInterface { return $this->lastActiveAt; }
+    public function setLastActiveAt(?\DateTimeInterface $dt): static { $this->lastActiveAt = $dt; return $this; }
+
+    public function isOnline(): bool
+    {
+        if (!$this->lastActiveAt) return false;
+        return (new \DateTime())->getTimestamp() - $this->lastActiveAt->getTimestamp() < 300;
+    }
 }

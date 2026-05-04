@@ -10,18 +10,22 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * @extends AbstractType<Application>
+ */
 class ApplicationType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('projectId', IntegerType::class, [
-                'label' => 'Project ID',
-                // Project would normally be an EntityType, but we use an Integer for now
-            ])
+            ->add('projectId', \Symfony\Component\Form\Extension\Core\Type\HiddenType::class)
             ->add('coverLetter', TextareaType::class, [
-                'label' => 'Cover Letter',
-                'attr' => ['rows' => 6, 'placeholder' => 'Write a cover letter of at least 20 characters...']
+                'label' => '✉️ Professional Cover Letter',
+                'attr' => [
+                    'rows' => 6, 
+                    'placeholder' => 'Sell your skills! Highlight your experience and why you are the best fit for this project...',
+                    'class' => 'premium-input'
+                ]
             ])
             ->add('proposedBudget', MoneyType::class, [
                 'label' => 'Proposed Budget',

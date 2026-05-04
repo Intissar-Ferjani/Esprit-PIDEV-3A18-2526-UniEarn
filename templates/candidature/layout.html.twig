@@ -44,11 +44,49 @@
         </div>
 
         <div class="dashboard-content">
-            {% for label, messages in app.flashes %}
-                {% for message in messages %}
-                    <div class="flash flash-{{ label }}">{{ message }}</div>
+            {# ── PREMIUM NOTIFICATIONS (TOASTS) ── #}
+            <div id="premium-toasts" style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; pointer-events: none;">
+                {% for label, messages in app.flashes %}
+                    {% for message in messages %}
+                        {% set icon = '✨' %}
+                        {% set primaryColor = '#4f46e5' %}
+                        {% if label == 'success' %}{% set icon = '✅' %}{% set primaryColor = '#10b981' %}{% endif %}
+                        {% if label == 'error' %}{% set icon = '🚫' %}{% set primaryColor = '#ef4444' %}{% endif %}
+                        {% if label == 'warning' %}{% set icon = '⚠️' %}{% set primaryColor = '#f59e0b' %}{% endif %}
+
+                        <div class="premium-toast" style="
+                            pointer-events: auto;
+                            min-width: 300px;
+                            max-width: 450px;
+                            background: rgba(255, 255, 255, 0.95);
+                            backdrop-filter: blur(12px);
+                            border-left: 5px solid {{ primaryColor }};
+                            padding: 16px 20px;
+                            border-radius: 12px;
+                            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+                            display: flex;
+                            align-items: center;
+                            gap: 14px;
+                            animation: toastSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                            font-size: 14px;
+                            font-weight: 500;
+                            color: #1e293b;
+                        ">
+                            <span style="font-size: 20px;">{{ icon }}</span>
+                            <div style="flex-grow: 1;">{{ message }}</div>
+                            <button onclick="this.parentElement.remove()" style="background:none; border:none; cursor:pointer; color:#94a3b8; font-size:18px;">&times;</button>
+                        </div>
+                    {% endfor %}
                 {% endfor %}
-            {% endfor %}
+            </div>
+
+            <style>
+                @keyframes toastSlideIn {
+                    from { transform: translateX(120%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                .premium-toast { transition: all 0.3s ease; }
+            </style>
 
             {% block content %}{% endblock %}
         </div>

@@ -140,7 +140,6 @@
         <div class="header-flex">
             <h3 class="app-title">
                 <span style="font-size:32px;">📄</span> Application Details
-                <span style="color:#94a3b8; font-weight:400; font-size: 20px;">#{{ application.id }}</span>
             </h3>
             {% set statusClass = 'status-' ~ application.status.value %}
             {% if statusClass not in ['status-PENDING', 'status-ACCEPTED', 'status-REJECTED'] %}{% set statusClass = 'status-DEFAULT' %}{% endif %}
@@ -149,22 +148,60 @@
 
         <div class="grid-metrics">
             <div class="metric-box" style="--accent: #4f46e5;">
-                <span class="metric-title">Project ID</span>
-                <span class="metric-value">#{{ application.projectId }}</span>
+                <span class="metric-title">Project Name</span>
+                <span class="metric-value">{{ projectTitle }}</span>
             </div>
             <div class="metric-box" style="--accent: #10b981;">
                 <span class="metric-title">Proposed Budget</span>
                 <span class="metric-value" style="color: #10b981;">{{ application.proposedBudget }} TND</span>
+                {% if convertedBudgets is defined %}
+                    <div style="font-size: 11px; color: #64748b; margin-top: 4px; font-weight: 600;">
+                        ≈ {{ convertedBudgets.USD }} USD / {{ convertedBudgets.EUR }} EUR
+                    </div>
+                {% endif %}
             </div>
             <div class="metric-box" style="--accent: #f59e0b;">
                 <span class="metric-title">Duration</span>
                 <span class="metric-value">{{ application.estimatedDuration }} Days</span>
             </div>
-            <div class="metric-box" style="--accent: #8b5cf6;">
-                <span class="metric-title">Applied On</span>
-                <span class="metric-value" style="font-size: 16px; margin-top: auto;">{{ application.appliedAt|date('M d, Y • g:i A') }}</span>
+            <div class="metric-box" style="--accent: #4f46e5;">
+                <span class="metric-title">Compatibility</span>
+                <div style="display:flex; align-items:center; gap:10px; margin-top:5px;">
+                    <div style="flex-grow:1; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
+                        <div style="width:{{ application.compatibilityScore }}%; height:100%; background:linear-gradient(90deg, #4f46e5, #7c3aed);"></div>
+                    </div>
+                    <span style="font-weight:800; color:#4f46e5; font-size:18px;">{{ application.compatibilityScore }}%</span>
+                </div>
             </div>
         </div>
+
+        {% if aiData and freelancer is defined and freelancer is not null %}
+            <div style="margin-bottom: 30px; padding: 25px; background: rgba(238, 242, 255, 0.7); backdrop-filter: blur(10px); border-radius: 16px; border: 1px solid #c7d2fe; box-shadow: 0 8px 30px rgba(79, 70, 229, 0.08); position: relative;">
+                <div style="position: absolute; top: -15px; left: 25px; background: #4f46e5; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);">
+                    Premium AI Analysis
+                </div>
+                <div style="display: flex; gap: 20px; align-items: flex-start;">
+                    <div style="font-size: 44px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">🤖</div>
+                    <div style="flex-grow: 1;">
+                        <p style="margin: 0 0 12px; color: #312e81; font-size: 15px; line-height: 1.6; font-weight: 500;">"{{ aiData.feedback }}"</p>
+                        
+                        <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px;">
+                            <div style="background: white; padding: 8px 16px; border-radius: 10px; border: 1px solid #e0e7ff; display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 12px; font-weight: 700; color: #6366f1;">SCORE:</span>
+                                <span style="font-weight: 800; color: #1e1b4b; font-size: 16px;">{{ (aiData.score * 100)|round }}%</span>
+                            </div>
+                            
+                            {% if aiData.recommendation is defined %}
+                                <div style="flex-grow: 1; min-width: 250px; background: #fffbeb; padding: 8px 16px; border-radius: 10px; border: 1px solid #fde68a; font-size: 13px; color: #92400e; display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 18px;">💡</span>
+                                    <span><strong>Pro Tip:</strong> {{ aiData.recommendation }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
 
         <div>
             <h4 style="font-size: 18px; color: #1e293b; margin-bottom: 15px; font-weight: 700;">Cover Letter</h4>

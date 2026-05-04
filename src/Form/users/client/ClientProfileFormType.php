@@ -11,6 +11,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\PositiveOrZero;
 
+/** @extends AbstractType<Client> */
 class ClientProfileFormType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
