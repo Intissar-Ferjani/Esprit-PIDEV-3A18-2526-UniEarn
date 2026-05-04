@@ -38,6 +38,7 @@ final class ProjectController extends AbstractController
         }
 
         $search = trim((string) $request->query->get('search', ''));
+        /** @var array<int, Project> $projects */
         $projects = $projectRepository->findBy(['client' => $client], ['idProject' => 'DESC']);
         if ($search !== '') {
             $projects = array_values(array_filter($projects, static fn (Project $project): bool => str_contains(strtolower($project->getTitle() ?? ''), strtolower($search))));
@@ -56,6 +57,7 @@ final class ProjectController extends AbstractController
             return $this->redirectToRoute('client_project_index', [], Response::HTTP_SEE_OTHER);
         }
 
+        /** @var array<int, \App\Entity\task\Task> $allTasks */
         $allTasks = count($projects) ? $taskRepository->findBy(['project' => $projects]) : [];
         $progress = $taskRepository->getProjectStats($projects, $allTasks)['progress'];
         $reviewTasks = array_values(array_filter($allTasks, static fn($t) => $t->getTaskStatus() === TaskStatus::REVIEW));
@@ -93,7 +95,7 @@ final class ProjectController extends AbstractController
         }
 
         $project = $projectRepository->find($id);
-        if (!$project || $project->getClient()?->getIdClient() !== $client->getIdClient()) {
+        if (!$project instanceof Project || $project->getClient()?->getIdClient() !== $client->getIdClient()) {
             throw $this->createNotFoundException('Project not found.');
         }
 
@@ -108,11 +110,13 @@ final class ProjectController extends AbstractController
         }
 
         $search = trim((string) $request->query->get('search', ''));
+        /** @var array<int, Project> $projects */
         $projects = $projectRepository->findBy(['client' => $client], ['idProject' => 'DESC']);
         if ($search !== '') {
             $projects = array_values(array_filter($projects, static fn (Project $item): bool => str_contains(strtolower($item->getTitle() ?? ''), strtolower($search))));
         }
 
+        /** @var array<int, \App\Entity\task\Task> $allTasks */
         $allTasks = count($projects) ? $taskRepository->findBy(['project' => $projects]) : [];
         $progress = $taskRepository->getProjectStats($projects, $allTasks)['progress'];
         $reviewTasks = array_values(array_filter($allTasks, static fn($t) => $t->getTaskStatus() === TaskStatus::REVIEW));
@@ -149,11 +153,11 @@ final class ProjectController extends AbstractController
         }
 
         $project = $projectRepository->find($id);
-        if (!$project || $project->getClient()?->getIdClient() !== $client->getIdClient()) {
+        if (!$project instanceof Project || $project->getClient()?->getIdClient() !== $client->getIdClient()) {
             throw $this->createNotFoundException('Project not found.');
         }
 
-        if ($this->isCsrfTokenValid('delete'.$project->getIdProject(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete'.$project->getIdProject(), (string) $request->request->get('_token'))) {
             $entityManager->remove($project);
             $entityManager->flush();
             $this->addFlash('success', 'Project deleted successfully.');
