@@ -16,7 +16,7 @@ class ForumPost
     private ?int $postId = null;
 
     #[ORM\Column(name: 'freelancer_id', type: 'integer')]
-    private int $freelancerId;
+    private ?int $freelancerId = null;
 
     #[ORM\Column(name: 'title', type: 'string', length: 200)]
     #[Assert\NotBlank(message: 'A title is required.')]

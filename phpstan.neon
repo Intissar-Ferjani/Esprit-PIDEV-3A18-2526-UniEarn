@@ -6,3 +6,5 @@ parameters:
         - src/Controller/auth
         - src/Entity/users
         - src/Service/users
+    ignoreErrors:
+        - '#is never assigned int so it can be removed from the property type#'

@@ -280,6 +280,7 @@ class FreelancerProfileController extends AbstractController
         Request                 $request,
         FreelancerRepository    $repo,
         PortfolioRepository     $portfolioRepo,
+        PortfolioItemRepository $itemRepo,
         EntityManagerInterface  $em
     ): Response {
         $userId = $request->getSession()->get('user_id');
@@ -313,7 +314,7 @@ class FreelancerProfileController extends AbstractController
             'freelancer'   => $freelancer,
             'user'         => $freelancer->getUser(),
             'portfolio'    => $portfolio,
-            'items'        => $em->getRepository(PortfolioItem::class)->findByPortfolioId($portfolio->getIdPortfolio()),
+            'items'        => $itemRepo->findByPortfolioId($portfolio->getIdPortfolio()),
             'addForm'      => $form->createView(),
             'editForm'     => $editForm->createView(),
             'openAddModal' => true,
