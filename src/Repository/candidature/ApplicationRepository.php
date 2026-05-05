@@ -47,7 +47,7 @@ class ApplicationRepository extends ServiceEntityRepository
     public function findByProjectId(int $projectId): array
     {
         return $this->createQueryBuilder('a')
-            ->andWhere('a.projectId = :val')
+            ->andWhere('IDENTITY(a.project) = :val')
             ->setParameter('val', $projectId)
             ->orderBy('a.appliedAt', 'ASC')
             ->getQuery()
@@ -75,7 +75,7 @@ class ApplicationRepository extends ServiceEntityRepository
                 // Return no results if projectIds list is provided but empty
                 return [];
             }
-            $qb->andWhere('a.projectId IN (:projectIds)')
+            $qb->andWhere('IDENTITY(a.project) IN (:projectIds)')
                ->setParameter('projectIds', $projectIds);
         }
 
@@ -117,8 +117,8 @@ class ApplicationRepository extends ServiceEntityRepository
             $sql = '
                 SELECT p.idProject, u.idUser, u.name, c.company
                 FROM `project` p
-                JOIN `client` c   ON c.idClient = p.ClientID
-                JOIN `user`   u   ON u.idUser   = c.userID
+                JOIN `client` c   ON c.idClient = p.client_id
+                JOIN `user`   u   ON u.idUser   = c.user_id
                 WHERE p.idProject IN (:ids)
             ';
             $rows = $conn->executeQuery($sql, ['ids' => $projectIds], ['ids' => Connection::PARAM_INT_ARRAY])
@@ -160,7 +160,7 @@ class ApplicationRepository extends ServiceEntityRepository
     public function findAcceptedProjectIdsForFreelancer(int $freelancerId): array
     {
         $rows = $this->createQueryBuilder('a')
-            ->select('DISTINCT a.projectId')
+            ->select('DISTINCT IDENTITY(a.project) AS projectId')
             ->andWhere('IDENTITY(a.freelancer) = :freelancerId')
             ->andWhere('a.status = :status')
             ->setParameter('freelancerId', $freelancerId)
@@ -177,7 +177,7 @@ class ApplicationRepository extends ServiceEntityRepository
     public function findAppliedProjectIdsForFreelancer(int $freelancerId): array
     {
         $rows = $this->createQueryBuilder('a')
-            ->select('DISTINCT a.projectId')
+            ->select('DISTINCT IDENTITY(a.project) AS projectId')
             ->andWhere('IDENTITY(a.freelancer) = :freelancerId')
             ->setParameter('freelancerId', $freelancerId)
             ->getQuery()

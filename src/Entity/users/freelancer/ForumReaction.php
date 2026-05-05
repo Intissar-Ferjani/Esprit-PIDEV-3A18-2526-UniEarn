@@ -2,6 +2,7 @@
 
 namespace App\Entity\users\freelancer;
 
+use App\Entity\users\freelancer\Freelancer;
 use App\Repository\users\freelancer\ForumReactionRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -18,8 +19,9 @@ class ForumReaction
     #[ORM\Column(name: 'post_id', type: 'integer')]
     private int $postId;
 
-    #[ORM\Column(name: 'freelancer_id', type: 'integer')]
-    private int $freelancerId;
+    #[ORM\ManyToOne(targetEntity: Freelancer::class)]
+    #[ORM\JoinColumn(name: 'freelancer_id', referencedColumnName: 'idFreelancer', nullable: false, onDelete: 'CASCADE')]
+    private Freelancer $freelancer;
 
     #[ORM\Column(name: 'reaction_type', type: 'string', length: 20)]
     private string $reactionType = 'LIKE';
@@ -40,8 +42,11 @@ class ForumReaction
     public function getPostId(): ?int { return $this->postId; }
     public function setPostId(?int $id): static { $this->postId = $id; return $this; }
 
-    public function getFreelancerId(): ?int { return $this->freelancerId; }
-    public function setFreelancerId(?int $id): static { $this->freelancerId = $id; return $this; }
+    public function getFreelancer(): ?Freelancer { return $this->freelancer; }
+    public function setFreelancer(Freelancer $freelancer): static { $this->freelancer = $freelancer; return $this; }
+
+    /** @deprecated Use getFreelancer()->getIdFreelancer() instead */
+    public function getFreelancerId(): ?int { return $this->freelancer?->getIdFreelancer(); }
 
     public function getReactionType(): string { return $this->reactionType; }
     public function setReactionType(string $type): static { $this->reactionType = $type; return $this; }

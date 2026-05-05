@@ -16,7 +16,7 @@ class ForumReactionRepository extends ServiceEntityRepository
 
     public function findByUserAndPost(int $freelancerId, int $postId): ?ForumReaction
     {
-        return $this->findOneBy(['freelancerId' => $freelancerId, 'postId' => $postId]);
+        return $this->findOneBy(['freelancer' => $freelancerId, 'postId' => $postId]);
     }
 
     public function countByPostAndType(int $postId, string $type): int
@@ -34,9 +34,9 @@ class ForumReactionRepository extends ServiceEntityRepository
     public function hasUserReacted(int $freelancerId, int $postId, string $type): bool
     {
         $reaction = $this->findOneBy([
-            'freelancerId' => $freelancerId,
-            'postId' => $postId,
-            'reactionType'   => $type,
+            'freelancer'   => $freelancerId,
+            'postId'       => $postId,
+            'reactionType' => $type,
         ]);
         return $reaction !== null;
     }

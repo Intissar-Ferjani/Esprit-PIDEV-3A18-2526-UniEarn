@@ -58,7 +58,7 @@ class ApplicationController extends AbstractController
         $treatedQuery = array_filter($all, fn($a) => $a->getStatus()->value !== 'PENDING');
 
         // Fetch project titles for all applications in this view
-        $allUniqueProjectIds = array_unique(array_map(fn($a) => $a->getProjectId(), $all));
+        $allUniqueProjectIds = array_unique(array_filter(array_map(fn($a) => $a->getProject()?->getIdProject(), $all)));
         $projectsList = $projectRepo->findByIds($allUniqueProjectIds);
         $projectTitles = [];
         foreach ($projectsList as $p) {
@@ -82,7 +82,7 @@ class ApplicationController extends AbstractController
         // For freelancers, look up which client owns each project
         $clientByProject = [];
         if ($freelancer && count($all) > 0) {
-            $projectIds = array_unique(array_map(fn($a) => $a->getProjectId(), array_values($all)));
+            $projectIds = array_unique(array_filter(array_map(fn($a) => $a->getProject()?->getIdProject(), array_values($all))));
             $clientByProject = $applicationRepository->getClientInfoByProjectIds($projectIds);
         }
 
@@ -121,7 +121,10 @@ class ApplicationController extends AbstractController
 
         $projectId = (int) $request->query->get('projectId', 0);
         if ($projectId > 0) {
-            $application->setProjectId($projectId);
+            $project = $entityManager->getRepository(\App\Entity\project\Project::class)->find($projectId);
+            if ($project) {
+                $application->setProject($project);
+            }
         }
 
         $form = $this->createForm(ApplicationType::class, $application);
@@ -152,7 +155,8 @@ class ApplicationController extends AbstractController
             }
 
             // Metier Avancé 3: Budget Range Validation (Metier + Repository logic)
-            $projectBudget = $applicationRepo->getProjectBudget($application->getProjectId());
+            $projectId = $application->getProject()?->getIdProject();
+            $projectBudget = $projectId ? $applicationRepo->getProjectBudget($projectId) : null;
             if ($projectBudget && $application->getProposedBudget() > $projectBudget * 1.5) {
                 $this->addFlash('warning', 'Note: Your proposed budget is significantly higher than the client\'s initial budget for this project.');
             }
@@ -198,7 +202,7 @@ class ApplicationController extends AbstractController
         $freelancer = $freelancerRepo->findByUserId($userId);
         $client = $clientRepo->findByUserId($userId);
 
-        $project = $projectRepo->find($application->getProjectId());
+        $project = $application->getProject();
 
         $converted = [];
         if ($application->getProposedBudget() > 0) {
@@ -211,7 +215,7 @@ class ApplicationController extends AbstractController
 
         return $this->render('candidature/application/show.html.twig', [
             'application' => $application,
-            'projectTitle' => $project ? $project->getTitle() : ('#' . $application->getProjectId()),
+            'projectTitle' => $project ? $project->getTitle() : ('#' . ($application->getProject()?->getIdProject() ?? '?')),
             'aiData' => json_decode($application->getAiAnalysis(), true),
             'convertedBudgets' => $converted,
             'freelancer' => $freelancer,
@@ -232,10 +236,13 @@ class ApplicationController extends AbstractController
             $application->setStatus(\App\Enum\ApplicationStatus::ACCEPTED);
 
             // Reject other applications for the same project
-            $others = $appRepo->findBy(['projectId' => $application->getProjectId()]);
-            foreach ($others as $other) {
-                if ($other->getId() !== $application->getId()) {
-                    $other->setStatus(\App\Enum\ApplicationStatus::REJECTED);
+            $projectId = $application->getProject()?->getIdProject();
+            if ($projectId) {
+                $others = $appRepo->findByProjectId($projectId);
+                foreach ($others as $other) {
+                    if ($other->getId() !== $application->getId()) {
+                        $other->setStatus(\App\Enum\ApplicationStatus::REJECTED);
+                    }
                 }
             }
 
@@ -284,11 +291,11 @@ class ApplicationController extends AbstractController
             $aiData = json_decode($application->getAiAnalysis(), true);
         }
 
-        $project = $projectRepo->find($application->getProjectId());
+        $project = $application->getProject();
 
         $binary = $pdfService->generateBinaryPdf('candidature/application/pdf.html.twig', [
             'application' => $application,
-            'projectTitle' => $project ? $project->getTitle() : ('#' . $application->getProjectId()),
+            'projectTitle' => $project ? $project->getTitle() : ('#' . ($application->getProject()?->getIdProject() ?? '?')),
             'aiData' => $aiData
         ]);
 

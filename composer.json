@@ -110,6 +110,7 @@
         }
     },
     "require-dev": {
+        "ahmed-bhs/doctrine-doctor": "*",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.1",
         "phpstan/phpstan-doctrine": "^2.0",

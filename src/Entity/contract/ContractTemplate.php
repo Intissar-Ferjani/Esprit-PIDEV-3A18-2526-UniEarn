@@ -18,7 +18,7 @@ class ContractTemplate
     #[ORM\Column(name: 'title', type: 'string', length: 255)]
     #[Assert\NotBlank(message: 'Title is required.')]
     #[Assert\Length(min: 3, max: 255)]
-    private ?string $title = null;
+    private string $title = '';
 
     #[ORM\Column(name: 'description', type: 'text', nullable: true)]
     #[Assert\Length(max: 1000, maxMessage: 'Description cannot exceed 1000 characters.')]
@@ -27,12 +27,12 @@ class ContractTemplate
     #[ORM\Column(name: 'content', type: 'text')]
     #[Assert\NotBlank(message: 'Content is required.')]
     #[Assert\Length(min: 10, minMessage: 'Content must be at least 10 characters.')]
-    private ?string $content = null;
+    private string $content = '';
 
     #[ORM\Column(name: 'contractType', type: 'string', length: 50)]
     #[Assert\NotBlank(message: 'Contract type is required.')]
     #[Assert\Choice(choices: ['fixed_price', 'hourly', 'milestone', 'retainer'], message: 'Invalid contract type.')]
-    private ?string $contractType = null;
+    private string $contractType = '';
 
     #[ORM\Column(name: 'createdAt', type: 'datetime')]
     private \DateTimeInterface $createdAt;
@@ -50,16 +50,16 @@ class ContractTemplate
 
     public function getIdContractTemplate(): ?int { return $this->idContractTemplate; }
 
-    public function getTitle(): ?string { return $this->title; }
+    public function getTitle(): string { return $this->title; }
     public function setTitle(string $title): static { $this->title = $title; return $this; }
 
     public function getDescription(): ?string { return $this->description; }
     public function setDescription(?string $description): static { $this->description = $description; return $this; }
 
-    public function getContent(): ?string { return $this->content; }
+    public function getContent(): string { return $this->content; }
     public function setContent(string $content): static { $this->content = $content; return $this; }
 
-    public function getContractType(): ?string { return $this->contractType; }
+    public function getContractType(): string { return $this->contractType; }
     public function setContractType(string $contractType): static { $this->contractType = $contractType; return $this; }
 
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }

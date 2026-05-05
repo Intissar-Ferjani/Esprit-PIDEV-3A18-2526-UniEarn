@@ -100,7 +100,7 @@
                     <form action="{{ path('admin_activity_log') }}" method="get" style="display: flex; gap: 8px; align-items: center;">
                         <select name="action_type" style="padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; outline: none; background: #fff;">
                             <option value="">All Actions</option>
-                            <option value="INSERT" {{ app.request.query.get('action_type') == 'INSERT' ? 'selected' : '' }}>INSERT</option>
+                            <option value="CREATE" {{ app.request.query.get('action_type') == 'CREATE' ? 'selected' : '' }}>CREATE</option>
                             <option value="UPDATE" {{ app.request.query.get('action_type') == 'UPDATE' ? 'selected' : '' }}>UPDATE</option>
                             <option value="DELETE" {{ app.request.query.get('action_type') == 'DELETE' ? 'selected' : '' }}>DELETE</option>
                         </select>

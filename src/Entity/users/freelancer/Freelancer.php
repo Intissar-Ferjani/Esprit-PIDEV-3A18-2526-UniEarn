@@ -16,14 +16,14 @@ class Freelancer
     #[ORM\Column(name: 'idFreelancer', type: 'integer')]
     private ?int $idFreelancer = null;
 
-    #[ORM\Column(name: 'pricePerHour', type: 'float')]
+    #[ORM\Column(name: 'pricePerHour', type: 'decimal', precision: 10, scale: 2)]
     #[Assert\NotBlank(message: 'Hourly rate is required.')]
     #[Assert\Positive(message: 'Hourly rate must be greater than 0.')]
     #[Assert\LessThanOrEqual(value: 9999, message: 'Hourly rate cannot exceed 9999 TND.')]
-    private float $pricePerHour = 0.0;
+    private string $pricePerHour = '0.00';
 
-    #[ORM\Column(name: 'amount', type: 'float')]
-    private float $amount = 0.0;
+    #[ORM\Column(name: 'amount', type: 'decimal', precision: 10, scale: 2)]
+    private string $amount = '0.00';
 
     #[ORM\Column(name: 'rating', type: 'float')]
     private float $rating = 0.0;
@@ -66,18 +66,18 @@ class Freelancer
     // ── Relationship to User ────────────────────────────────────────────
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'idUser', referencedColumnName: 'idUser', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'idUser', nullable: false, onDelete: 'CASCADE')]
     private User $user;
 
     // ── Getters & Setters ───────────────────────────────────────────────
 
     public function getIdFreelancer(): ?int { return $this->idFreelancer; }
 
-    public function getPricePerHour(): float { return $this->pricePerHour; }
-    public function setPricePerHour(float $v): static { $this->pricePerHour = $v; return $this; }
+    public function getPricePerHour(): string { return $this->pricePerHour; }
+    public function setPricePerHour(string $v): static { $this->pricePerHour = $v; return $this; }
 
-    public function getAmount(): float { return $this->amount; }
-    public function setAmount(float $v): static { $this->amount = $v; return $this; }
+    public function getAmount(): string { return $this->amount; }
+    public function setAmount(string $v): static { $this->amount = $v; return $this; }
 
     public function getRating(): float { return $this->rating; }
     public function setRating(float $v): static { $this->rating = $v; return $this; }

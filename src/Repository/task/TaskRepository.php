@@ -36,7 +36,7 @@ class TaskRepository extends ServiceEntityRepository
     public function findByProject(int $projectId): array
     {
         return $this->createQueryBuilder('t')
-            ->andWhere('t.idProject = :projectId')
+            ->andWhere('IDENTITY(t.project) = :projectId')
             ->setParameter('projectId', $projectId)
             ->orderBy('t.idTask', 'DESC')
             ->getQuery()

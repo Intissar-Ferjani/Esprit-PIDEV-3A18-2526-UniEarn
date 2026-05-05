@@ -20,38 +20,38 @@ class Contract
     private ?int $idContract = null;
 
     #[ORM\ManyToOne(targetEntity: ContractTemplate::class)]
-    #[ORM\JoinColumn(name: 'idContractTemplate', referencedColumnName: 'idContractTemplate', nullable: false)]
+    #[ORM\JoinColumn(name: 'contract_template_id', referencedColumnName: 'idContractTemplate', nullable: false)]
     private ?ContractTemplate $template = null;
 
     #[ORM\ManyToOne(targetEntity: Client::class)]
-    #[ORM\JoinColumn(name: 'idClient', referencedColumnName: 'idClient', nullable: false)]
+    #[ORM\JoinColumn(name: 'client_id', referencedColumnName: 'idClient', nullable: false)]
     private ?Client $client = null;
 
     #[ORM\ManyToOne(targetEntity: Freelancer::class)]
-    #[ORM\JoinColumn(name: 'idFreelancer', referencedColumnName: 'idFreelancer', nullable: false)]
+    #[ORM\JoinColumn(name: 'freelancer_id', referencedColumnName: 'idFreelancer', nullable: false)]
     private ?Freelancer $freelancer = null;
 
     #[ORM\Column(name: 'title', type: 'string', length: 255)]
     #[Assert\NotBlank(message: 'Title is required.')]
     #[Assert\Length(min: 3, max: 255)]
-    private ?string $title = null;
+    private string $title = '';
 
     #[ORM\Column(name: 'content', type: 'text')]
     #[Assert\NotBlank(message: 'Content is required.')]
-    private ?string $content = null;
+    private string $content = '';
 
     #[ORM\Column(name: 'amount', type: 'decimal', precision: 10, scale: 2)]
     #[Assert\NotBlank(message: 'Amount is required.')]
     #[Assert\Positive(message: 'Amount must be positive.')]
-    private ?string $amount = null;
+    private string $amount = '0.00';
 
     #[ORM\Column(name: 'startDate', type: 'date')]
     #[Assert\NotBlank(message: 'Start date is required.')]
-    private ?\DateTimeInterface $startDate = null;
+    private \DateTimeInterface $startDate;
 
     #[ORM\Column(name: 'endDate', type: 'date')]
     #[Assert\NotBlank(message: 'End date is required.')]
-    private ?\DateTimeInterface $endDate = null;
+    private \DateTimeInterface $endDate;
 
     #[ORM\Column(name: 'status', type: 'string', length: 20)]
     private string $status = 'pending';
@@ -93,19 +93,19 @@ class Contract
     public function getFreelancer(): ?Freelancer { return $this->freelancer; }
     public function setFreelancer(?Freelancer $freelancer): static { $this->freelancer = $freelancer; return $this; }
 
-    public function getTitle(): ?string { return $this->title; }
+    public function getTitle(): string { return $this->title; }
     public function setTitle(string $title): static { $this->title = $title; return $this; }
 
-    public function getContent(): ?string { return $this->content; }
+    public function getContent(): string { return $this->content; }
     public function setContent(string $content): static { $this->content = $content; return $this; }
 
-    public function getAmount(): ?string { return $this->amount; }
+    public function getAmount(): string { return $this->amount; }
     public function setAmount(string $amount): static { $this->amount = $amount; return $this; }
 
-    public function getStartDate(): ?\DateTimeInterface { return $this->startDate; }
+    public function getStartDate(): \DateTimeInterface { return $this->startDate; }
     public function setStartDate(\DateTimeInterface $startDate): static { $this->startDate = $startDate; return $this; }
 
-    public function getEndDate(): ?\DateTimeInterface { return $this->endDate; }
+    public function getEndDate(): \DateTimeInterface { return $this->endDate; }
     public function setEndDate(\DateTimeInterface $endDate): static { $this->endDate = $endDate; return $this; }
 
     public function getStatus(): string { return $this->status; }

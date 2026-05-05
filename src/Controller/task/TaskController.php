@@ -37,8 +37,9 @@ final class TaskController extends AbstractController
             return $this->redirectToRoute('freelancer_dashboard');
         }
 
-        $assignedProjects = $projectRepository->findByFreelancer($freelancer->getIdFreelancer());
-        $acceptedProjectIds = $applicationRepository->findAcceptedProjectIdsForFreelancer($freelancer->getIdFreelancer());
+        $freelancerId = (int) $freelancer->getIdFreelancer();
+        $assignedProjects = $projectRepository->findByFreelancer($freelancerId);
+        $acceptedProjectIds = $applicationRepository->findAcceptedProjectIdsForFreelancer($freelancerId);
         $acceptedProjects = $projectRepository->findByIds($acceptedProjectIds);
         $projectMap = [];
         foreach (array_merge($assignedProjects, $acceptedProjects) as $project) {
@@ -57,6 +58,7 @@ final class TaskController extends AbstractController
             return $this->redirectToRoute('freelancer_task_index', [], Response::HTTP_SEE_OTHER);
         }
 
+        /** @var array<int, Task> $tasks */
         $tasks = count($projects) ? $taskRepository->findBy(['project' => $projects], ['idTask' => 'DESC']) : [];
         $search = trim((string) $request->query->get('search', ''));
         if ($search !== '') {
@@ -112,12 +114,13 @@ final class TaskController extends AbstractController
 
         $project = $projectRepository->find($projectId);
 
-        $assignedProjects = $projectRepository->findByFreelancer($freelancer->getIdFreelancer());
-        $acceptedProjectIds = $applicationRepository->findAcceptedProjectIdsForFreelancer($freelancer->getIdFreelancer());
+        $freelancerId = (int) $freelancer->getIdFreelancer();
+        $assignedProjects = $projectRepository->findByFreelancer($freelancerId);
+        $acceptedProjectIds = $applicationRepository->findAcceptedProjectIdsForFreelancer($freelancerId);
         $acceptedProjects = $projectRepository->findByIds($acceptedProjectIds);
         $allowedProjectIds = array_map(static fn($p) => $p->getIdProject(), array_merge($assignedProjects, $acceptedProjects));
 
-        if (!$project || !in_array($project->getIdProject(), $allowedProjectIds, true)) {
+        if (!$project instanceof \App\Entity\project\Project || !in_array($project->getIdProject(), $allowedProjectIds, true)) {
             $this->addFlash('error', 'Invalid project selected.');
             return $this->redirectToRoute('freelancer_task_index');
         }
@@ -191,8 +194,9 @@ final class TaskController extends AbstractController
             return $this->redirectToRoute('freelancer_dashboard');
         }
 
-        $assignedProjects = $projectRepository->findByFreelancer($freelancer->getIdFreelancer());
-        $acceptedProjectIds = $applicationRepository->findAcceptedProjectIdsForFreelancer($freelancer->getIdFreelancer());
+        $freelancerId = (int) $freelancer->getIdFreelancer();
+        $assignedProjects = $projectRepository->findByFreelancer($freelancerId);
+        $acceptedProjectIds = $applicationRepository->findAcceptedProjectIdsForFreelancer($freelancerId);
         $acceptedProjects = $projectRepository->findByIds($acceptedProjectIds);
         $projectMap = [];
         foreach (array_merge($assignedProjects, $acceptedProjects) as $project) {
@@ -201,7 +205,7 @@ final class TaskController extends AbstractController
         $projects = array_values($projectMap);
         $task = $taskRepository->find($id);
         $allowedProjectIds = array_map(static fn($p) => $p->getIdProject(), $projects);
-        if (!$task || !in_array($task->getProject()?->getIdProject(), $allowedProjectIds, true)) {
+        if (!$task instanceof Task || !in_array($task->getProject()?->getIdProject(), $allowedProjectIds, true)) {
             throw $this->createNotFoundException('Task not found.');
         }
 
@@ -215,6 +219,7 @@ final class TaskController extends AbstractController
             return $this->redirectToRoute('freelancer_task_index', [], Response::HTTP_SEE_OTHER);
         }
 
+        /** @var array<int, Task> $tasks */
         $tasks = count($projects) ? $taskRepository->findBy(['project' => $projects], ['idTask' => 'DESC']) : [];
         $search = trim((string) $request->query->get('search', ''));
         if ($search !== '') {
@@ -263,8 +268,9 @@ final class TaskController extends AbstractController
             return $this->redirectToRoute('freelancer_dashboard');
         }
 
-        $assignedProjects = $projectRepository->findByFreelancer($freelancer->getIdFreelancer());
-        $acceptedProjectIds = $applicationRepository->findAcceptedProjectIdsForFreelancer($freelancer->getIdFreelancer());
+        $freelancerId = (int) $freelancer->getIdFreelancer();
+        $assignedProjects = $projectRepository->findByFreelancer($freelancerId);
+        $acceptedProjectIds = $applicationRepository->findAcceptedProjectIdsForFreelancer($freelancerId);
         $acceptedProjects = $projectRepository->findByIds($acceptedProjectIds);
         $projectMap = [];
         foreach (array_merge($assignedProjects, $acceptedProjects) as $project) {
@@ -273,7 +279,7 @@ final class TaskController extends AbstractController
         $projects = array_values($projectMap);
         $allowedProjectIds = array_map(static fn($p) => $p->getIdProject(), $projects);
         $task = $taskRepository->find($id);
-        if (!$task || !in_array($task->getProject()?->getIdProject(), $allowedProjectIds, true)) {
+        if (!$task instanceof Task || !in_array($task->getProject()?->getIdProject(), $allowedProjectIds, true)) {
             throw $this->createNotFoundException('Task not found.');
         }
 

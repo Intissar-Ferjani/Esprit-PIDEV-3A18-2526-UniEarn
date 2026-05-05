@@ -19,19 +19,19 @@ class ActivityLog
     private ?int $userId = null;
 
     #[ORM\Column(type: 'string', length: 50)]
-    private ?string $actionType = null;
+    private string $actionType = '';
 
     #[ORM\Column(type: 'string', length: 150)]
-    private ?string $entityName = null;
+    private string $entityName = '';
 
     #[ORM\Column(type: 'integer')]
-    private ?int $entityId = null;
+    private int $entityId = 0;
 
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $changes = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $createdAt = null;
+    private \DateTimeInterface $createdAt;
 
     public function __construct()
     {
@@ -54,7 +54,7 @@ class ActivityLog
         return $this;
     }
 
-    public function getActionType(): ?string
+    public function getActionType(): string
     {
         return $this->actionType;
     }
@@ -65,7 +65,7 @@ class ActivityLog
         return $this;
     }
 
-    public function getEntityName(): ?string
+    public function getEntityName(): string
     {
         return $this->entityName;
     }
@@ -76,7 +76,7 @@ class ActivityLog
         return $this;
     }
 
-    public function getEntityId(): ?int
+    public function getEntityId(): int
     {
         return $this->entityId;
     }
@@ -98,7 +98,7 @@ class ActivityLog
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getCreatedAt(): \DateTimeInterface
     {
         return $this->createdAt;
     }

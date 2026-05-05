@@ -3,6 +3,7 @@
 namespace App\Entity\candidature;
 
 use App\Enum\EvaluationType;
+use App\Entity\project\Project;
 use App\Entity\users\user\User;
 use App\Repository\candidature\EvaluationRepository;
 use Doctrine\DBAL\Types\Types;
@@ -27,8 +28,9 @@ class Evaluation
     #[ORM\JoinColumn(name: 'evaluated_id', referencedColumnName: 'idUser', nullable: false)]
     private User $evaluated;
 
-    #[ORM\Column(nullable: true)]
-    private ?int $projectId = null;
+    #[ORM\ManyToOne(targetEntity: Project::class)]
+    #[ORM\JoinColumn(name: 'project_id', referencedColumnName: 'idProject', nullable: true)]
+    private ?Project $project = null;
 
     #[ORM\Column]
     #[Assert\NotBlank(message: 'Rating is required.')]
@@ -101,15 +103,28 @@ class Evaluation
         return $this;
     }
 
-    public function getProjectId(): ?int
+    public function getProject(): ?Project
     {
-        return $this->projectId;
+        return $this->project;
     }
 
+    public function setProject(?Project $project): static
+    {
+        $this->project = $project;
+
+        return $this;
+    }
+
+    /** @deprecated Use getProject()?->getIdProject() instead */
+    public function getProjectId(): ?int
+    {
+        return $this->project?->getIdProject();
+    }
+
+    /** @deprecated Use setProject() instead */
     public function setProjectId(?int $projectId): static
     {
-        $this->projectId = $projectId;
-
+        // kept for form compatibility; callers should migrate to setProject()
         return $this;
     }
 

@@ -16,6 +16,8 @@ class AISuggestionService
     /**
      * Reaches out to the Pollinations AI text API to automatically break down a project
      * description into smaller, manageable sub-tasks.
+     *
+     * @return array<int, array<string, mixed>>
      */
     public function suggestTasks(string $projectTitle, string $projectDescription): array
     {
@@ -59,7 +61,7 @@ PROMPT;
             $content = preg_replace('/```json|```/', '', $content);
             
             // Decode the stringified JSON into a searchable PHP associative array.
-            $data = json_decode(trim($content), true);
+            $data = json_decode(trim((string) $content), true);
             
             // 4. Fallback Validations
             // Ensure the data didn't break and is exactly the format we requested.

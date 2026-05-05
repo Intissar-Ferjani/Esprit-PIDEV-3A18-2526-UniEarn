@@ -22,27 +22,27 @@ class Task
     #[ORM\Column(name: 'title', type: 'string', length: 255)]
     #[Assert\NotBlank(message: 'Title is required.')]
     #[Assert\Length(min: 3, max: 255, minMessage: 'Title must be at least 3 characters.')]
-    private ?string $title = null;
+    private string $title;
 
     #[ORM\Column(name: 'description', type: 'string', length: 255)]
     #[Assert\NotBlank(message: 'Description is required.')]
     #[Assert\Length(min: 10, max: 255, minMessage: 'Description must be at least 10 characters.')]
-    private ?string $description = null;
+    private string $description;
 
     #[ORM\Column(name: 'deadline', type: Types::DATETIME_MUTABLE)]
     #[Assert\NotBlank(message: 'Deadline is required.')]
-    private ?\DateTimeInterface $deadline = null;
+    private \DateTimeInterface $deadline;
 
     #[ORM\Column(name: 'TaskStatus', type: 'string', length: 50, enumType: TaskStatus::class)]
     #[Assert\NotBlank(message: 'Status is required.')]
     private TaskStatus $taskStatus = TaskStatus::TODO;
 
     #[ORM\Column(name: 'dateAssign', type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $dateAssign = null;
+    private \DateTimeInterface $dateAssign;
 
     #[ORM\Column(name: 'role', type: 'string', length: 255)]
     #[Assert\NotBlank(message: 'Role is required.')]
-    private ?string $role = null;
+    private string $role;
 
     #[ORM\Column(name: 'priority', type: 'string', length: 50)]
     #[Assert\NotBlank(message: 'Priority is required.')]
@@ -59,8 +59,8 @@ class Task
     private ?string $clientFeedback = null;
 
     #[ORM\ManyToOne(targetEntity: Project::class)]
-    #[ORM\JoinColumn(name: 'idProject', referencedColumnName: 'idProject', nullable: false)]
-    private ?Project $project = null;
+    #[ORM\JoinColumn(name: 'project_id', referencedColumnName: 'idProject', nullable: false)]
+    private Project $project;
 
     public function __construct()
     {
@@ -188,7 +188,7 @@ class Task
         return $this->project;
     }
 
-    public function setProject(?Project $project): static
+    public function setProject(Project $project): static
     {
         $this->project = $project;
         return $this;
@@ -196,28 +196,26 @@ class Task
 
     public function isOverdue(): bool
     {
-        if ($this->deadline === null) {
-            return false;
-        }
+        // Deadline is no longer nullable, so we don't check for null
         return $this->deadline < new \DateTime() && $this->taskStatus !== TaskStatus::DONE;
     }
 
     #[Assert\Callback]
     public function validateInput(ExecutionContextInterface $context): void
     {
-        if ($this->title !== null && $this->title !== '' && !preg_match("/^[\\p{L}\\p{N}\\s.,;:!?()'\\/\\-]+$/u", $this->title)) {
+        if ($this->title !== '' && !preg_match("/^[\\p{L}\\p{N}\\s.,;:!?()'\\/\\-]+$/u", $this->title)) {
             $context->buildViolation('Title must contain only letters, numbers, spaces, and basic punctuation.')
                 ->atPath('title')
                 ->addViolation();
         }
 
-        if ($this->description !== null && $this->description !== '' && !preg_match("/^[\\p{L}\\p{N}\\s.,;:!?()'\"-]+$/u", $this->description)) {
+        if ($this->description !== '' && !preg_match("/^[\\p{L}\\p{N}\\s.,;:!?()'\"-]+$/u", $this->description)) {
             $context->buildViolation('Description contains invalid characters.')
                 ->atPath('description')
                 ->addViolation();
         }
 
-        if ($this->role !== null && $this->role !== '' && !preg_match("/^[\\p{L}\\p{N}\\s.,;:!?()'\\/\\-]+$/u", $this->role)) {
+        if ($this->role !== '' && !preg_match("/^[\\p{L}\\p{N}\\s.,;:!?()'\\/\\-]+$/u", $this->role)) {
             $context->buildViolation('Role must contain only letters, numbers, spaces, and basic punctuation.')
                 ->atPath('role')
                 ->addViolation();

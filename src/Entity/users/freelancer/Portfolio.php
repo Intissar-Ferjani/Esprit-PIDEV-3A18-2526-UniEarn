@@ -29,7 +29,7 @@ class Portfolio
 
     // Links to freelancer table via freelancerId (idFreelancer FK)
     #[ORM\ManyToOne(targetEntity: Freelancer::class)]
-    #[ORM\JoinColumn(name: 'freelancerId', referencedColumnName: 'idFreelancer', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'freelancer_id', referencedColumnName: 'idFreelancer', nullable: false, onDelete: 'CASCADE')]
     private Freelancer $freelancer;
 
     public function __construct()

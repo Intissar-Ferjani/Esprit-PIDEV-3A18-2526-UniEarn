@@ -16,10 +16,10 @@ class Client
     #[ORM\Column(name: 'idClient', type: 'integer')]
     private ?int $idClient = null;
 
-    #[ORM\Column(name: 'amount', type: 'float')]
+    #[ORM\Column(name: 'amount', type: 'decimal', precision: 10, scale: 2)]
     #[Assert\PositiveOrZero(message: 'Budget cannot be negative.')]
     #[Assert\LessThanOrEqual(value: 999999, message: 'Budget cannot exceed 999,999 TND.')]
-    private float $amount = 0.0;
+    private string $amount = '0.00';
 
     #[ORM\Column(name: 'rating', type: 'float')]
     private float $rating = 0.0;
@@ -59,15 +59,15 @@ class Client
     // ── Relationship to User (mirrors Java's Client extends User + userID FK) ──
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'userID', referencedColumnName: 'idUser', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'idUser', nullable: false, onDelete: 'CASCADE')]
     private User $user;
 
     // ── Getters & Setters ───────────────────────────────────────────────
 
     public function getIdClient(): ?int { return $this->idClient; }
 
-    public function getAmount(): float { return $this->amount; }
-    public function setAmount(float $amount): static { $this->amount = $amount; return $this; }
+    public function getAmount(): string { return $this->amount; }
+    public function setAmount(string $amount): static { $this->amount = $amount; return $this; }
 
     public function getRating(): float { return $this->rating; }
     public function setRating(float $rating): static { $this->rating = $rating; return $this; }

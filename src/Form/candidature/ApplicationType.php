@@ -18,7 +18,9 @@ class ApplicationType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('projectId', \Symfony\Component\Form\Extension\Core\Type\HiddenType::class)
+            ->add('projectId', \Symfony\Component\Form\Extension\Core\Type\HiddenType::class, [
+                'mapped' => false,
+            ])
             ->add('coverLetter', TextareaType::class, [
                 'label' => '✉️ Professional Cover Letter',
                 'attr' => [

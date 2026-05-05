@@ -22,28 +22,28 @@ class Project
     #[ORM\Column(name: 'title', type: 'string', length: 255)]
     #[Assert\NotBlank(message: 'Title is required.')]
     #[Assert\Length(min: 3, max: 255, minMessage: 'Title must be at least 3 characters.')]
-    private ?string $title = null;
+    private string $title;
 
     #[ORM\Column(name: 'description', type: 'string', length: 255)]
     #[Assert\NotBlank(message: 'Description is required.')]
     #[Assert\Length(min: 10, max: 255, minMessage: 'Description must be at least 10 characters.')]
-    private ?string $description = null;
+    private string $description;
 
     #[ORM\Column(name: 'budget', type: 'float')]
     #[Assert\NotBlank(message: 'Budget is required.')]
     #[Assert\Positive(message: 'Budget must be positive.')]
-    private ?float $budget = null;
+    private float $budget;
 
     #[ORM\Column(name: 'status', type: 'string', length: 12, enumType: Projectstatus::class)]
     #[Assert\NotBlank(message: 'Status is required.')]
-    private ?Projectstatus $status = null;
+    private Projectstatus $status;
 
     #[ORM\ManyToOne(targetEntity: Client::class)]
-    #[ORM\JoinColumn(name: 'ClientID', referencedColumnName: 'idClient', nullable: false)]
-    private ?Client $client = null;
+    #[ORM\JoinColumn(name: 'client_id', referencedColumnName: 'idClient', nullable: false)]
+    private Client $client;
 
     #[ORM\ManyToOne(targetEntity: Freelancer::class)]
-    #[ORM\JoinColumn(name: 'freelancerID', referencedColumnName: 'idFreelancer', nullable: true)]
+    #[ORM\JoinColumn(name: 'freelancer_id', referencedColumnName: 'idFreelancer', nullable: true)]
     private ?Freelancer $freelancer = null;
 
     public function getIdProject(): ?int
@@ -100,7 +100,7 @@ class Project
         return $this->client;
     }
 
-    public function setClient(?Client $client): static
+    public function setClient(Client $client): static
     {
         $this->client = $client;
         return $this;
@@ -120,13 +120,13 @@ class Project
     #[Assert\Callback]
     public function validateInput(ExecutionContextInterface $context): void
     {
-        if ($this->title !== null && $this->title !== '' && !preg_match("/^[\\p{L}\\s'-]+$/u", $this->title)) {
+        if ($this->title !== '' && !preg_match("/^[\\p{L}\\s'-]+$/u", $this->title)) {
             $context->buildViolation('Title must contain only letters, spaces, apostrophes, or hyphens.')
                 ->atPath('title')
                 ->addViolation();
         }
 
-        if ($this->description !== null && $this->description !== '' && !preg_match("/^[\\p{L}\\p{N}\\s.,;:!?()'\"-]+$/u", $this->description)) {
+        if ($this->description !== '' && !preg_match("/^[\\p{L}\\p{N}\\s.,;:!?()'\"-]+$/u", $this->description)) {
             $context->buildViolation('Description contains invalid characters.')
                 ->atPath('description')
                 ->addViolation();

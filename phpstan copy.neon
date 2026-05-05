@@ -1,0 +1,12 @@
+parameters:
+    level: 8
+
+    paths:
+        - src/Entity/task/Task.php
+        - src/Entity/project/Project.php
+        - src/Controller/task/TaskController.php
+        - src/Controller/task/TaskReviewController.php
+        - src/Controller/project/ProjectController.php
+        - src/Enum/TaskStatus.php
+        - src/Enum/Projectstatus.php
+        - src/Service/AISuggestionService.php

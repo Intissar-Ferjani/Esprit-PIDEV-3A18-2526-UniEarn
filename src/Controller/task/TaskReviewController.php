@@ -41,15 +41,16 @@ final class TaskReviewController extends AbstractController
         }
 
         $task = $taskRepository->find($id);
-        $assignedProjects = $projectRepository->findByFreelancer($freelancer->getIdFreelancer());
-        $acceptedProjectIds = $applicationRepository->findAcceptedProjectIdsForFreelancer($freelancer->getIdFreelancer());
+        $freelancerId = (int) $freelancer->getIdFreelancer();
+        $assignedProjects = $projectRepository->findByFreelancer($freelancerId);
+        $acceptedProjectIds = $applicationRepository->findAcceptedProjectIdsForFreelancer($freelancerId);
         $acceptedProjects = $projectRepository->findByIds($acceptedProjectIds);
         $allowedProjectIds = array_map(
             static fn ($project): ?int => $project->getIdProject(),
             array_merge($assignedProjects, $acceptedProjects)
         );
 
-        if (!$task || !in_array($task->getProject()?->getIdProject(), $allowedProjectIds, true)) {
+        if (!$task instanceof Task || !in_array($task->getProject()?->getIdProject(), $allowedProjectIds, true)) {
             throw $this->createNotFoundException('Task not found.');
         }
 
@@ -72,7 +73,8 @@ final class TaskReviewController extends AbstractController
             // If the freelancer provided an actual file instead of just a URL link:
             if ($uploadedFile instanceof UploadedFile) {
                 // Determine upload directory and ensure it exists
-                $uploadDirectory = $this->getParameter('kernel.project_dir').'/public/uploads/task_submissions';
+                $projectDir = $this->getParameter('kernel.project_dir');
+                $uploadDirectory = (is_string($projectDir) ? $projectDir : '') . '/public/uploads/task_submissions';
                 if (!is_dir($uploadDirectory)) {
                     mkdir($uploadDirectory, 0775, true);
                 }
@@ -123,7 +125,7 @@ final class TaskReviewController extends AbstractController
         }
 
         $task = $taskRepository->find($id);
-        if (!$task || $task->getProject()?->getClient()?->getIdClient() !== $client->getIdClient()) {
+        if (!$task instanceof Task || $task->getProject()?->getClient()?->getIdClient() !== $client->getIdClient()) {
             throw $this->createNotFoundException('Task not found.');
         }
 
@@ -161,7 +163,7 @@ final class TaskReviewController extends AbstractController
         }
 
         $task = $taskRepository->find($id);
-        if (!$task || $task->getProject()?->getClient()?->getIdClient() !== $client->getIdClient()) {
+        if (!$task instanceof Task || $task->getProject()?->getClient()?->getIdClient() !== $client->getIdClient()) {
             throw $this->createNotFoundException('Task not found.');
         }
 

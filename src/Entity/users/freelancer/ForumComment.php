@@ -2,6 +2,7 @@
 
 namespace App\Entity\users\freelancer;
 
+use App\Entity\users\freelancer\Freelancer;
 use App\Repository\users\freelancer\ForumCommentRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -18,8 +19,9 @@ class ForumComment
     #[ORM\Column(name: 'post_id', type: 'integer')]
     private int $postId;
 
-    #[ORM\Column(name: 'freelancer_id', type: 'integer')]
-    private int $freelancerId;
+    #[ORM\ManyToOne(targetEntity: Freelancer::class)]
+    #[ORM\JoinColumn(name: 'freelancer_id', referencedColumnName: 'idFreelancer', nullable: false, onDelete: 'CASCADE')]
+    private Freelancer $freelancer;
 
     #[ORM\Column(name: 'comment_text', type: 'text')]
     #[Assert\NotBlank(message: 'Your comment cannot be empty.')]
@@ -45,8 +47,11 @@ class ForumComment
     public function getPostId(): ?int { return $this->postId; }
     public function setPostId(?int $id): static { $this->postId = $id; return $this; }
 
-    public function getFreelancerId(): ?int { return $this->freelancerId; }
-    public function setFreelancerId(?int $id): static { $this->freelancerId = $id; return $this; }
+    public function getFreelancer(): ?Freelancer { return $this->freelancer; }
+    public function setFreelancer(Freelancer $freelancer): static { $this->freelancer = $freelancer; return $this; }
+
+    /** @deprecated Use getFreelancer()->getIdFreelancer() instead */
+    public function getFreelancerId(): ?int { return $this->freelancer?->getIdFreelancer(); }
 
     public function getCommentText(): string { return $this->commentText; }
     public function setCommentText(string $text): static { $this->commentText = $text; return $this; }

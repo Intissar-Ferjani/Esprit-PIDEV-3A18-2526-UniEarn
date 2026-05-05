@@ -3,6 +3,7 @@
 namespace App\Entity\candidature;
 
 use App\Enum\ApplicationStatus;
+use App\Entity\project\Project;
 use App\Entity\users\freelancer\Freelancer;
 use App\Repository\candidature\ApplicationRepository;
 use Doctrine\DBAL\Types\Types;
@@ -23,10 +24,9 @@ class Application
     #[ORM\JoinColumn(name: 'freelancer_id', referencedColumnName: 'idFreelancer', nullable: false)]
     private Freelancer $freelancer;
 
-    #[ORM\Column]
-    #[Assert\NotBlank(message: 'Project ID is required.')]
-    #[Assert\Positive(message: 'Invalid Project ID.')]
-    private int $projectId;
+    #[ORM\ManyToOne(targetEntity: Project::class)]
+    #[ORM\JoinColumn(name: 'project_id', referencedColumnName: 'idProject', nullable: false)]
+    private Project $project;
 
     #[ORM\Column(length: 255, enumType: ApplicationStatus::class)]
     private ApplicationStatus $status;
@@ -90,16 +90,22 @@ class Application
         return $this;
     }
 
-    public function getProjectId(): ?int
+    public function getProject(): ?Project
     {
-        return $this->projectId;
+        return $this->project;
     }
 
-    public function setProjectId(int $projectId): static
+    public function setProject(Project $project): static
     {
-        $this->projectId = $projectId;
+        $this->project = $project;
 
         return $this;
+    }
+
+    /** @deprecated Use getProject()->getIdProject() instead */
+    public function getProjectId(): ?int
+    {
+        return $this->project?->getIdProject();
     }
 
     public function getStatus(): ?ApplicationStatus

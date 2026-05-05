@@ -16,7 +16,7 @@ class Admin
     private ?int $idAdmin = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'idUser', referencedColumnName: 'idUser', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'idUser', nullable: false, onDelete: 'CASCADE')]
     private User $user;
 
     public function getIdAdmin(): ?int { return $this->idAdmin; }

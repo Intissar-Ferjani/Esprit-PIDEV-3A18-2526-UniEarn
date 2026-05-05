@@ -5,6 +5,8 @@ namespace App\Entity\users\user;
 use App\Repository\users\user\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\Ignore;
+use SensitiveParameter;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
@@ -34,6 +36,7 @@ class User
     #[Assert\Length(max: 50, maxMessage: 'Email cannot exceed 50 characters.')]
     private string $email = '';
 
+    #[Ignore]
     #[ORM\Column(name: 'password', type: 'string', length: 255)]
     private string $password = '';
     
@@ -46,9 +49,11 @@ class User
     #[ORM\Column(name: 'activated', type: 'boolean')]
     private bool $activated = true;
 
+    #[Ignore]
     #[ORM\Column(name: 'resetToken', type: 'string', length: 6, nullable: true)]
     private ?string $resetToken = null;
 
+    #[Ignore]
     #[ORM\Column(name: 'resetTokenExpiresAt', type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $resetTokenExpiresAt = null;
 
@@ -66,7 +71,7 @@ class User
     public function setEmail(string $email): static { $this->email = $email; return $this; }
 
     public function getPassword(): ?string { return $this->password; }
-    public function setPassword(string $password): static { $this->password = $password; return $this; }
+    public function setPassword(#[SensitiveParameter] string $password): self { $this->password = $password; return $this; }
 
     public function getProfilePicturePath(): ?string { return $this->profilePicturePath; }
     public function setProfilePicturePath(?string $path): static { $this->profilePicturePath = $path; return $this; }
@@ -78,10 +83,10 @@ class User
     public function setActivated(bool $activated): static { $this->activated = $activated; return $this; }
 
     public function getResetToken(): ?string { return $this->resetToken; }
-    public function setResetToken(?string $resetToken): static { $this->resetToken = $resetToken; return $this; }
+    public function setResetToken(#[SensitiveParameter] ?string $resetToken): static { $this->resetToken = $resetToken; return $this; }
 
     public function getResetTokenExpiresAt(): ?\DateTimeImmutable { return $this->resetTokenExpiresAt; }
-    public function setResetTokenExpiresAt(?\DateTimeImmutable $expiresAt): static { $this->resetTokenExpiresAt = $expiresAt; return $this; }
+    public function setResetTokenExpiresAt(#[SensitiveParameter] ?\DateTimeImmutable $expiresAt): static { $this->resetTokenExpiresAt = $expiresAt; return $this; }
 
     public function getLastActiveAt(): ?\DateTimeInterface { return $this->lastActiveAt; }
     public function setLastActiveAt(?\DateTimeInterface $dt): static { $this->lastActiveAt = $dt; return $this; }

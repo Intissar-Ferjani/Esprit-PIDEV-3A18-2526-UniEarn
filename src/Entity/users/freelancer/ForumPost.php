@@ -2,6 +2,7 @@
 
 namespace App\Entity\users\freelancer;
 
+use App\Entity\users\freelancer\Freelancer;
 use App\Repository\users\freelancer\ForumPostRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -15,8 +16,9 @@ class ForumPost
     #[ORM\Column(name: 'post_id', type: 'integer')]
     private ?int $postId = null;
 
-    #[ORM\Column(name: 'freelancer_id', type: 'integer')]
-    private ?int $freelancerId = null;
+    #[ORM\ManyToOne(targetEntity: Freelancer::class)]
+    #[ORM\JoinColumn(name: 'freelancer_id', referencedColumnName: 'idFreelancer', nullable: false, onDelete: 'CASCADE')]
+    private Freelancer $freelancer;
 
     #[ORM\Column(name: 'title', type: 'string', length: 200)]
     #[Assert\NotBlank(message: 'A title is required.')]
@@ -54,8 +56,11 @@ class ForumPost
     public function getPostId(): ?int { return $this->postId; }
     public function setPostId(?int $id): static { $this->postId = $id; return $this; }
 
-    public function getFreelancerId(): ?int { return $this->freelancerId; }
-    public function setFreelancerId(?int $id): static { $this->freelancerId = $id; return $this; }
+    public function getFreelancer(): ?Freelancer { return $this->freelancer; }
+    public function setFreelancer(Freelancer $freelancer): static { $this->freelancer = $freelancer; return $this; }
+
+    /** @deprecated Use getFreelancer()->getIdFreelancer() instead */
+    public function getFreelancerId(): int { return $this->freelancer?->getIdFreelancer() ?? 0; }
 
     public function getTitle(): string { return $this->title; }
     public function setTitle(string $title): static { $this->title = $title; return $this; }

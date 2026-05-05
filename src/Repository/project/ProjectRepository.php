@@ -37,36 +37,40 @@ class ProjectRepository extends ServiceEntityRepository
             ->andWhere('p.status = :status')
             ->setParameter('status', $status)
             ->orderBy('p.idProject', 'DESC')
+            ->setMaxResults(1000)
             ->getQuery()
             ->getResult();
     }
 
-    public function findByClient(int $clientId): array
+    public function findByClient(int $clientId, int $limit = 50): array
     {
         return $this->createQueryBuilder('p')
             ->andWhere('IDENTITY(p.client) = :clientId')
             ->setParameter('clientId', $clientId)
             ->orderBy('p.idProject', 'DESC')
+            ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
     }
 
-    public function findByFreelancer(int $freelancerId): array
+    public function findByFreelancer(int $freelancerId, int $limit = 50): array
     {
         return $this->createQueryBuilder('p')
             ->andWhere('IDENTITY(p.freelancer) = :freelancerId')
             ->setParameter('freelancerId', $freelancerId)
             ->orderBy('p.idProject', 'DESC')
+            ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
     }
 
-    public function findAvailableProjects(): array
+    public function findAvailableProjects(int $limit = 50): array
     {
         return $this->createQueryBuilder('p')
             ->andWhere('p.status IN (:availableStatuses)')
             ->setParameter('availableStatuses', ['TODO', 'Review'])
             ->orderBy('p.idProject', 'DESC')
+            ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
     }
@@ -85,6 +89,7 @@ class ProjectRepository extends ServiceEntityRepository
             ->andWhere('p.idProject IN (:ids)')
             ->setParameter('ids', $ids)
             ->orderBy('p.idProject', 'DESC')
+            ->setMaxResults(1000)
             ->getQuery()
             ->getResult();
     }
