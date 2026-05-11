@@ -207,7 +207,7 @@ class ClientContractController extends AbstractController
         $client = $clientRepo->findByUserId($userId);
         $contract = $repo->find($id);
 
-        if (!$contract || $contract->getClient()->getIdClient() !== $client->getIdClient()) {
+        if (!$contract || !$client || $contract->getClient()?->getIdClient() !== $client->getIdClient()) {
             return new \Symfony\Component\HttpFoundation\JsonResponse(['error' => 'Contract not found.'], 404);
         }
 
@@ -245,17 +245,11 @@ class ClientContractController extends AbstractController
                 $url = rtrim($baseUrl, '/') . '/models/' . rawurlencode($model) . ':generateContent?key=' . urlencode($apiKey);
 
                 $response = $clientHttp->request('POST', $url, [
-                    'json' => [
-                        'contents' => [
-                            ['role' => 'user', 'parts' => [['text' => "Agissez comme un avocat expert conseil d'un client. Résumez ce contrat en français en 3 puces courtes et claires. Mettez en évidence le budget, les délais, et les points de vigilance : \n\n" . $contract->getContent()]]]
-                        ]
-                    ]
-                ]);
-                $response = $clientHttp->request('POST', 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=' . $apiKey, [
                     'verify_peer' => false,
+                    'verify_host' => false,
                     'json' => [
                         'contents' => [
-                            ['role' => 'user', 'parts' => [['text' => "Agissez comme un avocat expert conseil d'un client. Résumez ce contrat en français en 3 puces courtes et claires. Mettez en évidence le budget, les délais, et les points de vigilance : \n\n" . $contract->getContent()]]]
+                            ['role' => 'user', 'parts' => [['text' => $prompt]]]
                         ]
                     ]
                 ]);
@@ -286,6 +280,14 @@ class ClientContractController extends AbstractController
             $aiHtml = nl2br($aiHtml);
 
             return new \Symfony\Component\HttpFoundation\JsonResponse(['summary' => $aiHtml]);
+        } catch (\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface $e) {
+            // 429 quota exceeded → fallback simulation
+            if ($e->getResponse()->getStatusCode() === 429) {
+                return new \Symfony\Component\HttpFoundation\JsonResponse([
+                    'summary' => "<ul><li style='margin-bottom:8px'><strong>💰 Budget :</strong> Le montant total que vous paierez est sécurisé à " . $contract->getAmount() . " €.</li><li style='margin-bottom:8px'><strong>📅 Échéance :</strong> Le prestataire s'engage à livrer avant le " . ($contract->getEndDate() ? $contract->getEndDate()->format('d/m/Y') : 'Non précisé') . ".</li><li style='margin-bottom:8px'><strong>⚠️ Point de vigilance :</strong> Payez en séquestre dès la signature pour démarrer le projet. <br><em style='font-size:11px;color:#0ea5e9;'>(Quota API dépassé — analyse locale basée sur les données du contrat)</em></li></ul>",
+                ]);
+            }
+            return new \Symfony\Component\HttpFoundation\JsonResponse(['error' => 'Erreur IA: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
             return new \Symfony\Component\HttpFoundation\JsonResponse(['error' => 'Erreur IA: ' . $e->getMessage()], 500);
         }

@@ -59,7 +59,7 @@ class Client
     // ── Relationship to User (mirrors Java's Client extends User + userID FK) ──
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'idUser', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'userID', referencedColumnName: 'idUser', nullable: false, onDelete: 'CASCADE')]
     private User $user;
 
     // ── Getters & Setters ───────────────────────────────────────────────

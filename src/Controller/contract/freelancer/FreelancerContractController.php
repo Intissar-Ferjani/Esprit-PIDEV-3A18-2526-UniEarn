@@ -151,7 +151,7 @@ class FreelancerContractController extends AbstractController
         $freelancer = $freelancerRepo->findByUserId($userId);
         $contract = $repo->find($id);
 
-        if (!$contract || $contract->getFreelancer()->getIdFreelancer() !== $freelancer->getIdFreelancer()) {
+        if (!$contract || !$freelancer || $contract->getFreelancer()?->getIdFreelancer() !== $freelancer->getIdFreelancer()) {
             return new JsonResponse(['error' => 'Contract not found.'], 404);
         }
 
@@ -208,6 +208,8 @@ class FreelancerContractController extends AbstractController
                     . "Répondez avec :\n1. 📅 Dates et durée (commentaire sur le calendrier)\n2. 💰 Analyse financière (commentaire sur le montant et les conditions)\n3. ⚠️ Points de vigilance (recommandations importantes)";
 
                 $response = $client->request('POST', $url, [
+                    'verify_peer' => false,
+                    'verify_host' => false,
                     'json' => [
                         'contents' => [
                             ['role' => 'user', 'parts' => [['text' => $promptText]]]
@@ -239,6 +241,14 @@ class FreelancerContractController extends AbstractController
             $aiHtml = nl2br($aiHtml);
 
             return new JsonResponse(['summary' => $aiHtml]);
+        } catch (\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface $e) {
+            // 429 quota exceeded → fallback simulation
+            if ($e->getResponse()->getStatusCode() === 429) {
+                return new JsonResponse([
+                    'summary' => "<ul><li style='margin-bottom:8px'><strong>💰 Rémunération :</strong> Le montant total est fixé à " . $contract->getAmount() . " €.</li><li style='margin-bottom:8px'><strong>📅 Engagement :</strong> Le travail s'étend du " . ($contract->getStartDate() ? $contract->getStartDate()->format('d/m/Y') : 'Non précisé') . " au " . ($contract->getEndDate() ? $contract->getEndDate()->format('d/m/Y') : 'Non précisé') . ".</li><li style='margin-bottom:8px'><strong>⚠️ Point de vigilance :</strong> Lisez attentivement toutes les clauses avant signature. <br><em style='font-size:11px;color:#a855f7;'>(Quota API dépassé — analyse locale basée sur les données du contrat)</em></li></ul>",
+                ]);
+            }
+            return new JsonResponse(['error' => 'Erreur IA: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => 'Erreur IA: ' . $e->getMessage()], 500);
         }

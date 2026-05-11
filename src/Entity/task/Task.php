@@ -59,7 +59,7 @@ class Task
     private ?string $clientFeedback = null;
 
     #[ORM\ManyToOne(targetEntity: Project::class)]
-    #[ORM\JoinColumn(name: 'project_id', referencedColumnName: 'idProject', nullable: false)]
+    #[ORM\JoinColumn(name: 'idProject', referencedColumnName: 'idProject', nullable: false)]
     private Project $project;
 
     public function __construct()

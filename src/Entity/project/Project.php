@@ -39,11 +39,11 @@ class Project
     private Projectstatus $status;
 
     #[ORM\ManyToOne(targetEntity: Client::class)]
-    #[ORM\JoinColumn(name: 'client_id', referencedColumnName: 'idClient', nullable: false)]
+    #[ORM\JoinColumn(name: 'ClientID', referencedColumnName: 'idClient', nullable: false)]
     private Client $client;
 
     #[ORM\ManyToOne(targetEntity: Freelancer::class)]
-    #[ORM\JoinColumn(name: 'freelancer_id', referencedColumnName: 'idFreelancer', nullable: true)]
+    #[ORM\JoinColumn(name: 'freelancerID', referencedColumnName: 'idFreelancer', nullable: true)]
     private ?Freelancer $freelancer = null;
 
     public function getIdProject(): ?int

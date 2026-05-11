@@ -56,7 +56,7 @@ class PortfolioItem
     private \DateTimeInterface $createdAt;
 
     #[ORM\ManyToOne(targetEntity: Portfolio::class)]
-    #[ORM\JoinColumn(name: 'portfolio_id', referencedColumnName: 'idPortfolio', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'idPortfolio', referencedColumnName: 'idPortfolio', nullable: false, onDelete: 'CASCADE')]
     private Portfolio $portfolio;
 
     public function __construct()

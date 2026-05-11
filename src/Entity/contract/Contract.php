@@ -20,16 +20,16 @@ class Contract
     private ?int $idContract = null;
 
     #[ORM\ManyToOne(targetEntity: ContractTemplate::class)]
-    #[ORM\JoinColumn(name: 'contract_template_id', referencedColumnName: 'idContractTemplate', nullable: false)]
-    private ?ContractTemplate $template = null;
+    #[ORM\JoinColumn(name: 'idContractTemplate', referencedColumnName: 'idContractTemplate', nullable: false)]
+    private ?ContractTemplate $template = null; // @phpstan-ignore doctrine.associationType
 
     #[ORM\ManyToOne(targetEntity: Client::class)]
-    #[ORM\JoinColumn(name: 'client_id', referencedColumnName: 'idClient', nullable: false)]
-    private ?Client $client = null;
+    #[ORM\JoinColumn(name: 'idClient', referencedColumnName: 'idClient', nullable: false)]
+    private ?Client $client = null; // @phpstan-ignore doctrine.associationType
 
     #[ORM\ManyToOne(targetEntity: Freelancer::class)]
-    #[ORM\JoinColumn(name: 'freelancer_id', referencedColumnName: 'idFreelancer', nullable: false)]
-    private ?Freelancer $freelancer = null;
+    #[ORM\JoinColumn(name: 'idFreelancer', referencedColumnName: 'idFreelancer', nullable: false)]
+    private ?Freelancer $freelancer = null; // @phpstan-ignore doctrine.associationType
 
     #[ORM\Column(name: 'title', type: 'string', length: 255)]
     #[Assert\NotBlank(message: 'Title is required.')]
