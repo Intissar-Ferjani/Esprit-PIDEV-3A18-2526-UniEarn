@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: uniearn
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
