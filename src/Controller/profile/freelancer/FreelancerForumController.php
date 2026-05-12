@@ -188,7 +188,7 @@ class FreelancerForumController extends AbstractController
         $post = new ForumPost();
         $post->setTitle(trim($request->request->get('title', '')));
         $post->setContent(trim($request->request->get('content', '')));
-        $post->setFreelancerId($freelancer->getIdFreelancer());
+        $post->setFreelancer($freelancer);
         $post->setCategory($request->request->get('category', 'General'));
         $gifUrl = trim($request->request->get('gif_url', '')) ?: null;
         $post->setGifUrl($gifUrl);
@@ -318,7 +318,7 @@ class FreelancerForumController extends AbstractController
             else { $existing->setReactionType($type); $isNew = true; }
         } else {
             $reaction = new ForumReaction();
-            $reaction->setFreelancerId($freelancer->getIdFreelancer());
+            $reaction->setFreelancer($freelancer);
             $reaction->setPostId($id);
             $reaction->setReactionType($type);
             $em->persist($reaction);
@@ -367,7 +367,7 @@ class FreelancerForumController extends AbstractController
         $comment = new ForumComment();
         $comment->setPostId($id);
         $comment->setCommentText(trim($request->request->get('content', '')));
-        $comment->setFreelancerId($freelancer->getIdFreelancer());
+        $comment->setFreelancer($freelancer);
         $commentGifUrl = trim($request->request->get('gif_url', '')) ?: null;
         $comment->setGifUrl($commentGifUrl);
 

@@ -104,6 +104,10 @@
                class="nav-item {{ active == 'applications' ? 'active' : '' }}">
                 📋 <span>My Applications</span>
             </a>
+            <a href="{{ path('freelancer_contract_index') }}"
+               class="nav-item {{ active == 'contracts' ? 'active' : '' }}">
+                📄 <span>My Contracts</span>
+            </a>
             <a href="{{ path('freelancer_task_index') }}" class="nav-item {{ active == 'tasks' ? 'active' : '' }}">
                 📝 <span>Task Board</span>
             </a>

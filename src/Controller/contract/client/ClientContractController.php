@@ -245,17 +245,10 @@ class ClientContractController extends AbstractController
                 $url = rtrim($baseUrl, '/') . '/models/' . rawurlencode($model) . ':generateContent?key=' . urlencode($apiKey);
 
                 $response = $clientHttp->request('POST', $url, [
-                    'json' => [
-                        'contents' => [
-                            ['role' => 'user', 'parts' => [['text' => "Agissez comme un avocat expert conseil d'un client. Résumez ce contrat en français en 3 puces courtes et claires. Mettez en évidence le budget, les délais, et les points de vigilance : \n\n" . $contract->getContent()]]]
-                        ]
-                    ]
-                ]);
-                $response = $clientHttp->request('POST', 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=' . $apiKey, [
                     'verify_peer' => false,
                     'json' => [
                         'contents' => [
-                            ['role' => 'user', 'parts' => [['text' => "Agissez comme un avocat expert conseil d'un client. Résumez ce contrat en français en 3 puces courtes et claires. Mettez en évidence le budget, les délais, et les points de vigilance : \n\n" . $contract->getContent()]]]
+                            ['role' => 'user', 'parts' => [['text' => $prompt]]]
                         ]
                     ]
                 ]);
