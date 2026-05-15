@@ -3,7 +3,6 @@
 ## Overview
 UniEarn is a comprehensive platform created for the **PIDEV – 3rd Year Engineering Program** at **Esprit School of Engineering** (Academic Year 2025‑2026). It empowers students by bridging academic learning with professional freelancing, allowing them to manage tasks, collaborate on projects, and earn while they learn.
 
-> **Note:** This README targets the **Symfony** implementation of UniEarn, located in `d:\symfony\pi\uniearn_symfony`.
 
 ## Features
 - **User Management** – Secure registration, login, and profile handling for **clients** and **freelancers**.  
@@ -37,10 +36,10 @@ The project follows the **Model‑View‑Controller (MVC)** pattern promoted by 
 - **WebSocket / Mercure** – Real‑time notifications and chat.
 
 ## Contributors
-- **Yassmine Tebrizi**
 - **Intissar Ferjani**
+- **Yassmine Tebrizi**
+- - **Eya Ghzaiel**
 - **Akrem Arbi**
-- **Eya Ghzaiel**
 - **Firas benAli**
 
 ## Academic Context
